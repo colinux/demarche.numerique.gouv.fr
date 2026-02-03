@@ -156,7 +156,7 @@ module Users
       respond_to do |format|
         format.html
         format.turbo_stream do
-          @dossier.for_tiers = params[:dossier][:for_tiers] if params[:dossier].present?
+          @dossier.assign_for_tiers(params.dig(:dossier, :for_tiers) == 'true')
         end
       end
     end
@@ -165,6 +165,8 @@ module Users
       @dossier = dossier
       @no_description = true
       email = dossier_params.dig('individual_attributes', 'email')
+
+      @dossier.assign_for_tiers(dossier_params[:for_tiers] == 'true')
 
       if @dossier.update(dossier_params) && @dossier.individual.valid?
         # verify for_tiers email

@@ -428,6 +428,70 @@ describe Dossier, type: :model do
       end
     end
 
+    describe '#update_for_tiers' do
+      let(:procedure) { create(:procedure, :for_individual) }
+      let(:individual) { build(:individual, nom: 'Dupont', prenom: 'Jean', gender: Individual::GENDER_MALE, birthdate: Date.new(1980, 1, 1)) }
+      let(:dossier) { create(:dossier, procedure:, user:, individual:) }
+
+      context 'when user is connected via FranceConnect with one identity' do
+        let(:user) { create(:user, france_connect_informations: [build(:france_connect_information)]) }
+
+        context 'switching to for_tiers' do
+          it 'prefills mandataire and resets individual' do
+            dossier.assign_for_tiers(true)
+
+            expect(dossier.for_tiers).to be true
+            expect(dossier.mandataire_first_name).to eq('Angela Claire Louise')
+            expect(dossier.mandataire_last_name).to eq('DUBOIS')
+            expect(dossier.individual.nom).to be_nil
+            expect(dossier.individual.prenom).to be_nil
+          end
+        end
+
+        context 'switching from for_tiers to for self' do
+          before { dossier.update_columns(for_tiers: true) }
+
+          it 'prefills individual from FranceConnect' do
+            dossier.individual.update_columns(nom: nil, prenom: nil, gender: nil)
+            dossier.assign_for_tiers(false)
+
+            expect(dossier.for_tiers).to be false
+            expect(dossier.individual.nom).to eq('DUBOIS')
+            expect(dossier.individual.prenom).to eq('Angela Claire Louise')
+            expect(dossier.individual.gender).to eq(Individual::GENDER_FEMALE)
+          end
+        end
+      end
+
+      context 'when user is not connected via FranceConnect' do
+        let(:user) { create(:user) }
+
+        it 'keep individual, clear mandataire' do
+          dossier.assign_for_tiers(true)
+
+          expect(dossier.for_tiers).to be true
+          expect(dossier.mandataire_first_name).to be_nil
+          expect(dossier.mandataire_last_name).to be_nil
+          expect(dossier.individual.nom).to eq('Dupont')
+          expect(dossier.individual.prenom).to eq('Jean')
+        end
+
+        context 'switching from for_tiers to for self' do
+          before { dossier.update_columns(for_tiers: true) }
+
+          it 'keeps individual' do
+            dossier.assign_for_tiers(false)
+
+            expect(dossier.for_tiers).to be false
+            expect(dossier.mandataire_first_name).to be_nil
+            expect(dossier.mandataire_last_name).to be_nil
+            expect(dossier.individual.nom).to eq('Dupont')
+            expect(dossier.individual.prenom).to eq('Jean')
+          end
+        end
+      end
+    end
+
     describe '#last_booked_rdv' do
       let(:dossier) { create(:dossier) }
       let(:instructeur) { create(:instructeur) }

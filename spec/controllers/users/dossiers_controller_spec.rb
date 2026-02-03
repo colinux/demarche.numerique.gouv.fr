@@ -151,6 +151,45 @@ describe Users::DossiersController, type: :controller do
     end
   end
 
+  describe 'identite with france connect' do
+    let(:procedure) { create(:procedure, :for_individual, for_tiers_enabled: true) }
+    let(:dossier) { create(:dossier, user:, procedure:) }
+
+    before { sign_in(user) }
+
+    describe 'turbo_stream format' do
+      let(:user) { create(:user, france_connect_informations: [build(:france_connect_information)]) }
+
+      subject { patch :identite, params: { id: dossier.id, dossier: { for_tiers: for_tiers_value } }, format: :turbo_stream }
+
+      context 'when switching to for_tiers' do
+        let(:for_tiers_value) { 'true' }
+
+        it 'prefills mandataire and resets individual' do
+          subject
+          expect(assigns(:dossier).for_tiers).to be true
+          expect(assigns(:dossier).mandataire_first_name).to eq('Angela Claire Louise')
+          expect(assigns(:dossier).mandataire_last_name).to eq('DUBOIS')
+          expect(assigns(:dossier).individual.nom).to be_nil
+        end
+      end
+
+      context 'when switching back to for_self' do
+        let(:dossier) { create(:dossier, :for_tiers_without_notification, user:, procedure:) }
+        let(:for_tiers_value) { 'false' }
+
+        before { dossier.individual.update_columns(nom: nil, prenom: nil, gender: nil) }
+
+        it 'prefills individual from FranceConnect' do
+          subject
+          expect(assigns(:dossier).for_tiers).to be false
+          expect(assigns(:dossier).individual.nom).to eq('DUBOIS')
+          expect(assigns(:dossier).individual.prenom).to eq('Angela Claire Louise')
+        end
+      end
+    end
+  end
+
   describe 'update_identite' do
     let(:procedure) { create(:procedure, :for_individual) }
     let(:dossier) { create(:dossier, user: user, procedure: procedure) }
