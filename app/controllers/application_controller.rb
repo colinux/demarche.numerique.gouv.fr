@@ -122,7 +122,9 @@ class ApplicationController < ActionController::Base
   end
 
   def set_locale(locale)
-    if locale && locale.to_sym.in?(I18n.available_locales)
+    return if !locale.respond_to?(:to_sym)
+
+    if locale.to_sym.in?(I18n.available_locales)
       cookies[:locale] = { value: locale, secure: Rails.env.production?, httponly: true }
       if user_signed_in?
         current_user.update(locale: locale)
