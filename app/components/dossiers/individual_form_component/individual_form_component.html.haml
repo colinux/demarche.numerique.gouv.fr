@@ -15,10 +15,10 @@
           = t('.self_title')
 
       .fr-fieldset__element.fr-fieldset__element--short-text
-        = render Dsfr::InputComponent.new(form: f, attribute: :mandataire_first_name, opts: { autocomplete: 'given-name' })
+        = render Dsfr::InputComponent.new(form: f, attribute: :mandataire_first_name, opts: { autocomplete: 'given-name', disabled: mandataire_identity_locked? })
 
       .fr-fieldset__element.fr-fieldset__element--short-text
-        = render Dsfr::InputComponent.new(form: f, attribute: :mandataire_last_name, opts: { autocomplete: 'family-name' })
+        = render Dsfr::InputComponent.new(form: f, attribute: :mandataire_last_name, opts: { autocomplete: 'family-name', disabled: mandataire_identity_locked? })
 
   = f.fields_for :individual, include_id: false do |individual|
     %fieldset.fr-fieldset.fr-mb-0.individual-infos
@@ -38,12 +38,12 @@
 
             .fr-fieldset__element
               .fr-radio-group
-                = individual.radio_button :gender, Individual::GENDER_FEMALE, required: true, id: "identite_champ_radio_#{Individual::GENDER_FEMALE}", translate: "no"
+                = individual.radio_button :gender, Individual::GENDER_FEMALE, required: true, id: "identite_champ_radio_#{Individual::GENDER_FEMALE}", translate: "no", disabled: identity_locked?
                 %label.fr-label{ for: "identite_champ_radio_#{Individual::GENDER_FEMALE}" }
                   = Individual.human_attribute_name('gender.female')
             .fr-fieldset__element
               .fr-radio-group
-                = individual.radio_button :gender, Individual::GENDER_MALE, required: true, id: "identite_champ_radio_#{Individual::GENDER_MALE}", translate: "no"
+                = individual.radio_button :gender, Individual::GENDER_MALE, required: true, id: "identite_champ_radio_#{Individual::GENDER_MALE}", translate: "no", disabled: identity_locked?
                 %label.fr-label{ for: "identite_champ_radio_#{Individual::GENDER_MALE}" }
                   = Individual.human_attribute_name('gender.male')
       .fr-fieldset__element.fr-mb-0
@@ -52,12 +52,12 @@
             - if for_tiers?
               = render Dsfr::InputComponent.new(form: individual, attribute: :prenom)
             - else
-              = render Dsfr::InputComponent.new(form: individual, attribute: :prenom, opts: { autocomplete: 'given-name' })
+              = render Dsfr::InputComponent.new(form: individual, attribute: :prenom, opts: { autocomplete: 'given-name', disabled: identity_locked? })
           .fr-fieldset__element.fr-fieldset__element--short-text
             - if for_tiers?
               = render Dsfr::InputComponent.new(form: individual, attribute: :nom)
             - else
-              = render Dsfr::InputComponent.new(form: individual, attribute: :nom, opts: { autocomplete: 'family-name' })
+              = render Dsfr::InputComponent.new(form: individual, attribute: :nom, opts: { autocomplete: 'family-name', disabled: identity_locked? })
 
           - if @dossier.procedure.ask_birthday?
             .fr-fieldset__element
