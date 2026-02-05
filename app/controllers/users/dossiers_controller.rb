@@ -164,14 +164,22 @@ module Users
     def update_identite
       @dossier = dossier
       @no_description = true
-      email = dossier_params.dig('individual_attributes', 'email')
 
       @dossier.assign_for_tiers(dossier_params[:for_tiers] == 'true')
 
-      if @dossier.update(dossier_params) && @dossier.individual.valid?
-        # verify for_tiers email
-        if email.present?
-          User.create_or_promote_to_tiers(email, SecureRandom.hex, @dossier)
+      sanitized_params = dossier_params.dup
+      if mandataire_identity_locked?(@dossier)
+        sanitized_params = sanitized_params.except(:mandataire_first_name, :mandataire_last_name)
+      elsif identity_locked?(@dossier)
+        # keep only birthdate for legacy procedures
+        sanitized_params[:individual_attributes] = sanitized_params[:individual_attributes]&.except(:nom, :prenom, :gender)
+        sanitized_params.delete(:individual_attributes) if sanitized_params[:individual_attributes].empty? # évite {} qui réinitialise l'individual
+      end
+
+      if @dossier.update(sanitized_params) && @dossier.individual.valid?
+        if @dossier.for_tiers?
+          email = sanitized_params.dig(:individual_attributes, :email)
+          User.create_or_promote_to_tiers(email, SecureRandom.hex, @dossier) if email.present?
         end
 
         @dossier.update!(autorisation_donnees: true, identity_updated_at: Time.zone.now)
@@ -475,6 +483,14 @@ module Users
     end
 
     private
+
+    def identity_locked?(dossier)
+      dossier.france_connected_with_one_identity?
+    end
+
+    def mandataire_identity_locked?(dossier)
+      dossier.for_tiers? && dossier.france_connected_with_one_identity?
+    end
 
     # if the status tab is filled, then this tab
     # else first filled tab

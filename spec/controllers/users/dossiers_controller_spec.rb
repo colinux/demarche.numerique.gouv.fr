@@ -266,7 +266,7 @@ describe Users::DossiersController, type: :controller do
 
     context 'when a dossier is in brouillon, for_tiers and we want to update the individual' do
       let(:dossier) { create(:dossier, :for_tiers_without_notification, state: "brouillon", user: user, procedure: procedure) }
-      let(:dossier_params) { { individual_attributes: { gender: 'M', nom: 'Mouse', prenom: 'Mickey', email: 'mickey@gmail.com', notification_method: 'email' } } }
+      let(:dossier_params) { { for_tiers: 'true', individual_attributes: { gender: 'M', nom: 'Mouse', prenom: 'Mickey', email: 'mickey@gmail.com', notification_method: 'email' } } }
 
       it 'updates the individual with valid notification_method' do
         expect { subject }.to have_enqueued_mail(UserMailer, :invite_tiers)
@@ -282,7 +282,7 @@ describe Users::DossiersController, type: :controller do
       end
 
       context 'when we want to change the mandataire' do
-        let(:dossier_params) { { mandataire_first_name: "Jean", mandataire_last_name: "Dupont" } }
+        let(:dossier_params) { { for_tiers: 'true', mandataire_first_name: "Jean", mandataire_last_name: "Dupont" } }
 
         it 'updates the dossier mandataire first and last name' do
           expect { subject }.not_to have_enqueued_mail(UserMailer, :invite_tiers)
@@ -293,6 +293,86 @@ describe Users::DossiersController, type: :controller do
           expect(dossier.mandataire_first_name).to eq('Jean')
           expect(dossier.mandataire_last_name).to eq('Dupont')
           expect(dossier.mandataire_full_name).to eq('Jean Dupont')
+        end
+      end
+    end
+
+    context 'when user is connected via France Connect' do
+      let(:user) { create(:user, :with_fci) }
+
+      context 'when dossier is for self' do
+        let(:dossier) { create(:dossier, :with_individual, user:, procedure:) }
+
+        it 'ignores attempts to modify locked identity attributes and uses France Connect values' do
+          fc_info = user.france_connect_informations.first
+
+          post :update_identite, params: {
+            id: dossier.id,
+            dossier: {
+              individual_attributes: {
+                nom: 'Hacker',
+                prenom: 'Evil',
+              },
+            },
+          }
+
+          dossier.reload
+          # Identity should be locked to France Connect values, ignoring submitted params
+          expect(dossier.individual.nom).to eq(fc_info.family_name)
+          expect(dossier.individual.prenom).to eq(fc_info.given_name)
+        end
+      end
+
+      context 'when dossier is for tiers' do
+        let(:dossier) { create(:dossier, :for_tiers_without_notification, user:, procedure:) }
+
+        it 'ignores attempts to modify locked mandataire fields' do
+          fc_info = user.france_connect_informations.first
+
+          post :update_identite, params: {
+            id: dossier.id,
+            dossier: {
+              for_tiers: 'true',
+              mandataire_first_name: 'Hacker',
+              mandataire_last_name: 'Evil',
+              individual_attributes: {
+                nom: 'Beneficiaire',
+                prenom: 'Le',
+              },
+            },
+          }
+
+          dossier.reload
+          # Mandataire should be locked to France Connect values
+          expect(dossier.mandataire_first_name).to eq(fc_info.given_name)
+          expect(dossier.mandataire_last_name).to eq(fc_info.family_name)
+          # Beneficiary should be updated
+          expect(dossier.individual.nom).to eq('Beneficiaire')
+          expect(dossier.individual.prenom).to eq('Le')
+        end
+
+        it 'prevents bypassing identity lock by omitting for_tiers param' do
+          fc_info = user.france_connect_informations.first
+
+          # Attacker tries to modify identity by omitting for_tiers param
+          # This would switch dossier to "for self" mode, but identity should still be locked
+          post :update_identite, params: {
+            id: dossier.id,
+            dossier: {
+              # for_tiers is omitted - attacker trying to bypass
+              individual_attributes: {
+                nom: 'Hacker',
+                prenom: 'Evil',
+              },
+            },
+          }
+
+          dossier.reload
+          # Dossier switched to "for self" mode
+          expect(dossier.for_tiers).to be false
+          # But identity is still locked to France Connect values
+          expect(dossier.individual.nom).to eq(fc_info.family_name)
+          expect(dossier.individual.prenom).to eq(fc_info.given_name)
         end
       end
     end
