@@ -1,4 +1,4 @@
-import { isButtonElement, matchInputElement } from '@coldwired/utils';
+import { matchInputElement } from '@coldwired/utils';
 import { getConfig, httpRequest, ResponseError } from '@utils';
 
 import { AutoUpload } from '../shared/activestorage/auto-upload';
@@ -31,7 +31,7 @@ const AUTOSAVE_CONDITIONAL_SPINNER_DEBOUNCE_DELAY = 200;
 
 // This is a controller we attach to each "champ" in the main form. It performs
 // the save and dispatches a few events that allow `AutosaveStatusController` to
-// coordinate notifications and retries:
+// coordinate notifications:
 // * `autosave:enqueue` - dispatched when a new save attempt starts
 // * `autosave:end` - dispatched after sucessful save
 // * `autosave:error` - dispatched when an error occures
@@ -51,25 +51,6 @@ export class AutosaveController extends ApplicationController {
   disconnect() {
     this.#abortController?.abort();
     this.#latestPromise = Promise.resolve();
-  }
-
-  onClickRetryButton(event: Event) {
-    const target = event.target;
-    if (isButtonElement(target)) {
-      const inputTargetSelector = target.dataset.inputTarget;
-      if (inputTargetSelector) {
-        const target =
-          this.element.querySelector<HTMLInputElement>(inputTargetSelector);
-        if (
-          target &&
-          target.type == 'file' &&
-          target.dataset.autoAttachUrl &&
-          target.files?.length
-        ) {
-          this.enqueueAutouploadRequest(target, target.files[0]);
-        }
-      }
-    }
   }
 
   private onChange(event: Event) {
