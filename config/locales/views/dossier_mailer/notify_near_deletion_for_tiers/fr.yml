@@ -1,0 +1,18 @@
+fr:
+  dossier_mailer:
+    notify_near_deletion_for_tiers:
+      subject:
+        one: Votre dossier rempli par le mandataire %{mandataire} en votre nom va bientôt être supprimé
+        other: Des dossiers remplis par des mandataires en votre nom vont bientôt être supprimés
+      header_en_construction:
+        one: "Afin de respecter la durée de conservation de vos données personnelles, le dossier en attente d’instruction suivant sera supprimé automatiquement le %{expiration_date} :"
+        other: "Afin de respecter la durée de conservation de vos données personnelles, les dossiers en attente d’instruction suivants seront supprimés automatiquement le %{expiration_date} :"
+      header_termine:
+        one: "Afin de respecter la durée de conservation de vos données personnelles, ce dossier traité sera supprimé le %{expiration_date} :"
+        other: "Afin de respecter la durée de conservation de vos données personnelles, ces dossiers traités seront supprimés le %{expiration_date} :"
+      list:
+        one: "N° %{dossier_id} (%{libelle})"
+        other: "N° %{dossier_id} (%{libelle}) par"
+      more_information:
+        one: Pour en savoir plus, veuillez vous rapprocher de
+        other: Pour en savoir plus, veuillez vous rapprocher des mandataires ci-dessus.

@@ -129,7 +129,7 @@ module Instructeurs
     def commentaire_params
       params.require(:commentaire).permit(
         :body,
-        :piece_jointe
+        piece_jointe: []
       )
     end
 

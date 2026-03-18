@@ -7,7 +7,8 @@
 <% end %>
 
 <% if @deleted_row_number %>
-  <%= turbo_stream.append dom_id(@champ, :deletion_announcement), delay: 1000 do %> <%# the delay is to ensure there is not conflict with the focus %>
+  <%= turbo_stream.append dom_id(@champ, :deletion_announcement), delay: 1000 do %>
+    <%# the delay is to ensure there is not conflict with the focus %>
     <%= t('editable_champ.repetition_component.deleted', row_number: @deleted_row_number, libelle: @champ.row_libelle) %>
   <% end %>
 <% end %>

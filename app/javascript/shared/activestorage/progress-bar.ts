@@ -20,7 +20,14 @@ export default class ProgressBar {
   static init(input: HTMLInputElement, id: string, file: File) {
     clearErrors(input);
     const html = this.render(id, file.name);
-    input.before(html);
+    const progressContainer = input
+      .closest('.attachment-field')
+      ?.querySelector<HTMLElement>('[data-progress-container]');
+    if (progressContainer) {
+      progressContainer.append(html);
+    } else {
+      input.before(html);
+    }
   }
 
   static start(id: string) {
@@ -128,8 +135,11 @@ export default class ProgressBar {
 }
 
 function clearErrors(input: HTMLInputElement) {
-  const errorElements =
-    input.parentElement?.querySelectorAll(`.${ERROR_CLASS}`) ?? [];
+  const container =
+    input
+      .closest('.attachment-field')
+      ?.querySelector('[data-progress-container]') ?? input.parentElement;
+  const errorElements = container?.querySelectorAll(`.${ERROR_CLASS}`) ?? [];
   for (const element of errorElements) {
     element.remove();
   }

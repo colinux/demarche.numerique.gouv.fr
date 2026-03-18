@@ -286,3 +286,14 @@ input[type='radio'] {
 .dossier-edit .fr-fieldset {
   align-items: flex-end;
 }
+
+// DSFR 1.14.3 added display:flex + flex-direction:row on .fr-notice__body
+// (absent in 1.12.1). When a notice contains rich content like a <ul>,
+// children must wrap to preserve the vertical layout.
+.fr-notice__body:has(> ul) {
+  flex-wrap: wrap;
+
+  > * {
+    flex-basis: 100%;
+  }
+}

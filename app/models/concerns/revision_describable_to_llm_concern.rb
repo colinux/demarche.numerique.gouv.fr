@@ -28,6 +28,7 @@ module RevisionDescribableToLLMConcern
 
   def options_for_llm(tdc)
     return nil unless TYPES_WITH_OPTIONS.include?(tdc.type_champ)
+    return nil if tdc.options.blank?
 
     tdc.options.slice(*TypeDeChamp::OPTS_BY_TYPE.fetch(tdc.type_champ, []).map(&:to_s)).presence
   end

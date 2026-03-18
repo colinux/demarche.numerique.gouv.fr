@@ -1277,6 +1277,22 @@ describe ProcedureRevision do
 
     it { expect(draft.simple_routable_types_de_champ.pluck(:libelle)).to eq(['l2', 'l3', 'l4', 'l5', 'l6']) }
   end
+
+  describe "#schema_to_llm" do
+    context 'when a type_de_champ has nil options' do
+      let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :date, libelle: "Date de naissance" }]) }
+      let(:revision) { procedure.draft_revision }
+
+      before do
+        revision.types_de_champ_public.first.update_column(:options, nil)
+      end
+
+      it 'does not raise' do
+        expect { revision.schema_to_llm }.not_to raise_error
+      end
+    end
+  end
+
   describe "#apply_llm_rule_suggestion_items" do
     let(:procedure) { create(:procedure, types_de_champ_public:) }
     let(:revision) { procedure.draft_revision }

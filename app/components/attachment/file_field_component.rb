@@ -79,6 +79,10 @@ class Attachment::FileFieldComponent < ApplicationComponent
     champ.present? ? "attachment-empty-#{champ.public_id}" : "attachment-empty-generic"
   end
 
+  def progress_container_id
+    champ.present? ? "attachment-progress-#{champ.public_id}" : "attachment-progress-generic"
+  end
+
   def describedby_hint_id
     return nil if champ.nil?
     "#{champ.focusable_input_id}-hint"

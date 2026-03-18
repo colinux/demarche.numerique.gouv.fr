@@ -12,7 +12,6 @@ describe 'Creating a new dossier:', js: true do
 
     context 'when the procedure has identification by individual' do
       let(:libelle) { "[title] with characters to escape : '@*^$" }
-      let(:procedure) { create(:procedure, :published, :for_individual, :with_service, ask_birthday: ask_birthday, libelle: libelle) }
       let(:ask_birthday) { false }
       let(:expected_birthday) { nil }
 
@@ -21,10 +20,6 @@ describe 'Creating a new dossier:', js: true do
         click_on 'Commencer la démarche'
 
         expect(page).to have_current_path identite_dossier_path(user.reload.dossiers.last)
-        expect(page).to have_title(libelle)
-
-        fill_in('Prénom', with: 'prenom', visible: true)
-        fill_in('Nom', with: 'nom', visible: true)
       end
 
       shared_examples 'the user can create a new draft' do
@@ -39,39 +34,79 @@ describe 'Creating a new dossier:', js: true do
       end
 
       context 'when the birthday is asked' do
-        let(:ask_birthday) { true }
+        let(:procedure) { create(:procedure, :published, :for_individual, :with_service, ask_birthday: true, libelle:) }
         let(:expected_birthday) { Date.new(1987, 12, 10) }
 
         before do
+          find('label', text: "Pour vous").click
+          fill_in('Prénom', with: 'prenom')
+          fill_in('Nom', with: 'nom')
           fill_in 'Date de naissance', with: expected_birthday
         end
 
-        context 'when the birthday is asked' do
-          it_behaves_like 'the user can create a new draft'
-        end
+        it_behaves_like 'the user can create a new draft'
       end
 
       context 'when the birthday is not asked' do
-        let(:ask_birthday) { false }
-        let(:expected_birthday) { nil }
+        let(:procedure) { create(:procedure, :published, :for_individual, :with_service, ask_birthday: false, libelle:) }
+
+        before do
+          find('label', text: "Pour vous").click
+          fill_in('Prénom', with: 'prenom')
+          fill_in('Nom', with: 'nom')
+        end
+
+        it_behaves_like 'the user can create a new draft'
+      end
+
+      context 'when the gender is asked' do
+        let(:procedure) { create(:procedure, :published, :for_individual, :with_service, no_gender: false, libelle:) }
+
+        before do
+          find('label', text: "Pour vous").click
+          find("label[for='identite_champ_radio_#{Individual::GENDER_FEMALE}']").click
+          fill_in('Prénom', with: 'prenom')
+          fill_in('Nom', with: 'nom')
+        end
+
+        it_behaves_like 'the user can create a new draft'
+      end
+
+      context 'when for tiers is disabled' do
+        let(:procedure) { create(:procedure, :published, :for_individual, :with_service, for_tiers_enabled: false, libelle:) }
+
+        before do
+          fill_in('Prénom', with: 'prenom')
+          fill_in('Nom', with: 'nom')
+        end
+
         it_behaves_like 'the user can create a new draft'
       end
 
       context 'when individual fill dossier for a tiers' do
-        it 'completes the form with email notification method selected' do
-          find('label', text: 'Pour un bénéficiaire : membre de la famille, proche, mandant, professionnel en charge du suivi du dossier…').click
+        let(:procedure) { create(:procedure, :published, :for_individual, :with_service, ask_birthday: false, libelle: libelle) }
+
+        before do
+          find('label', text: /Pour une autre personne/).click
+
           within('.mandataire-infos') do
             fill_in('Prénom', with: 'John')
             fill_in('Nom', with: 'Doe')
           end
+        end
+
+        it 'completes the form with email notification method selected' do
+          expect(page).to have_text('Votre identité')
+          expect(page).to have_text('Identité du bénéficiaire')
 
           within('.individual-infos') do
             fill_in('Prénom', with: 'prenom')
             fill_in('Nom', with: 'nom')
+
+            find('label', text: /Informer le bénéficiaire par email/).click
+            fill_in('dossier_individual_attributes_email', with: 'prenom.nom@mail.com')
           end
 
-          find('label', text: 'Par adresse électronique').click
-          fill_in('dossier_individual_attributes_email', with: 'prenom.nom@mail.com')
           within('.individual-infos') do
             find('label', text: 'Prénom').click # force focus out
           end
@@ -84,30 +119,24 @@ describe 'Creating a new dossier:', js: true do
             click_button("Continuer")
           end
 
-          expect(procedure.dossiers.last.individual.notification_method == 'email')
           expect(page).to have_current_path(brouillon_dossier_path(procedure.dossiers.last))
+          expect(procedure.dossiers.last.individual.reload.notification_method).to eq('email')
         end
 
         it 'completes the form with no notification method selected' do
-          find('label', text: 'Pour un bénéficiaire : membre de la famille, proche, mandant, professionnel en charge du suivi du dossier…').click
-
-          within('.mandataire-infos') do
-            fill_in('Prénom', with: 'John')
-            fill_in('Nom', with: 'Doe')
-          end
+          expect(page).to have_text('Identité du bénéficiaire')
 
           within('.individual-infos') do
             fill_in('Prénom', with: 'prenom')
             fill_in('Nom', with: 'nom')
           end
 
-          find('label', text: 'Pas de notification').click
           within "#identite-form" do
             click_button('Continuer')
           end
 
-          expect(procedure.dossiers.last.individual.notification_method.empty?)
           expect(page).to have_current_path(brouillon_dossier_path(procedure.dossiers.last))
+          expect(procedure.dossiers.last.individual.reload.notification_method).to eq('no_notification')
         end
       end
     end

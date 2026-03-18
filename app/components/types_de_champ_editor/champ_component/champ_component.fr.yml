@@ -28,7 +28,7 @@ fr:
   identity_formats:
     title: "FORMATS ACCEPTÉS"
     desc_html: "L’usager pourra joindre une carte d’identité (uniquement le recto), passeport, titre de séjour ou autre justificatif d’identité."
-    rule_html: "Les formats acceptés pour cette pièce seront uniquement : <strong>image / scan</strong> (<strong>.jpg, .jpeg, .png</strong>) <strong>uniquement de 20 Mo max.</strong>"
+    rule_html: "Les formats acceptés pour cette pièce seront uniquement <strong>.jpg, .jpeg, .png</strong> avec une <strong>taille maximale de 20 Mo</strong>."
   identity_deletion:
     title: "SUPPRESSION DE LA PIÈCE JOINTE"
     desc_html: "Dans le cadre du RGPD, le titre d’identité sera <strong>filigrané</strong> et <strong>automatiquement supprimé une fois le dossier traité</strong> (accepté, refusé ou classé sans suite)."
@@ -37,11 +37,11 @@ fr:
     desc_html: "Le contenu du fichier joint par l’usager sera analysé automatiquement afin de récupérer et retranscrire à l’instructeur les informations suivantes : <strong>Nom du titulaire, Adresse du titulaire</strong> (si présente sur le fichier), <strong>IBAN, Code BIC, Nom de la banque</strong>."
   rib_formats:
     title: "FORMATS ACCEPTÉS"
-    desc_html: "Les formats acceptés pour cette pièce seront uniquement : <strong>document texte</strong> (.pdf, .doc, .docx, .odt, .txt) et <strong>image / scan</strong> (.jpg, .jpeg, .png)."
+    desc_html: "Les formats acceptés pour cette pièce seront uniquement <strong>.pdf, .doc, .docx, .jpg, .jpeg, .png</strong>."
   limit_formats_label: "Limiter à certains formats de fichier"
   auto_purge_label: "Supprimer automatiquement la pièce après traitement du dossier"
   template_label: "Modèle de fichier proposé à l\u2019usager"
   max_file_size_hint: "Taille maximale autorisée : %{max_file_size}."
   multiple_files_hint: "Les usagers pourront joindre plusieurs fichiers si nécessaire."
   families_legend: "FORMAT(S) ACCEPTÉ(S)"
-  tooltip_examples: "Exemples : %{examples}"
+  tooltip_examples: "Exemples : %{examples}..."

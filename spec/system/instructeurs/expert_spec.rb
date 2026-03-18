@@ -62,6 +62,46 @@ describe 'Inviting an expert:', js: true do
       expect(invitation_email.body).to include(targeted_user_url)
     end
 
+    scenario 'I can invite an expert with an introduction file' do
+      allow(ClamavService).to receive(:safe_file?).and_return(true)
+
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: Rails.root.join('spec/fixtures/files/piece_justificative_0.pdf').open,
+        filename: 'piece_justificative_0.pdf',
+        content_type: 'application/pdf'
+      )
+
+      instructeur.assign_to_procedure(linked_dossier.procedure)
+
+      login_as instructeur.user, scope: :user
+      visit instructeur_dossier_path(procedure, dossier)
+
+      click_on 'Avis externes'
+      within('.fr-sidemenu') { click_on 'Demander un avis' }
+
+      fill_in 'Emails', with: "#{expert.email},"
+      fill_in 'avis_introduction', with: 'Veuillez consulter le document ci-joint.'
+      choose 'confidentiel_false', allow_label_click: true
+
+      # Inject blob signed_id as hidden field to bypass direct upload
+      page.execute_script(<<~JS)
+        var form = document.querySelector('form#new_avis');
+        var fileInput = form.querySelector('input[type="file"]');
+        if (fileInput) fileInput.remove();
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'avis[introduction_file]';
+        hidden.value = '#{blob.signed_id}';
+        form.appendChild(hidden);
+      JS
+
+      within('form#new_avis') { click_on "Envoyer la demande d\u2019avis" }
+      perform_enqueued_jobs
+
+      expect(page).to have_content("Une demande d\u2019avis a \u00e9t\u00e9 envoy\u00e9e")
+      expect(Avis.last.introduction_file).to be_attached
+    end
+
     scenario 'I can paste a list of experts emails' do
       allow(ClamavService).to receive(:safe_file?).and_return(true)
 

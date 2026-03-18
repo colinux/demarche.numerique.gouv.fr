@@ -148,6 +148,8 @@ class Commentaire < ApplicationRecord
     else
       DossierMailer.with(commentaire: self).notify_new_answer.deliver_later(job_options)
     end
+
+    Ami::CreateNotificationService.call(dossier:, trigger: :messagerie_message)
   end
 
   def notify_administration

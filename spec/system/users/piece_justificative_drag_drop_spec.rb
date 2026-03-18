@@ -18,6 +18,23 @@ describe 'Piece justificative drag and drop', js: true do
       visit brouillon_dossier_path(dossier)
     end
 
+    scenario 'clicking the button opens file picker only once' do
+      within '.editable-champ-piece_justificative' do
+        # Spy on input.click() calls
+        page.execute_script(<<~JS)
+          const input = document.querySelector('.attachment-input');
+          input._clickCount = 0;
+          const originalClick = input.click.bind(input);
+          input.click = function() { input._clickCount++; originalClick(); };
+        JS
+
+        find('.fr-btn--secondary', text: 'Choisir des fichiers').click
+
+        click_count = page.evaluate_script("document.querySelector('.attachment-input')._clickCount")
+        expect(click_count).to eq(1)
+      end
+    end
+
     scenario 'displays complete drag and drop interface with ARIA attributes' do
       within '.editable-champ-piece_justificative' do
         # Structure de base
@@ -72,7 +89,7 @@ describe 'Piece justificative drag and drop', js: true do
       fill_individual
 
       within find('.editable-champ', text: 'RIB') do
-        expect(page).to have_text('Formats acceptés : .pdf, .docx, .odt, .doc, .txt, .rtf, .jpeg, .png')
+        expect(page).to have_text('Formats acceptés : .pdf, .doc, .docx, .jpg, .jpeg, .png')
       end
     end
   end
@@ -345,6 +362,7 @@ describe 'Piece justificative drag and drop', js: true do
   end
 
   def fill_individual
+    find('label', text: "Pour vous").click
     fill_in('Prénom', with: 'prenom', visible: true)
     fill_in('Nom', with: 'Nom', visible: true)
     within "#identite-form" do

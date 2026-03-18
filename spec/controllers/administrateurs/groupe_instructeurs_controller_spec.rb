@@ -1269,4 +1269,36 @@ describe Administrateurs::GroupeInstructeursController, type: :controller do
       expect(BulkRouteJob).to have_been_enqueued.with(procedure)
     end
   end
+
+  describe '#preview_attestation_acceptation' do
+    let(:procedure) { create(:procedure, :routee, :published, :for_individual, administrateurs: [admin]) }
+    let(:groupe_instructeur) { procedure.defaut_groupe_instructeur }
+
+    subject { get :preview_attestation_acceptation, params: { procedure_id: procedure.id, id: groupe_instructeur.id }, format: :pdf }
+
+    context 'with v1 attestation template' do
+      before do
+        create(:attestation_template, procedure:, state: :published, kind: 'acceptation')
+      end
+
+      it 'returns a PDF' do
+        subject
+        expect(response).to have_http_status(:ok)
+        expect(response.content_type).to include('application/pdf')
+      end
+    end
+
+    context 'with v2 attestation template' do
+      before do
+        create(:attestation_template, :v2, procedure:, state: :published, kind: 'acceptation')
+        allow(WeasyprintService).to receive(:generate_pdf).and_return('PDF_DATA')
+      end
+
+      it 'returns a PDF' do
+        subject
+        expect(response).to have_http_status(:ok)
+        expect(WeasyprintService).to have_received(:generate_pdf)
+      end
+    end
+  end
 end

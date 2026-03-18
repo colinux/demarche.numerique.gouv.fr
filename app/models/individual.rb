@@ -1,12 +1,17 @@
 # frozen_string_literal: true
 
 class Individual < ApplicationRecord
+  GENDER_MALE = "M."
+  GENDER_FEMALE = 'Mme'
+
   enum :notification_method, {
     email: 'email',
     no_notification: 'no_notification',
   }
 
   belongs_to :dossier, optional: false
+
+  scope :with_email_notification, -> { where(notification_method: 'email') }
 
   validates :dossier_id, uniqueness: true
   validates :nom, presence: true, allow_blank: false, allow_nil: false, on: :update
@@ -20,9 +25,6 @@ class Individual < ApplicationRecord
   validate :email_different_from_mandataire, on: :update
 
   after_commit -> { dossier.index_search_terms_later }, if: -> { nom_previously_changed? || prenom_previously_changed? }
-
-  GENDER_MALE = "M."
-  GENDER_FEMALE = 'Mme'
 
   def self.from_france_connect(fc_information)
     new(

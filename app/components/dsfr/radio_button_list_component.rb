@@ -10,12 +10,18 @@ class Dsfr::RadioButtonListComponent < ApplicationComponent
     @error = error
     @inline = inline
     @regular_legend = regular_legend
+    @id = "radio-#{target}-#{SecureRandom.hex(4)}"
   end
 
+  def legend_id = "#{@id}-legend"
+  def messages_id = "#{@id}-messages"
+
   def error?
-    # TODO: mettre correctement le aria-labelled-by avec l’id du div qui contient les erreurs
-    # https://www.systeme-de-design.gouv.fr/elements-d-interface/composants/bouton-radio/
     @error.present?
+  end
+
+  def disabled?
+    @buttons.all? { _1[:disabled] }
   end
 
   def each_button

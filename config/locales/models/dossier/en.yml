@@ -13,7 +13,8 @@ en:
         mandataire_last_name: Last name
         for_tiers:
           false: For yourself
-          true: "For someone else : a family member, a relative, a professional, someone you represent."
+          true: For someone else
+          true_hint: "You are filing this application on behalf of a beneficiary as a representative (family member, relative, professional in charge of the case…)"
       dossier/state: &state
         brouillon: "Draft"
         en_construction: "In progress"

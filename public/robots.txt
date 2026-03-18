@@ -12,3 +12,8 @@ Disallow: /connexion-par-jeton/
 Disallow: */reset-link-sent*
 Disallow: /lien-envoye
 Disallow: /france_connect/
+Disallow: /commencer/*/sign_in
+Disallow: /commencer/*/sign_up
+Disallow: /commencer/*/france_connect
+Disallow: /commencer/*/dossier_vide
+Disallow: /commencer/test/

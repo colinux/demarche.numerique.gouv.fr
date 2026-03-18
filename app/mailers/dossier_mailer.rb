@@ -122,6 +122,19 @@ class DossierMailer < ApplicationMailer
     end
   end
 
+  def notify_automatic_deletion_for_tiers(hidden_dossiers, to_email)
+    @state = hidden_dossiers.first.state
+    @subject = if hidden_dossiers.one?
+      default_i18n_subject(count: hidden_dossiers.size, mandataire: "#{hidden_dossiers.first.mandataire_first_name} #{hidden_dossiers.first.mandataire_last_name}")
+    else
+      default_i18n_subject(count: hidden_dossiers.size)
+    end
+    @hidden_dossiers = hidden_dossiers
+    @deletion_date = Dossier::REMAINING_WEEKS_BEFORE_DELETION.weeks.from_now
+
+    mail(to: to_email, subject: @subject)
+  end
+
   def notify_automatic_deletion_to_administration(hidden_dossiers, to_email)
     @subject = default_i18n_subject(count: hidden_dossiers.size)
     @hidden_dossiers = hidden_dossiers
@@ -139,6 +152,19 @@ class DossierMailer < ApplicationMailer
 
       mail(to: to_email, subject: @subject)
     end
+  end
+
+  def notify_near_deletion_for_tiers(dossiers, to_email)
+    @state = dossiers.first.state
+    @subject = if dossiers.one?
+      default_i18n_subject(count: dossiers.size, mandataire: "#{dossiers.first.mandataire_first_name} #{dossiers.first.mandataire_last_name}")
+    else
+      default_i18n_subject(count: dossiers.size)
+    end
+    @dossiers = dossiers
+    @expiration_date = Expired::REMAINING_WEEKS_BEFORE_EXPIRATION.weeks.from_now
+
+    mail(to: to_email, subject: @subject)
   end
 
   def notify_near_deletion_to_administration(dossiers, to_email)

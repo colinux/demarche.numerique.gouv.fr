@@ -55,7 +55,8 @@ export default class Uploader {
 
       if (this.autoAttachUrl) {
         await this.attach(blobSignedId, this.autoAttachUrl);
-        // On response, the attachment HTML fragment will replace the progress bar.
+        this.progressBar.end();
+        this.progressBar.destroy();
       } else {
         this.progressBar.end();
         this.progressBar.destroy();

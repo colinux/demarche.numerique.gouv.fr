@@ -1,5 +1,8 @@
 <div class="autosave" data-controller="autosave-status">
-  <p class="autosave-status fr-info-text fr-text--sm fr-m-0" data-autosave-status-target="idle">
+  <p
+    class="autosave-status fr-info-text fr-text--sm fr-m-0"
+    data-autosave-status-target="idle"
+  >
     <% if annotation? %>
       <%= t('.annotations.explanation') %>
     <% elsif dossier.en_construction? %>
@@ -9,7 +12,10 @@
     <% end %>
   </p>
 
-  <p class="autosave-status succeeded fr-valid-text fr-text--sm fr-m-0 fr-hidden" data-autosave-status-target="succeeded">
+  <p
+    class="autosave-status succeeded fr-valid-text fr-text--sm fr-m-0 fr-hidden"
+    data-autosave-status-target="succeeded"
+  >
     <% if annotation? %>
       <%= t('.annotations.confirmation_html') %>
     <% elsif dossier.en_construction? %>
@@ -19,7 +25,12 @@
     <% end %>
   </p>
 
-  <p class="autosave-status failed fr-error-text fr-text--sm fr-m-0 fr-hidden" tabindex="-1" role="alert" data-autosave-status-target="failed">
+  <p
+    class="autosave-status failed fr-error-text fr-text--sm fr-m-0 fr-hidden"
+    tabindex="-1"
+    role="alert"
+    data-autosave-status-target="failed"
+  >
     <% if annotation? %>
       <%= t('.annotations.error_html') %>
     <% elsif dossier.en_construction? %>

@@ -24,7 +24,6 @@ describe Instructeurs::ContactInformationsController, type: :controller do
           },
           procedure_id: procedure.id,
           groupe_id: gi.id,
-          from_admin: from_admin,
         }
       end
 
@@ -37,14 +36,6 @@ describe Instructeurs::ContactInformationsController, type: :controller do
         expect(ContactInformation.last.telephone).to eq('1234')
         expect(ContactInformation.last.horaires).to eq('horaires')
         expect(ContactInformation.last.adresse).to eq('adresse')
-      end
-
-      context 'from admin' do
-        let(:from_admin) { true }
-        it do
-          post :create, params: params
-          expect(response).to redirect_to(admin_procedure_groupe_instructeur_path(gi, procedure_id: procedure.id))
-        end
       end
     end
 
@@ -99,11 +90,6 @@ describe Instructeurs::ContactInformationsController, type: :controller do
         expect(ContactInformation.last.nom).to eq('nom')
         expect(response).to redirect_to(instructeur_groupe_path(gi, procedure_id: procedure.id))
       end
-    end
-
-    context 'when updating a contact_information as an admin' do
-      let(:from_admin) { true }
-      it { expect(response).to redirect_to(admin_procedure_groupe_instructeur_path(gi, procedure_id: procedure.id)) }
     end
 
     context 'when updating a contact_information with invalid data' do

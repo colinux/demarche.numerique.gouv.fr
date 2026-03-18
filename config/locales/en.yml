@@ -476,7 +476,7 @@ en:
       dossiers:
         archived_dossier: "Your file will be kept %{duree_conservation_dossiers_dans_ds} more months"
         identite:
-          legend: 'This file is:'
+          legend: 'This file is'
           identity_siret: Identify your establishment
           civility: Civility
           first_name: First Name
@@ -488,6 +488,7 @@ en:
           annuaire_link_title: Search for a SIRET number in the Companies Directory
           siret_loading: Information retrieval…
           continue: Continue
+          back: Back
         merci:
           thanks: Thank you!
           dossier_success: Your file has been submitted on the procedure “%{libelle}”.

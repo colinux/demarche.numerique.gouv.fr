@@ -96,7 +96,7 @@ RSpec.describe Attachment::FileFieldComponent, type: :component do
       let(:context) { Attachment::Context.new(champ:) }
 
       it 'renders exhaustive format list without tooltip' do
-        expect(subject).to have_content('.jpeg, .png')
+        expect(subject).to have_content('.jpg, .jpeg, .png')
         expect(subject).to have_no_selector('[role="tooltip"]')
       end
     end
@@ -165,7 +165,7 @@ RSpec.describe Attachment::FileFieldComponent, type: :component do
       let(:context) { Attachment::Context.new(champ:) }
 
       it 'renders exhaustive format list without tooltip' do
-        expect(subject).to have_content('.pdf, .docx, .odt, .doc, .txt, .rtf, .jpeg, .png')
+        expect(subject).to have_content('.pdf, .doc, .docx, .jpg, .jpeg, .png')
         expect(subject).to have_no_selector('[role="tooltip"]')
       end
     end

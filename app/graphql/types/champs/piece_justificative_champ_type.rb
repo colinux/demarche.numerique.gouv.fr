@@ -8,8 +8,14 @@ module Types::Champs
       { Extensions::Attachment => { attachments: :piece_justificative_file, as: :single } },
     ]
 
+    field :nature, String, null: false, description: "La nature de la pièce justificative. ex: 'NON_SPECIFIE', 'TITRE_IDENTITE', 'RIB', 'JUSTIFICATIF_DOMICILE'"
+
     field :files, [Types::File], null: false, extensions: [
       { Extensions::Attachment => { attachments: :piece_justificative_file } },
     ]
+
+    def nature
+      object.nature || "NON_SPECIFIE"
+    end
   end
 end

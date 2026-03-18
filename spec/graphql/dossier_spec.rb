@@ -397,6 +397,46 @@ RSpec.describe Types::DossierType, type: :graphql do
     }
   end
 
+  describe 'dossier with piece justificative nature=TITRE_IDENTITE filled' do
+    let(:procedure) { create(:procedure, :published, types_de_champ_public: [{ type: :piece_justificative, nature: 'TITRE_IDENTITE' }]) }
+    let(:dossier) { create(:dossier, :accepte, :with_populated_champs, procedure: procedure) }
+
+    let(:query) { DOSSIER_WITH_TITRE_IDENTITE_QUERY }
+    let(:variables) { { number: dossier.id } }
+
+    it 'returns TitreIdentiteChamp type' do
+      expect(data[:dossier][:champs][0][:__typename]).to eq('TitreIdentiteChamp')
+      expect(data[:dossier][:champs][0][:filled]).to eq(true)
+    end
+  end
+
+  describe 'dossier with piece justificative nature=TITRE_IDENTITE filled' do
+    let(:procedure) { create(:procedure, :published, types_de_champ_public: [{ type: :piece_justificative, nature: 'TITRE_IDENTITE' }]) }
+    let(:dossier) { create(:dossier, :accepte, :with_populated_champs, procedure: procedure) }
+
+    let(:query) { DOSSIER_WITH_PIECE_JUSTIFICATIVE_QUERY }
+    let(:variables) { { number: dossier.id } }
+
+    it 'returns TitreIdentiteChamp type' do
+      expect(data[:dossier][:champs][0][:__typename]).to eq('PieceJustificativeChamp')
+      expect(data[:dossier][:champs][0].key?(:filled)).to eq(false)
+      expect(data[:dossier][:champs][0][:columns]).not_to be_empty
+    end
+  end
+
+  describe 'dossier with piece justificative nature=TITRE_IDENTITE not filled' do
+    let(:procedure) { create(:procedure, :published, types_de_champ_public: [{ type: :piece_justificative, nature: 'TITRE_IDENTITE' }]) }
+    let(:dossier) { create(:dossier, :accepte, procedure: procedure) }
+
+    let(:query) { DOSSIER_WITH_TITRE_IDENTITE_QUERY }
+    let(:variables) { { number: dossier.id } }
+
+    it 'returns TitreIdentiteChamp type' do
+      expect(data[:dossier][:champs][0][:__typename]).to eq('TitreIdentiteChamp')
+      expect(data[:dossier][:champs][0][:filled]).to eq(false)
+    end
+  end
+
   describe 'dossier with motivation attachment' do
     let(:dossier) { create(:dossier, :accepte, :with_motivation, :with_justificatif) }
     let(:query) { DOSSIER_WITH_MOTIVATION_QUERY }
@@ -700,6 +740,31 @@ RSpec.describe Types::DossierType, type: :graphql do
       }
     }
   }
+  GRAPHQL
+  DOSSIER_WITH_PIECE_JUSTIFICATIVE_QUERY = <<-GRAPHQL
+  query($number: Int!) {
+    dossier(number: $number) {
+      id
+      number
+
+      champs {
+        id
+        label
+        __typename
+        ... on PieceJustificativeChamp {
+
+        }
+        columns {
+          __typename
+          label
+          ... on IntegerColumn {
+            value
+          }
+        }
+      }
+    }
+  }
+
   GRAPHQL
 
   DOSSIER_WITH_TITRE_IDENTITE_QUERY = <<-GRAPHQL

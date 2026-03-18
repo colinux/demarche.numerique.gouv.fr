@@ -57,6 +57,50 @@ describe 'As an administrateur, I want to manage the procedure’s attestation',
       find_attestation_card(v2: false, with_nested_selector: ".fr-badge")
       expect(page).to have_content('Désactivée')
     end
+
+    scenario 'upload logo and signature' do
+      visit admin_procedure_path(procedure)
+
+      within find_attestation_card(v2: false) do
+        expect(page).to have_content('Activée')
+        click
+      end
+
+      attestation = procedure.attestation_acceptation_template
+
+      expect(page).to have_text("Logo de l’attestation")
+      find('input[type=file]', match: :first).attach_file(Rails.root.join('spec/fixtures/files/logo_test_procedure.png'))
+
+      expect(page).to have_text("Tampon de l’attestation")
+      all('input[type=file]').last.attach_file(Rails.root.join('spec/fixtures/files/white.png'))
+
+      click_on 'Enregistrer'
+      expect(page).to have_text("Le modèle de l’attestation a bien été modifié")
+
+      # Verify attachments are persisted
+      attestation.reload
+      expect(attestation.logo).to be_attached
+      expect(attestation.signature).to be_attached
+      expect(attestation.logo.filename.to_s).to eq('logo_test_procedure.png')
+      expect(attestation.signature.filename.to_s).to eq('white.png')
+
+      # Test de suppression du logo
+      visit admin_procedure_path(procedure)
+      within find_attestation_card(v2: false) do
+        click
+      end
+
+      click_on 'Supprimer le fichier logo_test_procedure.png'
+
+      wait_until { !attestation.reload.logo.attached? }
+      expect(attestation.logo.attached?).to be(false)
+
+      # Test de suppression de la signature
+      click_on 'Supprimer le fichier white.png'
+
+      wait_until { !attestation.reload.signature.attached? }
+      expect(attestation.signature.attached?).to be(false)
+    end
   end
 
   context 'Update attestation v2' do

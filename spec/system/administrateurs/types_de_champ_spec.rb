@@ -52,6 +52,69 @@ describe 'As an administrateur I can edit types de champ', js: true do
 
     # Expect the files to be uploaded immediately
     expect(page).to have_text('file.pdf')
+
+    # Verify attachment is persisted in database
+    tdc = procedure.active_revision.types_de_champ_public.first
+    wait_until { tdc.reload.piece_justificative_template.attached? }
+    expect(tdc.piece_justificative_template).to be_attached
+    expect(tdc.piece_justificative_template.filename.to_s).to eq('file.pdf')
+
+    # Test deleting the template
+    click_on 'Supprimer le fichier file.pdf'
+    expect(page).not_to have_button('Supprimer le fichier file.pdf')
+    wait_until { !tdc.reload.piece_justificative_template.attached? }
+    expect(tdc.piece_justificative_template.attached?).to be(false)
+  end
+
+  context "with an explication champ" do
+    let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :explication }]) }
+
+    scenario "adding a notice explicative" do
+      expect(page).to have_text('Notice explicative')
+
+      find('.attachment-field input[type=file]').attach_file(Rails.root + 'spec/fixtures/files/file.pdf')
+
+      expect(page).to have_text('file.pdf')
+
+      tdc = procedure.active_revision.types_de_champ_public.first
+      wait_until { tdc.reload.notice_explicative.attached? }
+      expect(tdc.notice_explicative).to be_attached
+
+      # Test de suppression
+      click_on 'Supprimer le fichier file.pdf'
+
+      wait_until { !tdc.reload.notice_explicative.attached? }
+      expect(tdc.notice_explicative.attached?).to be(false)
+    end
+  end
+
+  context "with a drop_down_list champ" do
+    let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :drop_down_list, libelle: 'Choix de dessert' }]) }
+
+    scenario "importing a CSV referentiel" do
+      expect(page).to have_text('Choix de dessert')
+
+      # Click on "Import référentiel" radio button
+      find('label', text: 'Import référentiel').click
+      expect(page).to have_text('Fichier de référentiel à importer (CSV)')
+
+      # Upload CSV file
+      tdc = procedure.active_revision.types_de_champ_public.first
+      file_input = find("##{dom_id(tdc, :import_referentiel)}", visible: :all)
+      file_input.attach_file(Rails.root.join('spec/fixtures/files/modele-import-referentiel.csv'))
+
+      # Wait for referentiel to be created
+      wait_until { tdc.reload.referentiel.present? }
+
+      expect(page).to have_text('3 options importées')
+      expect(page).to have_text('modele-import-referentiel.csv')
+
+      # Verify referentiel was created correctly
+      referentiel = tdc.referentiel
+      expect(referentiel).to be_a(Referentiels::CsvReferentiel)
+      expect(referentiel.items.count).to eq(3)
+      expect(referentiel.headers).to eq(['Dessert', 'Poids (g)', 'Calorie (kcal)'])
+    end
   end
 
   scenario "adding multiple champs" do

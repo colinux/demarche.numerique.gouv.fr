@@ -12,14 +12,22 @@ function onHiddenDisableInputs(element: HTMLInputElement) {
 }
 
 export class ForTiersController extends ApplicationController {
-  static targets = ['emailContainer', 'emailInput', 'notificationMethod'];
+  static targets = [
+    'emailContainer',
+    'emailInput',
+    'notificationMethodCheckbox'
+  ];
 
-  declare notificationMethodTargets: NodeListOf<HTMLInputElement>;
+  declare notificationMethodCheckboxTarget: HTMLInputElement;
   declare emailContainerTarget: HTMLElement;
   declare emailInputTarget: HTMLInputElement;
 
+  connect() {
+    this.toggleEmailInput();
+  }
+
   toggleEmailInput() {
-    const isEmailSelected = this.isEmailSelected();
+    const isEmailSelected = this.notificationMethodCheckboxTarget.checked;
 
     toggle(this.emailContainerTarget, isEmailSelected);
 
@@ -28,11 +36,5 @@ export class ForTiersController extends ApplicationController {
     } else {
       onHiddenDisableInputs(this.emailInputTarget);
     }
-  }
-
-  isEmailSelected() {
-    return Array.from(this.notificationMethodTargets).some(
-      (radio) => radio.value === 'email' && radio.checked
-    );
   }
 }

@@ -121,6 +121,62 @@ RSpec.describe DossierStateConcern do
     end
   end
 
+  describe 'AMI notifications' do
+    before do
+      allow(Ami::CreateNotificationService).to receive(:call)
+    end
+
+    it 'enqueues AMI notification after passer_en_construction' do
+      dossier.after_commit_passer_en_construction
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after passer_en_instruction' do
+      dossier.after_commit_passer_en_instruction({})
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after passer_automatiquement_en_instruction' do
+      dossier.after_commit_passer_automatiquement_en_instruction
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after accepter' do
+      dossier.after_commit_accepter({})
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after accepter_automatiquement' do
+      dossier.after_commit_accepter_automatiquement
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after refuser' do
+      dossier.after_commit_refuser({})
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after refuser_automatiquement' do
+      dossier.after_commit_refuser_automatiquement
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after classer_sans_suite' do
+      dossier.after_commit_classer_sans_suite({})
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+
+    it 'enqueues AMI notification after repasser_en_instruction' do
+      dossier.after_commit_repasser_en_instruction({})
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: :repasser_en_instruction)
+    end
+
+    it 'enqueues AMI notification after repasser_en_construction' do
+      dossier.after_commit_repasser_en_construction
+      expect(Ami::CreateNotificationService).to have_received(:call).with(dossier:, trigger: :dossier_state_change, state: nil)
+    end
+  end
+
   describe 'accepter' do
     let(:dossier_state) { :en_instruction }
 
@@ -245,6 +301,19 @@ RSpec.describe DossierStateConcern do
     let(:file) { fixture_file_upload('spec/fixtures/files/logo_test_procedure.png', 'image/png') }
 
     before { allow(ClamavService).to receive(:safe_file?).and_return(true) }
+
+    context 'when legacy TitreIdentiteChamp' do
+      let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :titre_identite }]) }
+      let(:dossier) { create(:dossier, :en_instruction, :followed, procedure:) }
+      let(:instructeur) { dossier.followers_instructeurs.first }
+      let(:champ) { dossier.champs.first }
+
+      it 'destroys champ on accepter' do
+        champ.piece_justificative_file.attach(file)
+        dossier.accepter!(instructeur: instructeur, motivation: 'ok')
+        expect(champ.reload.piece_justificative_file.attached?).to be false
+      end
+    end
 
     context 'when nature is TITRE_IDENTITE' do
       let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :piece_justificative, nature: 'TITRE_IDENTITE' }]) }

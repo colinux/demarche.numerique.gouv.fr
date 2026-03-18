@@ -5,18 +5,16 @@ fr:
         individual:
           attributes:
             email:
-              must_be_different_from_mandataire: "doit être différent de celui du mandataire"
+              must_be_different_from_mandataire: 'doit être différent de celui du mandataire'
     attributes:
       individual:
+        hints:
+          email: 'Format attendu : adresse@mail.com'
         gender: Civilité
         nom: Nom
         prenom: Prénom
         birthdate: Date de naissance
-        email: Adresse électronique
-        notification_method: "Notifier le bénéficiaire :"
-        notification_methods:
-          email: Par adresse électronique
-          no_notification: Pas de notification
+        email: Adresse électronique du bénéficiaire
       individual/gender:
         female: Madame
         male: Monsieur

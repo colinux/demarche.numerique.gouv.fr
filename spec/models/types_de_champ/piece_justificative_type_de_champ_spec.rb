@@ -15,6 +15,40 @@ describe TypesDeChamp::PieceJustificativeTypeDeChamp do
     end
   end
 
+  describe '#champ_value_for_export' do
+    context 'when nature is TITRE_IDENTITE' do
+      let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :piece_justificative, nature: 'TITRE_IDENTITE' }]) }
+      let(:dossier) { create(:dossier, procedure:) }
+      let(:champ) { dossier.champs.first }
+      let(:type_de_champ) { champ.type_de_champ }
+
+      it 'returns "absent" when no file attached' do
+        expect(type_de_champ.dynamic_type.champ_value_for_export(champ)).to eq('absent')
+      end
+
+      it 'returns "présent" when file attached' do
+        champ.piece_justificative_file.attach(fixture_file_upload('spec/fixtures/files/logo_test_procedure.png', 'image/png'))
+        expect(type_de_champ.dynamic_type.champ_value_for_export(champ)).to eq('présent')
+      end
+    end
+
+    context 'when nature is not TITRE_IDENTITE' do
+      let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :piece_justificative }]) }
+      let(:dossier) { create(:dossier, procedure:) }
+      let(:champ) { dossier.champs.first }
+      let(:type_de_champ) { champ.type_de_champ }
+
+      it 'returns filenames' do
+        champ.piece_justificative_file.attach(fixture_file_upload('spec/fixtures/files/logo_test_procedure.png', 'image/png'))
+        expect(type_de_champ.dynamic_type.champ_value_for_export(champ)).to include('logo_test_procedure.png')
+      end
+
+      it 'returns empty string when no file' do
+        expect(type_de_champ.dynamic_type.champ_value_for_export(champ)).to eq('')
+      end
+    end
+  end
+
   describe '#champ_value_for_api' do
     let(:procedure) { create(:procedure, types_de_champ_public: [{ type: :piece_justificative }]) }
     let(:dossier) { create(:dossier, procedure:) }

@@ -31,10 +31,11 @@ class Attachment::HintsComponent < ApplicationComponent
       []
     else
       tdc = champ.type_de_champ
-      if tdc.titre_identite_nature? || tdc.RIB? || !tdc.pj_limit_formats? || tdc.pj_format_families.blank?
+      families = tdc.pj_format_families.map(&:to_sym)
+      if tdc.titre_identite_nature? || tdc.RIB? || !tdc.pj_limit_formats? || families.blank? || families.sort == FORMAT_FAMILIES.keys.sort
         []
       else
-        tdc.pj_format_families.map(&:to_sym).filter_map do |key|
+        families.filter_map do |key|
           label = I18n.t("activerecord.attributes.type_de_champ.format_families.#{key}", default: key.to_s.humanize).downcase
           top = FORMAT_FAMILY_TOP_FORMATS[key]
           all = FORMAT_FAMILY_EXAMPLES[key]
@@ -60,7 +61,8 @@ class Attachment::HintsComponent < ApplicationComponent
   def exhaustive_formats
     return nil unless show_exhaustive_formats?
 
-    champ.type_de_champ.allowed_extensions.join(', ')
+    tdc = champ.type_de_champ
+    NATURE_DISPLAY_FORMATS[tdc.nature&.to_sym] || tdc.allowed_extensions.join(', ')
   end
 
   def formats_accepted_text

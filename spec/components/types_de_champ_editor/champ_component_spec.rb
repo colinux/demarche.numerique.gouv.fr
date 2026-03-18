@@ -182,6 +182,19 @@ describe TypesDeChampEditor::ChampComponent, type: :component do
       expect(page).not_to have_text("envoyer plusieurs fichiers")
     end
 
+    context 'when pj_limit_formats is enabled' do
+      let(:tdc) { procedure.draft_revision.types_de_champ.first }
+
+      before do
+        tdc.update!(pj_limit_formats: true, pj_format_families: ['document_texte'])
+        render_inline(component)
+      end
+
+      it 'displays tooltip with trailing ellipsis' do
+        expect(page).to have_css('.fr-tooltip', text: /Exemples :.*\.\.\./)
+      end
+    end
+
     context 'when nature is titre_identite' do
       let(:tdc) { procedure.draft_revision.types_de_champ.first }
 
@@ -192,6 +205,12 @@ describe TypesDeChampEditor::ChampComponent, type: :component do
 
       it 'does not display multi-file mention' do
         expect(page).not_to have_text("joindre plusieurs fichiers")
+      end
+
+      it 'displays accepted formats with plain extensions in bold' do
+        expect(page).to have_css('strong', text: '.jpg, .jpeg, .png')
+        expect(page).to have_css('strong', text: 'taille maximale de 20 Mo')
+        expect(page).not_to have_text('image / scan')
       end
     end
 
@@ -205,6 +224,11 @@ describe TypesDeChampEditor::ChampComponent, type: :component do
 
       it 'does not display multi-file mention' do
         expect(page).not_to have_text("joindre plusieurs fichiers")
+      end
+
+      it 'displays accepted formats with plain extensions in bold' do
+        expect(page).to have_css('strong', text: '.pdf, .doc, .docx, .jpg, .jpeg, .png')
+        expect(page).not_to have_text('document texte')
       end
     end
   end

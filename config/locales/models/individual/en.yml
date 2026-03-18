@@ -8,15 +8,13 @@ en:
               must_be_different_from_mandataire: "must be different from the agent's email"
     attributes:
       individual:
+        hints:
+          email: 'Expected format: address@mail.com'
         gender: Title
         nom: Last name
         prenom: First name
-        birthdate: Date de naissance
-        email: Email
-        notification_method: "Notify beneficiary :"
-        notification_methods:
-          email: By e-mail
-          no_notification: No notification
+        birthdate: Birth date
+        email: Beneficiary's email
       individual/gender:
         female: Ms
         male: Mr

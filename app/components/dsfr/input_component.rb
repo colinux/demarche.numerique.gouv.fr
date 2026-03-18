@@ -38,6 +38,7 @@ class Dsfr::InputComponent < ApplicationComponent
       class: class_names({
         'fr-input-group': true,
         'fr-password': password?,
+        'fr-input-group--disabled': @opts[:disabled],
       }.merge(input_group_error_class_names)),
     }
     if email?

@@ -139,6 +139,11 @@ FORMAT_FAMILY_EXAMPLES = {
   archive: '.zip, .7z, .rar, .gz',
 }.freeze
 
+NATURE_DISPLAY_FORMATS = {
+  TITRE_IDENTITE: '.jpg, .jpeg, .png',
+  RIB: '.pdf, .doc, .docx, .jpg, .jpeg, .png',
+}.freeze
+
 FORMAT_FAMILY_TOP_FORMATS = {
   document_texte: '.pdf, .docx',
   tableur: '.xlsx, .csv',

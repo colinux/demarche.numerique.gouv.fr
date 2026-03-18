@@ -1,0 +1,15 @@
+fr:
+  dossier_mailer:
+    notify_automatic_deletion_for_tiers:
+      subject:
+        one: "Votre dossier rempli par le mandataire %{mandataire} en votre nom a été mis à la corbeille"
+        other: "Des dossiers remplis par des mandataires en votre nom ont été placés à la corbeille"
+      header:
+        one: "Le délai maximum pour la conservation du dossier a été atteint.\nLe dossier suivant sera supprimé définitivement le %{deletion_date} :"
+        other: "Le délai maximum pour la conservation des dossiers a été atteint.\nLes dossiers suivants seront supprimés définitivement le %{deletion_date} :"
+      list:
+        one: "N° %{dossier_id} (%{libelle})"
+        other: "N° %{dossier_id} (%{libelle}) par"
+      more_information:
+        one: Pour en savoir plus, veuillez vous rapprocher de
+        other: Pour en savoir plus, veuillez vous rapprocher des mandataires ci-dessus.

@@ -335,7 +335,39 @@ describe 'BatchOperation a dossier:', js: true do
 
       # clean alert after reload
       visit instructeur_procedure_path(procedure, statut: 'suivis')
-      expect(page).not_to have_content("L’action de masse est terminée")
+      expect(page).not_to have_content("L'action de masse est terminée")
+    end
+
+    scenario 'create a BatchOperation for create_commentaire with piece jointe', chrome: true do
+      dossier_1 = create(:dossier, :en_construction, procedure: procedure)
+      instructeur.follow(dossier_1)
+      log_in(instructeur.email, password)
+
+      visit instructeur_procedure_path(procedure, statut: 'suivis')
+
+      checkbox_id_1 = dom_id(BatchOperation.new, "checkbox_#{dossier_1.id}")
+      check(checkbox_id_1)
+
+      click_on "Autres actions multiples"
+      click_on "Envoyer un message aux usagers"
+
+      expect(page).to have_selector("#modal-commentaire-batch", visible: true)
+      fill_in('Votre message', with: 'Veuillez trouver ci-joint le document')
+
+      within('#modal-commentaire-batch') do
+        find('input[type="file"]', visible: false).attach_file(Rails.root.join('spec/fixtures/files/piece_justificative_0.pdf'))
+      end
+
+      click_on "Envoyer le message"
+
+      expect(page).to have_selector("##{checkbox_id_1}[disabled]")
+      expect(BatchOperation.count).to eq(1)
+
+      perform_enqueued_jobs(only: [BatchOperationEnqueueAllJob])
+      perform_enqueued_jobs(only: [BatchOperationProcessOneJob])
+
+      expect(dossier_1.reload.commentaires.last.body).to eq('Veuillez trouver ci-joint le document')
+      expect(dossier_1.commentaires.last.piece_jointe).to be_attached
     end
 
     scenario 'create a BatchOperation for create_commentaire without modal in À suivre tab', chrome: true do

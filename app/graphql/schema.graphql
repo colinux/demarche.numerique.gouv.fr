@@ -4552,6 +4552,11 @@ type PieceJustificativeChamp implements Champ {
   Libellé du champ.
   """
   label: String!
+
+  """
+  La nature de la pièce justificative. ex: 'NON_SPECIFIE', 'TITRE_IDENTITE', 'RIB', 'JUSTIFICATIF_DOMICILE'
+  """
+  nature: String!
   prefilled: Boolean!
 
   """

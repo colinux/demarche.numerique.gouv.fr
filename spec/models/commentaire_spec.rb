@@ -121,8 +121,38 @@ describe Commentaire do
 
       it "does not call notify_user" do
         expect(commentaire).not_to receive(:notify_user).with(no_args)
+        expect(Ami::CreateNotificationService).not_to receive(:call)
         commentaire.save
       end
+    end
+
+    context "with a commentaire created by a user" do
+      let(:commentaire) { CommentaireService.build(user, dossier, body: "Mon commentaire usager") }
+
+      it "does not trigger AMI user notification" do
+        expect(Ami::CreateNotificationService).not_to receive(:call)
+        commentaire.save
+      end
+    end
+  end
+
+  describe "#notify_user" do
+    let(:procedure) { create(:procedure) }
+    let(:instructeur) { create(:instructeur) }
+    let(:user) { create(:user) }
+    let(:dossier) { create(:dossier, :en_construction, procedure:, user: user) }
+    let(:commentaire) { CommentaireService.build(instructeur, dossier, body: "Mon commentaire") }
+    let(:mail_delivery) { double(deliver_later: true) }
+    let(:mailer) { double(notify_pending_correction: mail_delivery, notify_new_answer: mail_delivery) }
+
+    before do
+      allow(DossierMailer).to receive(:with).with(commentaire: commentaire).and_return(mailer)
+    end
+
+    it "triggers AMI notification with messagerie trigger" do
+      expect(Ami::CreateNotificationService).to receive(:call).with(dossier: dossier, trigger: :messagerie_message)
+
+      commentaire.send(:notify_user, wait: 5.minutes)
     end
   end
 

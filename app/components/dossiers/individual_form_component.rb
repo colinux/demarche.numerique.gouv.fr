@@ -22,4 +22,8 @@ class Dossiers::IndividualFormComponent < ApplicationComponent
   def mandataire_identity_locked?
     @dossier.france_connected_with_one_identity?
   end
+
+  def back_url
+    helpers.commencer_path(path: @dossier.procedure.path)
+  end
 end

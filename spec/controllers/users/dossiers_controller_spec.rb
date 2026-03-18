@@ -1953,6 +1953,7 @@ describe Users::DossiersController, type: :controller do
         context 'when user is logged in' do
           before do
             sign_in user
+            allow(Ami::CreateNotificationService).to receive(:call)
           end
 
           it { is_expected.to have_http_status(302) }
@@ -1964,6 +1965,12 @@ describe Users::DossiersController, type: :controller do
           context 'when procedure is for particulier' do
             let(:procedure) { create(:procedure, :published, :for_individual) }
             it { is_expected.to redirect_to identite_dossier_path(id: Dossier.last) }
+          end
+
+          it 'enqueues AMI notification for created draft' do
+            subject
+
+            expect(Ami::CreateNotificationService).to have_received(:call).with(dossier: Dossier.last)
           end
 
           context 'when procedure is closed' do
@@ -2095,10 +2102,19 @@ describe Users::DossiersController, type: :controller do
     context 'signed with user dossier' do
       let(:procedure) { create(:procedure, :with_all_champs) }
 
-      before { sign_in dossier.user }
+      before do
+        sign_in dossier.user
+        allow(Ami::CreateNotificationService).to receive(:call)
+      end
 
       it { expect(subject).to redirect_to(brouillon_dossier_path(Dossier.last)) }
       it { expect { subject }.to change { dossier.user.dossiers.count }.by(1) }
+
+      it 'enqueues AMI notification' do
+        subject
+
+        expect(Ami::CreateNotificationService).to have_received(:call).with(dossier: Dossier.last)
+      end
     end
   end
 

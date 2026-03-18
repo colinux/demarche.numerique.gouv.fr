@@ -35,6 +35,7 @@ features = [
   :sva,
   :switch_domain,
   :llm_nightly_improve_procedure,
+  :ami_notifications,
 ]
 
 def database_exists?

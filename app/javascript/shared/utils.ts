@@ -39,7 +39,7 @@ const Gon = s.defaulted(
       s.type({
         key: nullish(s.string()),
         enabled: s.defaulted(s.boolean(), false),
-        environment: s.optional(s.string()),
+        environment: nullish(s.string()),
         user: s.defaulted(s.type({ id: s.string() }), { id: '' }),
         browser: s.defaulted(s.type({ modern: s.boolean() }), {
           modern: false

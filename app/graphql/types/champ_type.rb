@@ -76,7 +76,11 @@ module Types
         when ::Champs::DossierLinkChamp
           Types::Champs::DossierLinkChampType
         when ::Champs::PieceJustificativeChamp
-          Types::Champs::PieceJustificativeChampType
+          if object.titre_identite_nature? && context.has_fragment?(:TitreIdentiteChamp)
+            Types::Champs::TitreIdentiteChampType
+          else
+            Types::Champs::PieceJustificativeChampType
+          end
         when ::Champs::CarteChamp
           Types::Champs::CarteChampType
         when ::Champs::NumberChamp, ::Champs::IntegerNumberChamp

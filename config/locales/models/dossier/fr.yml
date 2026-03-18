@@ -13,7 +13,8 @@ fr:
         mandataire_last_name: Nom
         for_tiers:
           false: Pour vous
-          true: "Pour un bénéficiaire : membre de la famille, proche, mandant, professionnel en charge du suivi du dossier…"
+          true: Pour une autre personne
+          true_hint: "Vous déposez ce dossier pour un bénéficiaire en tant que mandataire (membre de la famille, proche, professionnel en charge du suivi du dossier…)"
       dossier/state: &state
         brouillon: "Brouillon"
         en_construction: "En construction"

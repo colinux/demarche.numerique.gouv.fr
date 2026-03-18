@@ -3,6 +3,8 @@
 require "rails_helper"
 
 RSpec.describe Dossiers::IndividualFormComponent, type: :component do
+  include Rails.application.routes.url_helpers
+
   let(:procedure) { create(:procedure, :published, :for_individual, no_gender: false) }
   let(:dossier) { create(:dossier, :with_individual, procedure:, user:) }
 
@@ -52,6 +54,15 @@ RSpec.describe Dossiers::IndividualFormComponent, type: :component do
       expect(page).to have_field("Prénom", disabled: false)
       expect(page).to have_field("Nom", disabled: false)
       expect(page).not_to have_text("par FranceConnect et ne peuvent pas être modifiées")
+    end
+  end
+
+  context "back button" do
+    let(:user) { create(:user) }
+
+    it "shows a back link to the procedure page" do
+      subject
+      expect(page).to have_link(I18n.t('views.users.dossiers.identite.back'), href: commencer_path(path: procedure.path))
     end
   end
 end
