@@ -362,6 +362,7 @@ describe 'Piece justificative drag and drop', js: true do
   end
 
   def fill_individual
+    find('label', text: "Pour vous").click
     fill_in('Prénom', with: 'prenom', visible: true)
     fill_in('Nom', with: 'Nom', visible: true)
     within "#identite-form" do

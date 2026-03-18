@@ -13,6 +13,7 @@ describe 'Quotient familial piece justificative upload', js: true do
     visit commencer_path(path: procedure.path)
     click_on 'Commencer la démarche'
 
+    find('label', text: "Pour vous").click
     within('.individual-infos') do
       fill_in('Prénom', with: 'Jean')
       fill_in('Nom', with: 'Dupont')

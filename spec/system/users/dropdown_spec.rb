@@ -76,6 +76,7 @@ describe 'dropdown list with other option activated', js: true do
   private
 
   def fill_individual
+    find('label', text: "Pour vous").click
     within('.individual-infos') do
       fill_in('Prénom', with: 'prenom')
       fill_in('Nom', with: 'nom')

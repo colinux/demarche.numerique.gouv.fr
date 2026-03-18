@@ -8,6 +8,7 @@ shared_examples "the user has got a prefilled dossier, owned by themselves" do
 
     expect(page).to have_current_path identite_dossier_path(procedure.dossiers.last)
 
+    find('label', text: "Pour vous").click
     within('.individual-infos') do
       expect(page).to have_field('Prénom', with: prenom_value)
       expect(page).to have_field('Nom', with: nom_value)
