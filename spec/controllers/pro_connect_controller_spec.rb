@@ -131,7 +131,6 @@ describe ProConnectController, type: :controller do
 
             it "sets user values and cookies" do
               expect { subject }.to change { instructeur.user.reload.email_verified_at }.from(nil)
-              expect(instructeur.user.preferred_domain_demarche_numerique_gouv_fr?).to be_truthy
 
               expect(cookies.encrypted[ProConnectSessionConcern::SESSION_INFO_COOKIE_NAME]).to eq({ user_id: instructeur.user.id, mfa: false }.to_json)
             end

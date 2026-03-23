@@ -81,17 +81,6 @@ describe Users::SessionsController, type: :controller do
         end
       end
 
-      context 'when user has not yet a preferred domain' do
-        before do
-          allow(Current).to receive(:host).and_return(ENV.fetch("APP_HOST"))
-        end
-
-        it 'update preferred domain' do
-          subject
-
-          expect(user.reload.preferred_domain_demarche_numerique_gouv_fr?).to be_truthy
-        end
-      end
     end
 
     context 'when the credentials are wrong' do

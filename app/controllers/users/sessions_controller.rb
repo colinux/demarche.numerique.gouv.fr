@@ -19,7 +19,6 @@ class Users::SessionsController < Devise::SessionsController
       delete_france_connect_cookies
       delete_pro_connect_session_info_cookie
       user.update(loged_in_with_france_connect: nil)
-      user.update_preferred_domain(Current.host)
     end
 
     super

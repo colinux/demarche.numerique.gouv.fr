@@ -5,8 +5,7 @@ module Instructeurs
     before_action :set_dossier
 
     def create
-      # TODO: remove this once ENV are fixed in dev env
-      host = helpers.app_host_legacy?(request) ? ENV.fetch("APP_HOST_LEGACY") : ENV.fetch("APP_HOST")
+      host = ENV.fetch("APP_HOST")
 
       first_name = @dossier.individual&.prenom || @dossier.user.france_connect_informations.first&.given_name || "Usager"
       last_name = @dossier.individual&.nom || @dossier.user.france_connect_informations.first&.family_name || "Démarche Numérique"

@@ -78,12 +78,6 @@ module Users
       end
     end
 
-    def preferred_domain
-      current_user.update_preferred_domain(request.host_with_port)
-
-      head :no_content
-    end
-
     private
 
     def find_transfers

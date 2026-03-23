@@ -57,8 +57,6 @@ describe Users::RegistrationsController, type: :controller do
         expect(message).to receive(:deliver_later)
 
         subject
-
-        expect(User.last.preferred_domain_demarche_numerique_gouv_fr?).to be_truthy
       end
     end
 
