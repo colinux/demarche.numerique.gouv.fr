@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 
-module BlobImageProcessorConcern
+module BlobProcessorConcern
   extend ActiveSupport::Concern
+
+  def processed?
+    metadata["processed"] == true || virus_scanner.done?
+  end
 
   def watermark_pending?
     watermark_required? && !watermark_done?

@@ -9,7 +9,7 @@ Rails.application.config.active_storage.variant_processor = :vips
 Rails.application.config.active_storage.analyzers = []
 
 ActiveSupport.on_load(:active_storage_blob) do
-  include BlobImageProcessorConcern
+  include BlobProcessorConcern
   include BlobVirusScannerConcern
   include BlobSignedIdConcern
 
