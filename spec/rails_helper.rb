@@ -93,6 +93,14 @@ RSpec.configure do |config|
     Geocoder.configure(lookup: :test)
   end
 
+  # BlobProcessorJob requires libvips which is only available in the :external_deps CI job.
+  # Stub it by default so that perform_enqueued_jobs in system tests doesn't crash.
+  config.before(:each, type: :system) do |example|
+    if !example.metadata[:external_deps]
+      allow_any_instance_of(BlobProcessorJob).to receive(:perform)
+    end
+  end
+
   # By default, forgery protection is disabled in the test environment.
   # (See `config.action_controller.allow_forgery_protection` in `config/test.rb`)
   #
