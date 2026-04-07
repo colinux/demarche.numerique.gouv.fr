@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe ImageProcessorJob, :external_deps, type: :job do
+describe BlobProcessorJob, :external_deps, type: :job do
   include Dry::Monads[:result]
 
   let(:antivirus_pending) { false }

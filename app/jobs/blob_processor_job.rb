@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ImageProcessorJob < ApplicationJob
+class BlobProcessorJob < ApplicationJob
   queue_as do
     blob = self.arguments.first
     maybe_champ = blob&.attachments&.first&.record
