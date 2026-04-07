@@ -13,7 +13,7 @@ class Cron::FixMissingAntivirusAnalysisJob < Cron::CronJob
       .where(virus_scan_result: ActiveStorage::VirusScanner::PENDING)
       .where.not(id: blobs_to_skip)
       .find_each do |blob|
-        VirusScannerJob.perform_later(blob)
+        BlobProcessorJob.perform_later(blob)
       end
   end
 end

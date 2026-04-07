@@ -514,7 +514,7 @@ describe Champ do
           expect(subject.piece_justificative_file.first.virus_scanner.started?).to be_truthy
         end
 
-        it 'marks the file as safe once the scan completes' do
+        it 'marks the file as safe once the scan completes', :external_deps do
           subject
           perform_enqueued_jobs
           expect(champ.reload.piece_justificative_file.first.virus_scanner.safe?).to be_truthy
@@ -547,10 +547,10 @@ describe Champ do
         subject
         blob = champ.piece_justificative_file.first.blob
 
-        perform_enqueued_jobs(only: VirusScannerJob)
+        perform_enqueued_jobs(only: BlobProcessorJob)
         expect(blob.reload.virus_scanner.safe?).to be_truthy
 
-        perform_enqueued_jobs(only: ImageProcessorJob)
+        perform_enqueued_jobs(only: BlobProcessorJob)
         expect(champ.reload.piece_justificative_file.first.watermark_pending?).to be_falsy
         expect(champ.reload.piece_justificative_file.first.blob.watermark_done?).to be_truthy
       end

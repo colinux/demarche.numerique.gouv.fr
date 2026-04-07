@@ -94,11 +94,12 @@ RSpec.configure do |config|
   end
 
   # BlobProcessorJob requires libvips which is only available in the :external_deps CI job.
-  # Stub it by default so that perform_enqueued_jobs in system tests doesn't crash.
-  config.before(:each, type: :system) do |example|
-    if !example.metadata[:external_deps]
-      allow_any_instance_of(BlobProcessorJob).to receive(:perform)
-    end
+  # Stub it by default so that perform_enqueued_jobs doesn't crash.
+  config.before(:each) do |example|
+    next if example.metadata[:external_deps]
+    next if example.metadata[:type] == :job # job specs test the job itself
+
+    allow_any_instance_of(BlobProcessorJob).to receive(:perform)
   end
 
   # By default, forgery protection is disabled in the test environment.

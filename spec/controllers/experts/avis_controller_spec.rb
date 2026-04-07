@@ -316,9 +316,7 @@ describe Experts::AvisController, type: :controller do
         let(:file) { fixture_file_upload('spec/fixtures/files/piece_justificative_0.pdf', 'application/pdf') }
 
         before do
-          expect(ClamavService).to receive(:safe_file?).and_return(true)
           post :update, params: { id: avis_without_answer.id, procedure_id:, avis: { answer: 'answer', piece_justificative_file: file } }
-          perform_enqueued_jobs
           avis_without_answer.reload
         end
 

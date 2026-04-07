@@ -43,7 +43,7 @@ class Champs::PieceJustificativeChamp < Champ
   private
 
   def fetch_external_data_later(wait: nil)
-    nil # the job is already enqueued by the ImageProcessorJob when the blob is attached
+    nil # the job is already enqueued by the BlobProcessorJob when the blob is attached
   end
 
   def ready_for_external_call?
