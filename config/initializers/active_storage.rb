@@ -26,7 +26,7 @@ ActiveSupport.on_load(:active_storage_blob) do
 end
 
 ActiveSupport.on_load(:active_storage_attachment) do
-  include AttachmentVirusScannerConcern
+  include AttachmentProcessorConcern
 end
 
 Rails.application.reloader.to_prepare do

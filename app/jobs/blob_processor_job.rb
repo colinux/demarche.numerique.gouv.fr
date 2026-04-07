@@ -3,114 +3,155 @@
 class BlobProcessorJob < ApplicationJob
   queue_as do
     blob = self.arguments.first
-    maybe_champ = blob&.attachments&.first&.record
+    attachment = blob&.attachments&.includes(:record)&.first
 
-    if ocr_compatible?(maybe_champ)
-      :default # UI is waiting
+    if ocr_compatible?(attachment&.record)
+      :default # UI is waiting for OCR result
     else
-      :low # thumbnails and watermarks. Execution depends of virus scanner which is more urgent
+      :low # thumbnails and watermarks can wait
     end
   end
 
-  class FileNotScannedYetError < StandardError
-  end
-
-  # If by the time the job runs the blob has been deleted, ignore the error
   discard_on ActiveRecord::RecordNotFound
-
-  # Safety net: if job is enqueued before virus scan completes, retry with short delay
-  # This shouldn't happen normally since VirusScannerJob now enqueues ImageProcessorJob
-  retry_on FileNotScannedYetError, wait: 10.seconds, attempts: 5
-  # If the file is deleted during the scan, ignore the error
   discard_on ActiveStorage::FileNotFoundError
   discard_on ActiveRecord::InvalidForeignKey
 
-  retry_on "Vips::Error", attempts: 3 # not as const because we don't load vips at load time
+  retry_on(ActiveStorage::IntegrityError, attempts: 5, wait: 5.seconds) do |job, _error|
+    blob = job.arguments.first
+    blob.update_columns(virus_scan_result: ActiveStorage::VirusScanner::INTEGRITY_ERROR, virus_scanned_at: Time.current)
+  end
+
+  retry_on "Vips::Error", attempts: 3 # not as const because vips is loaded at runtime
   retry_on WatermarkService::Error, attempts: 3
 
   rescue_from ActiveStorage::PreviewError do |exception|
     retry_or_discard(exception)
   end
 
+  attr_reader :blob, :attachment
+
   def perform(blob)
-    require "vips" # load at runtime, not at bootime because vips is available only in jobs
+    require "vips"
 
+    @blob = blob
     return if blob.nil?
-    raise FileNotScannedYetError if blob.virus_scanner.pending?
-    return if ActiveStorage::Attachment.find_by(blob_id: blob.id)&.record_type == "ActiveStorage::VariantRecord"
+    # Idempotency guard: during deployment, old VirusScannerJob/ImageProcessorJob may
+    # overlap with new BlobProcessorJob for the same blob. Skip if already processed.
+    return if blob.metadata["processed"]
 
-    add_ocr_data(blob)
-    auto_rotate(blob) if ["image/jpeg", "image/jpg"].include?(blob.content_type)
-    uninterlace(blob) if blob.content_type == "image/png" && embeddable_in_pdf?(blob)
-    create_representations(blob) if blob.representation_required?
-    add_watermark(blob) if blob.watermark_pending?
-  rescue Vips::Error => e
-    Rails.logger.info "ImageProcessorJob raising vips error: #{e.message}"
+    @attachment = blob.attachments.includes(:record).first
+
+    processable = blob.content_type.in?(PROCESSABLE_TYPES)
+
+    # Phase 1: Virus scan + image mutations in a single blob.open to minimize downloads
+    blob.open do |tempfile|
+      scan_virus(tempfile) if !blob.virus_scanner.done?
+
+      if attachment && blob.virus_scanner.safe? && processable && needs_mutations?
+        apply_mutations(tempfile)
+      end
+    end
+
+    return mark_processed if !blob.virus_scanner.safe?
+    return mark_processed if attachment.nil?
+
+    # Phase 2: OCR (external API call)
+    add_ocr_data
+
+    # Phase 3: Representations (ActiveStorage manages its own downloads)
+    create_representations if blob.representation_required?
+
+    mark_processed
   end
 
   private
 
-  def auto_rotate(blob)
-    blob.open do |file|
-      Tempfile.create(["rotated", File.extname(file)]) do |output|
-        processed = AutoRotateService.new.process(file, output)
-        return if processed.blank?
-
-        blob.upload(processed) # also update checksum & byte_size accordingly
-        blob.save!
-      end
+  def scan_virus(tempfile)
+    if ClamavService.safe_file?(tempfile.path)
+      blob.update_columns(virus_scan_result: ActiveStorage::VirusScanner::SAFE, virus_scanned_at: Time.current)
+    else
+      blob.update_columns(virus_scan_result: ActiveStorage::VirusScanner::INFECTED, virus_scanned_at: Time.current)
     end
   end
 
-  def uninterlace(blob)
-    blob.open do |file|
-      processed = UninterlaceService.new.process(file)
-      return if processed.blank?
+  def apply_mutations(tempfile)
+    require "vips"
+    modified = false
+    current_file = tempfile
+    extra_tempfiles = []
 
-      blob.upload(processed)
+    if jpeg?
+      output = Tempfile.new(["rotated", File.extname(current_file)])
+      extra_tempfiles << output
+      processed = AutoRotateService.new.process(current_file, output)
+      if processed
+        current_file = processed
+        modified = true
+      end
+    end
+
+    if blob.content_type == "image/png" && embeddable_in_pdf?
+      # UninterlaceService modifies the file in-place (writes to the same path then reopens)
+      processed = UninterlaceService.new.process(current_file)
+      modified = true if processed
+    end
+
+    if blob.watermark_pending?
+      output = Tempfile.new(["watermarked", File.extname(current_file)])
+      extra_tempfiles << output
+      processed = WatermarkService.new.process(current_file, output)
+      if processed
+        current_file = processed
+        modified = true
+        blob.watermarked_at = Time.current
+      end
+    end
+
+    if modified
+      blob.upload(current_file)
       blob.save!
     end
-  end
-
-  def embeddable_in_pdf?(blob)
-    blob.attachments.any? do |attachment|
-      attachment.name.in?(%w[logo signature]) &&
-        attachment.record_type.in?(%w[AttestationTemplate GroupeInstructeur])
+  ensure
+    extra_tempfiles.each do |f|
+      f.close
+      f.unlink if File.exist?(f.path)
     end
   end
 
-  def create_representations(blob)
-    blob.attachments.each do |attachment|
-      next unless attachment&.representable?
-      attachment.representation(resize_to_limit: [400, 400]).processed
-      if attachment.blob.content_type.in?(RARE_IMAGE_TYPES)
-        attachment.variant(resize_to_limit: [2000, 2000]).processed
+  def needs_mutations?
+    return true if jpeg?
+    return true if blob.content_type == "image/png" && embeddable_in_pdf?
+    return true if blob.watermark_pending?
+
+    false
+  end
+
+  def jpeg?
+    blob.content_type.in?(["image/jpeg", "image/jpg"])
+  end
+
+  def embeddable_in_pdf?
+    attachment.name.in?(%w[logo signature]) &&
+      attachment.record_type.in?(%w[AttestationTemplate GroupeInstructeur])
+  end
+
+  def create_representations
+    blob.attachments.each do |att|
+      next if !att.representable?
+      att.representation(resize_to_limit: [400, 400]).processed
+      if att.blob.content_type.in?(RARE_IMAGE_TYPES)
+        att.variant(resize_to_limit: [2000, 2000]).processed
       end
-      if attachment.record.class == ActionText::RichText
-        attachment.variant(resize_to_limit: [1024, 768]).processed
+      if att.record.class == ActionText::RichText
+        att.variant(resize_to_limit: [1024, 768]).processed
       end
     end
   end
 
-  def add_watermark(blob)
-    return if blob.watermark_done?
-
-    blob.open do |file|
-      Tempfile.create(["watermarked", File.extname(file)]) do |output|
-        processed = WatermarkService.new.process(file, output)
-        return if processed.blank?
-
-        blob.upload(processed) # also update checksum & byte_size accordingly
-        blob.watermarked_at = Time.current
-        blob.save!
-      end
-    end
-  end
-
-  def add_ocr_data(blob)
-    champ = blob&.attachments&.first&.record
+  def add_ocr_data
+    champ = attachment.record
     return if !ocr_compatible?(champ)
-    return if !champ.may_fetch? # a previous blob may have already been analyzed
+    return if !champ.may_fetch?
 
     champ.fetch!
   end
@@ -119,6 +160,13 @@ class BlobProcessorJob < ApplicationJob
     return false if !maybe_champ.is_a?(Champs::PieceJustificativeChamp)
 
     maybe_champ.ocr_compatible?
+  end
+
+  def mark_processed
+    if !blob.metadata["processed"]
+      blob.metadata["processed"] = true
+      blob.save!
+    end
   end
 
   def retry_or_discard(exception)
