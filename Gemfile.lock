@@ -921,6 +921,7 @@ GEM
       public_suffix
     vcr (6.3.1)
       base64
+    vernier (1.10.0)
     version_gem (1.1.9)
     view_component (4.1.0)
       activesupport (>= 7.1.0, < 8.2)
@@ -1137,6 +1138,7 @@ DEPENDENCIES
   typhoeus
   ulid-ruby
   vcr
+  vernier
   view_component
   vite_rails
   warden
