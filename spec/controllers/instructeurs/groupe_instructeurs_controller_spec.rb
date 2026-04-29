@@ -239,20 +239,42 @@ describe Instructeurs::GroupeInstructeursController, type: :controller do
   describe '#add_signature' do
     let(:signature) { fixture_file_upload('spec/fixtures/files/black.png', 'image/png') }
 
-    before do
-      post :add_signature,
-        params: {
-          procedure_id: procedure.id,
-          id: gi_1_2.id,
-          groupe_instructeur: {
-            signature: signature,
-          },
-        }
+    context 'when the targeted groupe belongs to the current procedure' do
+      before do
+        post :add_signature,
+          params: {
+            procedure_id: procedure.id,
+            id: gi_1_2.id,
+            groupe_instructeur: { signature: },
+          }
+      end
+
+      it "works" do
+        expect(response).to redirect_to(instructeur_groupe_path(procedure, gi_1_2))
+        expect(gi_1_2.reload.signature).to be_attached
+      end
     end
 
-    it "works" do
-      expect(response).to redirect_to(instructeur_groupe_path(procedure, gi_1_2))
-      expect(gi_1_2.reload.signature).to be_attached
+    context 'when the targeted groupe belongs to another procedure' do
+      let(:procedure) { create(:procedure, :published, administrateurs: [administrateur], instructeurs_self_management_enabled: true) }
+
+      before do
+        gi_2_2.instructeurs << instructeur
+      end
+
+      subject do
+        post :add_signature,
+          params: {
+            procedure_id: procedure.id,
+            id: gi_2_2.id,
+            groupe_instructeur: { signature: },
+          }
+      end
+
+      it 'does not attach the signature on the foreign groupe' do
+        expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
+        expect(gi_2_2.reload.signature).not_to be_attached
+      end
     end
   end
 end

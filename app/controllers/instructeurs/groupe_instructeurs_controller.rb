@@ -95,7 +95,7 @@ module Instructeurs
     end
 
     def groupe_instructeur
-      current_instructeur.groupe_instructeurs.find(params[:id])
+      procedure.groupe_instructeurs.find(params[:id])
     end
 
     def paginated_groupe_instructeurs
