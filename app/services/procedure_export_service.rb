@@ -53,6 +53,15 @@ class ProcedureExportService
     create_blob(io, :json)
   end
 
+  # Nettoie un nom d'onglet pour Excel : translittération en ASCII (pour que
+  # truncate respecte la limite de 30 octets) puis suppression des caractères
+  # interdits par Excel (/\*?[]:) — caxlsx levait sur ces caractères, xlsxtream non.
+  def self.sanitize_sheet_name(name)
+    I18n.transliterate(name, locale: :en)
+      .delete('/\*?[]:')
+      .truncate(30, omission: '')
+  end
+
   private
 
   def create_blob(io, format)
@@ -138,12 +147,7 @@ class ProcedureExportService
       table
     end.merge(DEFAULT_STYLES)
 
-    # transliterate: convert to ASCII characters
-    # to ensure truncate respects 30 bytes
-    # /\*?[] are invalid Excel worksheet characters
-    options[:sheet_name] = I18n.transliterate(options[:sheet_name], locale: :en)
-      .delete('/\*?[]')
-      .truncate(30, omission: '')
+    options[:sheet_name] = self.class.sanitize_sheet_name(options[:sheet_name])
 
     options
   end
