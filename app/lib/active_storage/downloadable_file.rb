@@ -7,7 +7,7 @@ class ActiveStorage::DownloadableFile
     pj_service = PiecesJustificativesService.new(user_profile:, export_template:)
 
     files = []
-    DossierPreloader.new(dossiers).in_batches_with_block do |loaded_dossiers|
+    DossierPreloader.new(dossiers).in_batches(includes: DossierPreloader::PJ_EXPORT_INCLUDES) do |loaded_dossiers|
       files += pj_service.generate_dossiers_export(loaded_dossiers) + pj_service.liste_documents(loaded_dossiers)
     end
 

@@ -483,18 +483,15 @@ class Dossier < ApplicationRecord
   validates :mandataire_last_name, presence: true, if: :for_tiers?
   validates :for_tiers, inclusion: { in: [true, false] }, if: -> { revision&.procedure&.for_individual? }
 
+  # csv/ods construisent tout le classeur en mémoire d'un coup (spreadsheet_architect) :
+  # on matérialise donc l'ensemble des dossiers triés et préchargés. On passe par
+  # `in_batches` seulement pour précharger les champs par tranches adaptatives
+  # (plutôt qu'en une requête champs géante), et on rassemble les batches.
   def self.downloadable_sorted_batch
-    DossierPreloader.new(includes(
-      :user,
-      :individual,
-      :followers_instructeurs,
-      :traitement,
-      :groupe_instructeur,
-      :etablissement,
-      :pending_corrections,
-      procedure: [:groupe_instructeurs],
-      avis: [:claimant, :expert]
-    ).ordered_for_export).in_batches
+    [].tap do |dossiers|
+      DossierPreloader.new(ordered_for_export)
+        .in_batches(includes: DossierPreloader::SHEET_EXPORT_INCLUDES) { |batch| dossiers.concat(batch) }
+    end
   end
 
   def user_deleted?

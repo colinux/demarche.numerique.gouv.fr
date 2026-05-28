@@ -4,24 +4,42 @@ class DossierPreloader
   DEFAULT_BATCH_SIZE = 2000
   MAX_CHAMPS_PER_BATCH = 140_000
 
+  # Associations préchargées pour l'export tableur (feuilles Dossiers/Etablissements/Avis).
+  SHEET_EXPORT_INCLUDES = [
+    :user, :individual, :followers_instructeurs, :traitement, :groupe_instructeur,
+    :etablissement, :pending_corrections,
+    { procedure: [:groupe_instructeurs], avis: [:claimant, :expert] },
+  ].freeze
+
+  # Associations préchargées pour l'export PDF/zip (PiecesJustificativesService).
+  PJ_EXPORT_INCLUDES = [
+    :individual, :traitement, :etablissement, :pending_corrections,
+    { user: :france_connect_informations, avis: :expert, commentaires: [:instructeur, :expert] },
+  ].freeze
+
   def initialize(dossiers, includes_for_champ: [], includes_for_etablissement: [])
     @dossiers = dossiers
     @includes_for_etablissement = includes_for_etablissement
     @includes_for_champ = includes_for_champ
   end
 
-  def in_batches
-    dossiers = @dossiers.to_a
-    batch_size = adaptive_batch_size(dossiers)
-    dossiers.each_slice(batch_size) { load_dossiers(it) }
-    dossiers
-  end
+  # Streame les dossiers dans l'ordre de la relation, par batches adaptatifs.
+  # Chaque batch est rechargé avec `includes`, préchargé, yieldé puis relâché :
+  # seuls les ids de l'ensemble + un batch de dossiers vivent à la fois.
+  # L'ordre est choisi par l'appelant sur la relation (ex: `ordered_for_export`).
+  def in_batches(includes:)
+    ids = @dossiers.ids
+    return if ids.empty?
 
-  def in_batches_with_block(&block)
-    @dossiers.in_batches(of: adaptive_batch_size(@dossiers)) do |batch|
-      data = Dossier.where(id: batch.ids).includes(:individual, :traitement, :etablissement, :pending_corrections, user: :france_connect_informations, avis: :expert, commentaires: [:instructeur, :expert])
+    # On dimensionne les batches d'après la révision *active*
+    sample_revision = @dossiers.first.procedure.active_revision
 
-      dossiers = data.to_a
+    ids.each_slice(adaptive_batch_size(ids.size, sample_revision)) do |batch_ids|
+      dossiers_by_id = Dossier.where(id: batch_ids).includes(includes).index_by(&:id)
+
+      # Ré-applique l'ordre original
+      dossiers = batch_ids.filter_map { dossiers_by_id[it] }
+
       load_dossiers(dossiers)
       yield(dossiers)
     end
@@ -133,11 +151,15 @@ class DossierPreloader
     dossier.send(:reset_champs_cache)
   end
 
-  def adaptive_batch_size(dossiers)
-    return DEFAULT_BATCH_SIZE if dossiers.count < DEFAULT_BATCH_SIZE
+  # - `count` : nombre de dossiers à batcher
+  # - `sample_revision` : révision de référence (la révision active de la démarche)
+  # pour estimer le nombre de champs par dossier,
+  # afin qu'un batch ne charge jamais plus de MAX_CHAMPS_PER_BATCH champs d'un coup.
+  def adaptive_batch_size(count, sample_revision)
+    return DEFAULT_BATCH_SIZE if count < DEFAULT_BATCH_SIZE
 
     # Prend un ordre de grandeur de la taille de la démarche
-    champs_per_dossier = dossiers.last.revision.types_de_champ.count + 1
+    champs_per_dossier = sample_revision&.types_de_champ&.count.to_i + 1
 
     # Reste sur un multiple de 100
     ideal_batch_size = (MAX_CHAMPS_PER_BATCH / champs_per_dossier).round(-2)

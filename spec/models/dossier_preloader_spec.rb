@@ -48,7 +48,7 @@ describe DossierPreloader do
     end
   end
 
-  describe 'in_batches_with_block' do
+  describe '#in_batches (preloading for PDF/zip export)' do
     let(:instructeur) { create(:instructeur) }
     let(:expert) { create(:expert) }
     let(:experts_procedure) { create(:experts_procedure, expert:, procedure:) }
@@ -74,7 +74,7 @@ describe DossierPreloader do
       all_dossiers = Dossier.where(id: dossiers.map(&:id))
       loaded_dossiers = []
 
-      DossierPreloader.new(all_dossiers).in_batches_with_block do |batch|
+      DossierPreloader.new(all_dossiers).in_batches(includes: DossierPreloader::PJ_EXPORT_INCLUDES) do |batch|
         loaded_dossiers = batch
       end
 
@@ -100,6 +100,69 @@ describe DossierPreloader do
       end
 
       expect(count).to eq(0)
+    end
+  end
+
+  describe '#in_batches (streamed, ordered for sheet export)' do
+    let(:instructeur) { create(:instructeur) }
+    let(:procedure) { create(:procedure, :published, :for_individual, instructeurs: [instructeur]) }
+
+    let!(:dossiers) do
+      [3.days.ago, 1.day.ago, 2.days.ago].map do |depose_at|
+        dossier = create(:dossier, :en_instruction, :with_individual, procedure:)
+        dossier.update_column(:depose_at, depose_at)
+        create(:groupe_instructeur, label: 'gi', procedure:) if dossier == nil # noop, just to ensure procedure has gi
+        dossier
+      end
+    end
+
+    let(:dossier_includes) do
+      [
+        :user,
+        :individual,
+        :followers_instructeurs,
+        :traitement,
+        :groupe_instructeur,
+        :etablissement,
+        :pending_corrections,
+        { procedure: [:groupe_instructeurs] },
+        { avis: [:claimant, :expert] },
+      ]
+    end
+
+    it 'yields dossiers in depose_at order across batches without materializing all dossiers' do
+      all_dossiers = procedure.dossiers
+      yielded = []
+
+      DossierPreloader.new(all_dossiers.ordered_for_export).in_batches(includes: dossier_includes) do |batch|
+        yielded.concat(batch)
+      end
+
+      expect(yielded.map(&:id)).to eq(all_dossiers.ordered_for_export.pluck(:id))
+    end
+
+    it 'preloads requested includes (no N+1 inside the block)' do
+      all_dossiers = procedure.dossiers
+
+      DossierPreloader.new(all_dossiers.ordered_for_export).in_batches(includes: dossier_includes) do |batch|
+        count = 0
+        callback = lambda { |*_args| count += 1 }
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+          batch.each do |dossier|
+            dossier.user&.email
+            dossier.individual&.gender
+            dossier.traitement&.processed_at
+            dossier.groupe_instructeur&.label
+            dossier.etablissement&.siret
+            dossier.procedure.groupe_instructeurs.to_a
+            dossier.followers_instructeurs.to_a
+            dossier.avis.each { |a| a.claimant&.email; a.expert&.email }
+            dossier.pending_corrections.to_a
+            dossier.champs.to_a # champs préchargés via load_dossiers
+          end
+        end
+        expect(count).to eq(0)
+      end
     end
   end
 end

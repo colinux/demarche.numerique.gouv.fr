@@ -54,7 +54,7 @@ describe 'Export performance' do
       query_count = 0
 
       ActiveSupport::Notifications.subscribed(lambda { |*_args| query_count += 1 }, "sql.active_record") do
-        DossierPreloader.new(all_dossiers).in_batches_with_block do |loaded|
+        DossierPreloader.new(all_dossiers).in_batches(includes: DossierPreloader::PJ_EXPORT_INCLUDES) do |loaded|
           pj_service.generate_dossiers_export(loaded)
         end
       end
