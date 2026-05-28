@@ -142,6 +142,20 @@ describe ProcedureExportService do
         end
       end
 
+      context 'with an untyped boolean column (no export_template)' do
+        let(:procedure) { create(:procedure, :published, :for_individual) }
+        let!(:dossier) { create(:dossier, :en_instruction, :with_individual, procedure:) }
+
+        # Parité avec l'export caxlsx historique : un booléen *non typé* sort en
+        # texte (SpreadsheetArchitect#get_type → :string), pas en cellule native
+        # t="b". Les colonnes explicitement typées :boolean (export_template)
+        # restent natives, cf. spec tabular yes_no/checkbox.
+        it 'exports the boolean as the string "false", not a native boolean cell' do
+          value = dossiers_sheet.data[0][dossiers_sheet.headers.index('FranceConnect ?')]
+          expect(value).to eq('false')
+        end
+      end
+
       context 'with a procedure routee' do
         let(:procedure) { create(:procedure, :published, :for_individual) }
         let!(:dossier) { create(:dossier, :en_instruction, :with_individual, procedure:) }
@@ -168,7 +182,7 @@ describe ProcedureExportService do
       end
 
       context 'with procedure chorus' do
-        before { expect_any_instance_of(Procedure).to receive(:chorusable?).and_return(true) }
+        before { allow_any_instance_of(Procedure).to receive(:chorusable?).and_return(true) }
         let(:procedure) { create(:procedure, :published, :for_individual, :filled_chorus) }
         let!(:dossier) { create(:dossier, :en_instruction, procedure: procedure) }
 
