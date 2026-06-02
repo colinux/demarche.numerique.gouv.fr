@@ -6,8 +6,9 @@
 #   - add a black-fill / white-bold header style, applied to each header *cell*
 #     (Numbers ignores row-level styles), via Worksheet#add_styled_row
 #   - replace xlsxtream's escaped custom date formats with the ones caxlsx used
-#     (built-in short date + "yyyy-mm-dd h:mm AM/PM"), which Numbers reads as
-#     dates and which match the previous (caxlsx) export byte-for-byte
+#     ("yyyy-mm-dd" + "yyyy-mm-dd h:mm AM/PM"), which spreadsheet readers (Excel,
+#     LibreOffice, Numbers…) read as dates and which match the previous (caxlsx)
+#     export
 #
 # All confined here (auto-required by config/initializers/core_ext.rb, like the
 # other gem extensions in lib/core_ext); remove if xlsxtream ever exposes these
@@ -25,7 +26,8 @@ module Xlsxtream
     private
 
     # Full override of upstream's hardcoded stylesheet. Differences:
-    #   - dates (cellXf 1) use the built-in short-date format (numFmtId 14)
+    #   - dates (cellXf 1) use "yyyy-mm-dd" (caxlsx used this custom code, not the
+    #     locale-dependent built-in numFmtId 14)
     #   - datetimes (cellXf 2) use "yyyy-mm-dd h:mm AM/PM"
     #   - header (cellXf 3) uses a white bold font on a black fill
     # The font is hardcoded to upstream's default (we never pass the :font option).
@@ -34,7 +36,8 @@ module Xlsxtream
       @writer << XML.header
       @writer << XML.strip(<<-XML)
         <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-          <numFmts count="1">
+          <numFmts count="2">
+            <numFmt numFmtId="164" formatCode="yyyy-mm-dd"/>
             <numFmt numFmtId="165" formatCode="yyyy-mm-dd h:mm AM/PM"/>
           </numFmts>
           <fonts count="2">
@@ -73,7 +76,7 @@ module Xlsxtream
           </cellStyleXfs>
           <cellXfs count="4">
             <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-            <xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+            <xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
             <xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
             <xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>
           </cellXfs>

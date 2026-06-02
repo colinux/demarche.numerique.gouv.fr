@@ -128,9 +128,16 @@ describe ProcedureExportService::XlsxStreamer do
       expect(sheet_xml).to match(/<c r="B1" s="3"/)
     end
 
-    it 'declares the datetime format with unescaped code so Numbers recognizes it' do
+    it 'declares the datetime format with unescaped code so readers recognize it as a date' do
       styles = read_zip_entry('xl/styles.xml')
       expect(styles).to include('formatCode="yyyy-mm-dd h:mm AM/PM"')
+    end
+
+    # caxlsx (previous export) styled Date columns with the custom code
+    # "yyyy-mm-dd", not the locale-dependent built-in numFmtId 14.
+    it 'declares the date format with a yyyy-mm-dd code matching the caxlsx export' do
+      styles = read_zip_entry('xl/styles.xml')
+      expect(styles).to include('formatCode="yyyy-mm-dd"')
     end
 
     it 'sets column widths' do
