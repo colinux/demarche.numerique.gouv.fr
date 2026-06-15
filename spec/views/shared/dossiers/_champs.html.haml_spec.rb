@@ -94,6 +94,20 @@ describe 'shared/dossiers/champs', type: :view do
     end
   end
 
+  context "with a dossier champ pointing to a deposited dossier" do
+    let(:public_type_de_champs) { [{ type: :dossier_link }] }
+    let(:linked_dossier) { create(:dossier, :en_construction) }
+
+    before do
+      dossier.champs.first.update(value: linked_dossier.id)
+    end
+
+    it "renders the enriched summary with the procedure in bold" do
+      is_expected.to have_css("strong", text: linked_dossier.procedure.libelle)
+      is_expected.to include("N° #{linked_dossier.id}")
+    end
+  end
+
   context "with a dossier_link champ but without value" do
     let(:public_type_de_champs) { [{ type: :dossier_link, mandatory: false }] }
 

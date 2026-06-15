@@ -129,7 +129,7 @@ module Dsfr
                                          hidden_at: l(dossier.hidden_by_user_at.to_date)),
             }
           else
-            { state: :info, text: dossier.text_summary }
+            { state: :info, text: helpers.dossier_link_summary(dossier, @champ.dossier.user) }
           end
         end
       when TypeDeChamp.type_champs[:referentiel]

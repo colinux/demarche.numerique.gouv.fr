@@ -18,6 +18,9 @@
     %br
     .copy-zone
       %p= t('shared.champs.dossier_link.hidden', depose_at: l(dossier.depose_at.to_date), procedure_libelle: dossier.procedure.libelle, hidden_at: l(hidden_at.to_date))
+  - elsif dossier.depose_at.present?
+    .copy-zone
+      %p= dossier_link_summary(dossier, current_instructeur || current_user)
   - else
     - path = dossier_linked_path(current_instructeur || current_user, dossier)
     - if path.present?
