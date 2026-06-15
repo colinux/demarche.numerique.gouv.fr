@@ -1,0 +1,8 @@
+---
+fr:
+  not_found: Ce dossier est inconnu
+  procedure_group: '--- Démarche "%{libelle}" ---'
+  procedure_section: Démarche « %{libelle} »
+  option: N° %{id} - déposé le %{date}
+  no_dossier_in_procedure: Vous n’avez déposé aucun dossier sur cette démarche.
+  select_placeholder: Sélectionnez un dossier

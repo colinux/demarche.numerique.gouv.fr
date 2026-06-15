@@ -1,0 +1,8 @@
+---
+en:
+  not_found: This file is unknown
+  procedure_group: '--- Procedure "%{libelle}" ---'
+  procedure_section: 'Procedure “%{libelle}”'
+  option: 'No. %{id} - submitted on %{date}'
+  no_dossier_in_procedure: You have not submitted any file for this procedure.
+  select_placeholder: Select a file
