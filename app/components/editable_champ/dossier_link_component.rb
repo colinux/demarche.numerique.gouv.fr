@@ -8,7 +8,7 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
   end
 
   def limited?
-    @champ.type_de_champ.procedures_limit? && allowed_procedures.any?
+    @champ.selectable?
   end
 
   def render_combobox?
@@ -61,21 +61,8 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
     end
   end
 
-  def allowed_procedures
-    @allowed_procedures ||= begin
-      ids = @champ.type_de_champ.dossier_link_procedure_ids
-      Procedure.where(id: ids).index_by(&:id).values_at(*ids).compact
-    end
-  end
-
   def grouped_dossiers
-    @grouped_dossiers ||= allowed_procedures.index_with do |procedure|
-      procedure.dossiers
-        .visible_by_user_or_administration
-        .where(user_id: @champ.dossier.user_id, state: Dossier::SOUMIS)
-        .where.not(id: @champ.dossier_id)
-        .order(depose_at: :desc)
-    end
+    @champ.linkable_dossiers_by_procedure
   end
 
   def total_dossiers
@@ -83,7 +70,7 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
   end
 
   def contains_long_option?
-    grouped_dossiers.any? { |procedure, _dossiers| procedure.libelle.size > 100 }
+    @champ.linkable_procedures.any? { |procedure| procedure.libelle.size > 100 }
   end
 
   def option_label(dossier)

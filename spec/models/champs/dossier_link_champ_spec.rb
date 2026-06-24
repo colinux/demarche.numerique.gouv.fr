@@ -124,4 +124,34 @@ describe Champs::DossierLinkChamp, type: :model do
       it { is_expected.to be_truthy }
     end
   end
+
+  describe '#selectable?' do
+    let(:allowed_procedure) { create(:procedure) }
+    let(:type_de_champ) { procedure.draft_revision.type_de_champs.first }
+
+    subject { champ.selectable? }
+
+    context 'when the field is not limited to procedures' do
+      it { is_expected.to be(false) }
+    end
+
+    context 'when the field is limited' do
+      before do
+        type_de_champ.update!(options: type_de_champ.options.merge(
+          'procedures_limit' => '1',
+          'dossier_link_procedure_ids' => [allowed_procedure.id]
+        ))
+      end
+
+      context 'and the user has a submitted dossier on an allowed procedure' do
+        before { create(:dossier, :en_construction, procedure: allowed_procedure, user: dossier.user) }
+
+        it { is_expected.to be(true) }
+      end
+
+      context 'and the user has no dossier to propose' do
+        it { is_expected.to be(false) }
+      end
+    end
+  end
 end

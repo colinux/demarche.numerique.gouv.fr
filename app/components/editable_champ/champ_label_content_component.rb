@@ -69,10 +69,10 @@ class EditableChamp::ChampLabelContentComponent < ApplicationComponent
 
   private
 
-  # The dossier_link hint depends on its input mode: a select prompt when the
-  # field is limited to some procedures, the free-text format otherwise.
+  # The dossier_link hint depends on its actual input mode: a select prompt when the
+  # user picks among their dossiers, the free-text format otherwise.
   def dossier_link_hints
-    key = @champ.type_de_champ.procedures_limit? ? :select : :free
+    key = @champ.selectable? ? :select : :free
     [I18n.t("activerecord.attributes.champs/dossier_link_champ.hints.#{key}", application_name: APPLICATION_NAME)]
   end
 

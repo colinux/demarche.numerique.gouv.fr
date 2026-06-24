@@ -35,13 +35,28 @@ describe EditableChamp::DossierLinkComponent, type: :component do
       end
     end
 
-    context 'when the admin limited the field to some procedures' do
-      before { tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [create(:procedure).id]) }
+    context 'when the admin limited the field and the user has a dossier to propose' do
+      let(:linked_procedure) { create(:procedure) }
+
+      before do
+        tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [linked_procedure.id])
+        create(:dossier, :en_construction, procedure: linked_procedure, user:)
+      end
 
       it 'invites the user to select a dossier' do
         render
 
         expect(page).to have_text('Sélectionnez le numéro')
+      end
+    end
+
+    context 'when the admin limited the field but the user has no dossier to propose' do
+      before { tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [create(:procedure).id]) }
+
+      it 'keeps the free-text format hint' do
+        render
+
+        expect(page).to have_text('Format attendu')
       end
     end
   end
@@ -66,11 +81,27 @@ describe EditableChamp::DossierLinkComponent, type: :component do
       end
     end
 
-    context 'when the user has no dossier on an allowed procedure' do
-      it 'renders a disabled option explaining there is no dossier' do
+    context 'when the user has no dossier to propose on any allowed procedure' do
+      it 'falls back to the free numeric text input' do
         render
 
-        expect(page).to have_css('select optgroup[label*="Démarche A"] option[disabled]', text: 'Vous n’avez déposé aucun dossier sur cette démarche.')
+        expect(page).to have_css('input[type="text"]')
+        expect(page).not_to have_css('select')
+      end
+    end
+
+    context 'when the user has a dossier on one allowed procedure but not another' do
+      let(:empty_procedure) { create(:procedure, libelle: 'Démarche B') }
+
+      before do
+        tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [linked_procedure.id, empty_procedure.id])
+        create(:dossier, :en_construction, procedure: linked_procedure, user:)
+      end
+
+      it 'renders a disabled option for the procedure without any dossier' do
+        render
+
+        expect(page).to have_css('select optgroup[label*="Démarche B"] option[disabled]', text: 'Vous n’avez déposé aucun dossier sur cette démarche.')
       end
     end
 
@@ -93,12 +124,14 @@ describe EditableChamp::DossierLinkComponent, type: :component do
 
     context 'when the current dossier itself belongs to an allowed procedure' do
       let(:dossier) { create(:dossier, :en_construction, procedure:) }
+      let!(:sibling_dossier) { create(:dossier, :en_construction, procedure:, user:) }
 
       before { tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [procedure.id]) }
 
       it 'does not offer the current dossier as a link target' do
         render
 
+        expect(page).to have_css("select option[value='#{sibling_dossier.id}']")
         expect(page).not_to have_css("select option[value='#{dossier.id}']")
       end
     end
