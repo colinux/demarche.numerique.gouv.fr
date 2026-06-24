@@ -96,15 +96,26 @@ describe 'shared/dossiers/champs', type: :view do
 
   context "with a dossier champ pointing to a deposited dossier" do
     let(:public_type_de_champs) { [{ type: :dossier_link }] }
-    let(:linked_dossier) { create(:dossier, :en_construction) }
 
     before do
       dossier.champs.first.update(value: linked_dossier.id)
     end
 
-    it "renders the enriched summary with the procedure in bold" do
-      is_expected.to have_css("strong", text: linked_dossier.procedure.libelle)
-      is_expected.to include("N° #{linked_dossier.id}")
+    context "when the viewer has access to the linked dossier" do
+      let(:linked_dossier) { create(:dossier, :en_construction, procedure: create(:procedure, instructeurs: [instructeur])) }
+
+      it "renders the enriched summary with the procedure in bold" do
+        is_expected.to have_css("strong", text: linked_dossier.procedure.libelle)
+        is_expected.to include("N° #{linked_dossier.id}")
+      end
+    end
+
+    context "when the instructeur has no access to the linked dossier" do
+      let(:linked_dossier) { create(:dossier, :en_construction) }
+
+      it "renders the no-access component instead of the summary" do
+        is_expected.to have_css("#modal-no-access-to-dossier-#{linked_dossier.id}", visible: false)
+      end
     end
   end
 
