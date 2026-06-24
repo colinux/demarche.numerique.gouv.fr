@@ -118,6 +118,15 @@ RSpec.describe Dsfr::InputStatusMessageComponent, type: :component do
           )
         end
       end
+
+      context "when the linked dossier is still a brouillon (no depose_at)" do
+        let(:linked_dossier) { create(:dossier, :brouillon) }
+
+        it "falls back to the plain text summary without raising" do
+          expect { subject }.not_to raise_error
+          expect(subject).to have_css(".fr-message--info", text: /Dossier en brouillon/)
+        end
+      end
     end
 
     context 'with referentiel champs' do
