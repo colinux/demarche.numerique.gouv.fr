@@ -35,6 +35,8 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
       selected_key: @champ.value.presence,
       placeholder: t('.select_placeholder'),
       is_required: @champ.required?,
+      labelId: input_label_id(@champ),
+      ariaLabelledbyPrefix: aria_labelledby_prefix,
       'aria-describedby': select_aria_describedby,
     }.compact
   end

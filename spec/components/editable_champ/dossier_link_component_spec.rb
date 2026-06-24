@@ -119,6 +119,8 @@ describe EditableChamp::DossierLinkComponent, type: :component do
 
         props = JSON.parse(page.find('react-component')['props'])
         expect(props['sections'].first['label']).to eq('Démarche « Démarche A »')
+        # the combobox input gets its accessible name from the field label
+        expect(props['labelId']).to be_present
       end
     end
 
