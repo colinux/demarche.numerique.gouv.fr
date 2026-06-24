@@ -23,7 +23,7 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
         dossiers.map { |dossier| [option_label(dossier), dossier.id.to_s] }
       end
 
-      [t('.procedure_group', libelle: procedure.libelle), options]
+      [t('.procedure_section', libelle: procedure.libelle), options]
     end
   end
 
