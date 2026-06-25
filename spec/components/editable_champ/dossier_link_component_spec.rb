@@ -81,6 +81,29 @@ describe EditableChamp::DossierLinkComponent, type: :component do
       end
     end
 
+    context 'with an expired dossier submitted by the user' do
+      let!(:expired_dossier) { create(:dossier, :en_construction, :hidden_by_expired, procedure: linked_procedure, user:) }
+
+      it 'offers it with an option label mentioning its expiration date' do
+        render
+
+        expect(page).to have_css("select option[value='#{expired_dossier.id}']", text: /expiré le/)
+      end
+    end
+
+    context 'with an expired dossier already purged (DeletedDossier)' do
+      let!(:purged_dossier) do
+        create(:deleted_dossier, reason: :expired, user_id: user.id, procedure: linked_procedure,
+                                 dossier_id: 99_999, depose_at: 3.days.ago.to_date)
+      end
+
+      it 'offers it with an option label mentioning its expiration date' do
+        render
+
+        expect(page).to have_css("select option[value='#{purged_dossier.dossier_id}']", text: /expiré le/)
+      end
+    end
+
     context 'when the user has no dossier to propose on any allowed procedure' do
       it 'falls back to the free numeric text input' do
         render

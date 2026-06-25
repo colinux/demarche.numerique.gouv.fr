@@ -76,6 +76,10 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
   end
 
   def option_label(dossier)
-    t('.option', id: dossier.id, date: l(dossier.depose_at.to_date))
+    if dossier.expired?
+      t('.option_expired', id: dossier.id, date: l(dossier.depose_on), expired_date: l(dossier.expired_on))
+    else
+      t('.option', id: dossier.id, date: l(dossier.depose_on))
+    end
   end
 end
