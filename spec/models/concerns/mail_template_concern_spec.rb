@@ -231,4 +231,45 @@ describe MailTemplateConcern do
       expect(doc["content"].first["content"]).to include({ "type" => "mention", "attrs" => { "id" => "dossier_number", "label" => "numéro du dossier" } })
     end
   end
+
+  describe 'rendu dual' do
+    let(:dossier) { create(:dossier, :en_instruction, procedure:) }
+
+    it 'body_for_dossier utilise json_body si présent (rend le HTML via TiptapService)' do
+      mail.json_body = {
+        "type" => "doc",
+        "content" => [
+          {
+            "type" => "paragraph", "content" => [
+              { "type" => "text", "text" => "Dossier nº " },
+              { "type" => "mention", "attrs" => { "id" => "dossier_number", "label" => "numéro du dossier" } },
+            ],
+          },
+        ],
+      }
+      html = mail.body_for_dossier(dossier)
+      expect(html).to include("Dossier nº #{dossier.id}")
+    end
+
+    it 'body_for_dossier retombe sur le legacy si json_body absent' do
+      mail.json_body = nil
+      mail.body = 'Bonjour --numéro du dossier--'
+      expect(mail.body_for_dossier(dossier)).to include(dossier.id.to_s)
+    end
+
+    it 'subject_for_dossier utilise json_subject si présent' do
+      mail.json_subject = {
+        "type" => "doc",
+        "content" => [
+          {
+            "type" => "paragraph", "content" => [
+              { "type" => "text", "text" => "Dossier " },
+              { "type" => "mention", "attrs" => { "id" => "dossier_number", "label" => "numéro du dossier" } },
+            ],
+          },
+        ],
+      }
+      expect(mail.subject_for_dossier(dossier)).to eq("Dossier #{dossier.id}")
+    end
+  end
 end
