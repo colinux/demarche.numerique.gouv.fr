@@ -272,4 +272,26 @@ describe MailTemplateConcern do
       expect(mail.subject_for_dossier(dossier)).to eq("Dossier #{dossier.id}")
     end
   end
+
+  describe 'validation des tags JSON' do
+    it 'invalide un tag de champ inexistant dans json_body' do
+      mail.json_body = {
+        "type" => "doc",
+        "content" => [
+          {
+            "type" => "paragraph", "content" => [
+              { "type" => "mention", "attrs" => { "id" => "tdc999999", "label" => "champ fantôme" } },
+            ],
+          },
+        ],
+      }
+      expect(mail).not_to be_valid
+      expect(mail.errors[:json_body]).to be_present
+    end
+
+    it 'json_body vide reste valide' do
+      mail.json_body = nil
+      expect(mail).to be_valid
+    end
+  end
 end

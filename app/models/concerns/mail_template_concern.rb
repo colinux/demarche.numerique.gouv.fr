@@ -79,6 +79,9 @@ module MailTemplateConcern
   included do
     has_rich_text :rich_body
     before_save :update_rich_body
+
+    validates :json_body, tags: true
+    validates :json_subject, tags: true
   end
 
   class_methods do
