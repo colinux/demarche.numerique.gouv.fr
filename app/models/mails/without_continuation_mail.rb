@@ -18,9 +18,6 @@ module Mails
 
     belongs_to :procedure, optional: false
 
-    validates :subject, tags: true
-    validates :body, tags: true
-
     SLUG = "without_continuation"
     DEFAULT_TEMPLATE_NAME = "notification_mailer/default_templates/without_continuation_mail"
     DISPLAYED_NAME = I18n.t('activerecord.models.mail.without_continuation_mail.closure_acknowledgment')

@@ -293,5 +293,26 @@ describe MailTemplateConcern do
       mail.json_body = nil
       expect(mail).to be_valid
     end
+
+    it 'reste valide si json_body est valide même si le body legacy contient un tag invalide' do
+      mail.json_body = { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => [{ "type" => "text", "text" => "OK" }] }] }
+      mail.body = 'Bonjour --libellé totalement inexistant--'
+      expect(mail).to be_valid
+    end
+
+    it 'invalide via :json_body (et pas :body) quand json_body est présent et invalide' do
+      mail.json_body = { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => [{ "type" => "mention", "attrs" => { "id" => "tdc999999", "label" => "x" } }] }] }
+      mail.body = 'Bonjour'
+      expect(mail).not_to be_valid
+      expect(mail.errors[:json_body]).to be_present
+      expect(mail.errors[:body]).to be_empty
+    end
+
+    it 'valide le body legacy quand json_body est absent' do
+      mail.json_body = nil
+      mail.body = 'Bonjour --libellé totalement inexistant--'
+      expect(mail).not_to be_valid
+      expect(mail.errors[:body]).to be_present
+    end
   end
 end

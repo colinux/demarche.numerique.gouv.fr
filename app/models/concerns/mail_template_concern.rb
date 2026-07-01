@@ -80,8 +80,10 @@ module MailTemplateConcern
     has_rich_text :rich_body
     before_save :update_rich_body
 
-    validates :json_body, tags: true
-    validates :json_subject, tags: true
+    validates :json_body, tags: true, if: -> { json_body.present? }
+    validates :json_subject, tags: true, if: -> { json_subject.present? }
+    validates :body, tags: true, if: -> { json_body.blank? }
+    validates :subject, tags: true, if: -> { json_subject.blank? }
   end
 
   class_methods do
