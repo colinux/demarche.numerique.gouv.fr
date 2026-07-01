@@ -3,7 +3,6 @@
 describe Administrateurs::MailTemplatesController, type: :controller do
   render_views
   let(:procedure) { create :procedure }
-  let(:initiated_mail) { Mails::InitiatedMail.default_for_procedure(procedure) }
 
   let(:admin) { administrateurs(:default_admin) }
 
@@ -47,38 +46,22 @@ describe Administrateurs::MailTemplatesController, type: :controller do
     end
   end
 
-  describe 'PATCH update' do
-    let(:mail_subject) { 'Mise à jour de votre démarche' }
-    let(:mail_body) { '<div>Une mise à jour a été effectuée sur votre démarche n° --numéro du dossier--.</div>' }
+  describe 'PUT #update (tiptap)' do
+    let(:admin) { create(:administrateur) }
+    let(:procedure) { create(:procedure, administrateur: admin) }
+    let(:json_body) { { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => [{ "type" => "text", "text" => "Salut" }] }] }.to_json }
+    let(:json_subject) { { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => [{ "type" => "text", "text" => "Objet" }] }] }.to_json }
 
-    before :each do
-      patch :update,
-        params: {
-          procedure_id: procedure.id,
-          id: initiated_mail.class.const_get(:SLUG),
-          mails_initiated_mail: { subject: mail_subject, rich_body: mail_body },
-        }
-    end
+    before { sign_in(admin.user) }
 
-    it { expect(response).to redirect_to edit_admin_procedure_mail_template_path(procedure, initiated_mail.class.const_get(:SLUG)) }
-
-    context 'with valid email template' do
-      subject { procedure.reload; procedure.passer_en_construction_email_template }
-
-      it do
-        expect(subject.subject).to eq(mail_subject)
-        expect(subject.body).to eq(mail_body)
-      end
-    end
-
-    context 'with invalid email template' do
-      subject { procedure.reload; procedure.passer_en_construction_email_template }
-      let(:mail_body) { '<div>Une mise à jour a été effectuée sur votre démarche n° --numéro--.</div>' }
-
-      it do
-        expect(subject.body).not_to eq(mail_body)
-        expect(response.body).to match("Le champ « Corps de l’email » contient la balise &quot;numéro&quot; qui n’existe pas. Supprimer la balise")
-      end
+    it 'enregistre json_body et json_subject' do
+      put :update, params: {
+        procedure_id: procedure.id, id: 'received_mail',
+        mails_received_mail: { tiptap_body: json_body, tiptap_subject: json_subject },
+      }
+      mail = procedure.reload.received_mail
+      expect(mail.json_body).to eq(JSON.parse(json_body))
+      expect(mail.json_subject).to eq(JSON.parse(json_subject))
     end
   end
 end

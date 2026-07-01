@@ -25,13 +25,11 @@ module Administrateurs
     def update
       mail_template = find_mail_template_by_slug(params[:id])
 
-      if mail_template.update(update_params)
+      if mail_template.update(mail_template_params(mail_template))
         flash.notice = "Email mis à jour"
         redirect_to edit_admin_procedure_mail_template_path(mail_template.procedure_id, params[:id])
       else
-        flash.now.alert = "L’email contient des erreurs et n’a pas pu être enregistré. Veuiller les corriger"
-        mail_template.rich_body = mail_template.body
-
+        flash.now.alert = "L’email contient des erreurs et n’a pas pu être enregistré. Veuillez les corriger"
         @mail_template = mail_template
         render :edit
       end
@@ -56,13 +54,8 @@ module Administrateurs
       @procedure.mail_templates.find { |template| template.class.const_get(:SLUG) == slug }
     end
 
-    def update_params
-      mail_template_id = params[:id]
-      {
-        procedure_id: params[:procedure_id],
-        subject: params["mails_#{mail_template_id}"] ? params["mails_#{mail_template_id}"][:subject] : params["mails_#{mail_template_id}_mail"][:subject],
-        body: params["mails_#{mail_template_id}"] ? params["mails_#{mail_template_id}"][:rich_body] : params["mails_#{mail_template_id}_mail"][:rich_body],
-      }
+    def mail_template_params(mail_template)
+      params.require(mail_template.model_name.param_key).permit(:tiptap_body, :tiptap_subject)
     end
   end
 end
