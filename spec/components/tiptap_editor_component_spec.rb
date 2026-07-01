@@ -14,4 +14,13 @@ describe TiptapEditorComponent, type: :component do
     expect(rendered).not_to have_button("Souligné")
     expect(rendered.to_html).not_to include('data-tiptap-action="underline"')
   end
+
+  context "with a custom actions list" do
+    subject(:rendered) { render_inline(described_class.new(form:, field_name: :tiptap_body, actions: %w[bold strike])) }
+
+    it "renders only the buttons matching the given actions" do
+      expect(rendered).to have_button("Barré")
+      expect(rendered).not_to have_button("Liste")
+    end
+  end
 end
