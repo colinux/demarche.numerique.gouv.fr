@@ -27,6 +27,12 @@ class TiptapService
     children_texts_and_tags(node[:content], substitutions)
   end
 
+  def to_text(node, substitutions = {})
+    return '' if node.nil?
+
+    node_texts(node[:content], substitutions)
+  end
+
   private
 
   def initialize
@@ -53,6 +59,23 @@ class TiptapService
       end
     in type: 'pageBreak'
       ' '
+    end
+  end
+
+  def node_texts(content, substitutions)
+    (content || []).map { node_to_text(_1, substitutions) }.join
+  end
+
+  def node_to_text(node, substitutions)
+    case node
+    in type: 'text', text:
+      text
+    in type: 'mention', attrs: { id: }
+      substitutions.fetch(id) { "--#{id}--" }
+    in { content: } if content.is_a?(Array)
+      node_texts(content, substitutions)
+    else
+      ''
     end
   end
 

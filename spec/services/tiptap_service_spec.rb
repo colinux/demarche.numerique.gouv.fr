@@ -431,4 +431,36 @@ RSpec.describe TiptapService do
       end
     end
   end
+
+  describe '#to_text' do
+    let(:doc) do
+      {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              { type: 'text', text: 'Dossier nº ' },
+              { type: 'mention', attrs: { id: 'dossier_number', label: 'numéro du dossier' } },
+              { type: 'text', text: ' reçu' },
+            ],
+          },
+        ],
+      }
+    end
+
+    it 'concatène le texte en préservant les espaces et substitue les mentions' do
+      result = TiptapService.new.to_text(doc, { 'dossier_number' => '42' })
+      expect(result).to eq('Dossier nº 42 reçu')
+    end
+
+    it 'affiche --id-- pour une mention non substituée' do
+      result = TiptapService.new.to_text(doc, {})
+      expect(result).to eq('Dossier nº --dossier_number-- reçu')
+    end
+
+    it 'retourne une chaîne vide pour nil' do
+      expect(TiptapService.new.to_text(nil)).to eq('')
+    end
+  end
 end
