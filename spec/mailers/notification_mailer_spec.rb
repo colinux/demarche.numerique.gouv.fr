@@ -153,6 +153,27 @@ RSpec.describe NotificationMailer, type: :mailer do
       end
     end
 
+    context 'when the template body comes from json_body with a dossier_url mention' do
+      let(:email_template) do
+        create(:received_mail, subject: 'Email subject', procedure:, json_body: {
+          "type" => "doc",
+          "content" => [
+            {
+              "type" => "paragraph",
+              "content" => [
+                { "type" => "mention", "attrs" => { "id" => "dossier_url", "label" => "lien dossier" } },
+              ],
+            },
+          ],
+        })
+      end
+
+      it 'renders the link tag as clickable HTML' do
+        expect(mail.body.encoded).to include('<a ')
+        expect(mail.body).to have_link(href: dossier_url(dossier))
+      end
+    end
+
     it 'sends the mail from a no-reply address' do
       expect(subject.from.first).to eq(Mail::Address.new(NO_REPLY_EMAIL).address)
     end
