@@ -41,6 +41,14 @@
   <div id="editor" class="tiptap-editor" data-tiptap-target="editor"></div>
   <%= form.hidden_field field_name, data: { tiptap_target: 'input' }, value: input_value %>
 
+  <% if tags? %>
+    <p class="fr-hint-text">
+      Tapez le caractère <strong class="fr-text-title--grey">@</strong> suivi
+      du nom de la balise, ou cliquez sur les boutons ci-dessous.
+    </p>
+    <%= render TagsButtonListComponent.new(tags: tags) %>
+  <% end %>
+
   <dialog
     id="tiptap-link-modal"
     class="fr-modal"

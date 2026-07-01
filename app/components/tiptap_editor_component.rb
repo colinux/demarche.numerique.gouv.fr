@@ -13,13 +13,14 @@ class TiptapEditorComponent < ApplicationComponent
     'orderedList' => { label: 'Numérotée', title: 'Liste numérotée', icon: 'fr-icon-list-ordered' },
   }.freeze
 
-  attr_reader :form, :field_name, :preview_url, :actions
+  attr_reader :form, :field_name, :preview_url, :actions, :tags
 
-  def initialize(form:, field_name:, preview_url: nil, actions: DEFAULT_ACTIONS)
+  def initialize(form:, field_name:, preview_url: nil, actions: DEFAULT_ACTIONS, tags: nil)
     @form = form
     @field_name = field_name
     @preview_url = preview_url
     @actions = actions
+    @tags = tags
   end
 
   def input_value
@@ -32,6 +33,10 @@ class TiptapEditorComponent < ApplicationComponent
 
   def link?
     actions.include?('link')
+  end
+
+  def tags?
+    tags.present?
   end
 
   def button_class(button)

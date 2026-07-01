@@ -23,4 +23,17 @@ describe TiptapEditorComponent, type: :component do
       expect(rendered).not_to have_button("Liste")
     end
   end
+
+  it "does not render any tag button when tags: is not given" do
+    expect(rendered).not_to have_css('[data-tiptap-target="tag"]')
+  end
+
+  it "rend la liste de tags dans le composant quand tags: est fourni" do
+    render_inline(described_class.new(
+      form: form, field_name: :tiptap_body,
+      tags: { dossier: [{ id: 'dossier_number', libelle: 'numéro du dossier', description: '' }] }
+    ))
+    expect(page).to have_button('numéro du dossier')
+    expect(page).to have_css('[data-tiptap-target="tag"]')
+  end
 end
