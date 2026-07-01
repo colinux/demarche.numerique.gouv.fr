@@ -1,0 +1,78 @@
+<% content_for(:title, @mail_template.class.const_get(:DISPLAYED_NAME)) %>
+<% content_for(:root_class, 'scroll-margins-for-sticky-footer') %>
+<% render_procedure_sticky_title(@procedure) %>
+
+<% if params[:id] == 'closed_mail' %>
+  <%= render partial: 'admin/mail_template_attestation_inconsistency_alert',
+        locals: { procedure: @procedure, state: @procedure.mail_template_attestation_inconsistency_state(:acceptation),
+                  mail_type: 'acceptation', attestation_template_v1: (@procedure.attestation_acceptation_template&.version == 1) } %>
+<% elsif params[:id] == 'refused_mail' %>
+  <%= render partial: 'admin/mail_template_attestation_inconsistency_alert',
+        locals: { procedure: @procedure, state: @procedure.mail_template_attestation_inconsistency_state(:refus),
+                  mail_type: 'refus', attestation_template_v1: false } %>
+<% end %>
+
+<%= render partial: 'shared/breadcrumbs_section',
+      locals: { steps: [[admin_procedures_back_label(@procedure), admin_procedures_back_path(@procedure)],
+                        [@procedure.libelle.truncate_words(10), admin_procedure_path(@procedure)],
+                        ["Modèles d’email", admin_procedure_mail_templates_path(@procedure)],
+                        [@mail_template.class.const_get(:DISPLAYED_NAME)]] } %>
+
+<% preview_url = preview_admin_procedure_mail_template_path(@procedure, @mail_template.class.const_get(:SLUG)) %>
+<% preview_dossier = @procedure.active_revision.dossier_for_preview(current_user) %>
+
+<%= form_for @mail_template,
+      url: admin_procedure_mail_template_path(@procedure, @mail_template.class.const_get(:SLUG)),
+      method: :put do |f| %>
+  <div class="fr-container fr-my-4w">
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-12 fr-col-lg-7">
+        <fieldset class="fr-fieldset" aria-labelledby="edit-mail-template">
+          <legend class="fr-fieldset__legend" id="edit-mail-template">
+            <h1 class="fr-h2">
+              <%= @mail_template.class.const_get(:DISPLAYED_NAME) %>
+            </h1>
+          </legend>
+
+          <div class="fr-fieldset__element">
+            <%= render partial: 'subject_editor', locals: { f:, mail_template: @mail_template, preview_url: } %>
+          </div>
+
+          <div class="fr-fieldset__element <%= 'fr-input-group--error' if @mail_template.errors.include?(:json_body) %>">
+            <%= render TiptapEditorComponent.new(
+                  form: f,
+                  field_name: :tiptap_body,
+                  preview_url:,
+                  actions: %w[bold italic strike heading2 heading3 bulletList orderedList link],
+                  tags: @mail_template.tags_categorized) %>
+
+            <% if @mail_template.errors.include?(:json_body) %>
+              <div class="fr-error-text">
+                <%= render partial: "shared/errors_list", locals: { object: @mail_template, attribute: :json_body } %>
+              </div>
+            <% end %>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="fr-col-12 fr-col-lg-5 fr-background-alt--blue-france fr-py-3w">
+        <h2 class="fr-h4">Aperçu</h2>
+
+        <p class="fr-text--sm">
+          Objet&nbsp;:
+          <strong id="mail-subject-preview"><%= @mail_template.subject_for_dossier(preview_dossier) %></strong>
+        </p>
+
+        <div id="mail-body-preview">
+          <%= tag.iframe(src: preview_url, class: "mail-preview-frame", title: "Aperçu de l’email", width: "100%", height: "650", sandbox: "") %>
+        </div>
+
+        <p class="fr-hint-text fr-mt-1w">
+          L’aperçu se met à jour automatiquement après chaque modification.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <%= render Procedure::FixedFooterComponent.new(procedure: @procedure, form: f) %>
+<% end %>

@@ -1,0 +1,36 @@
+<%# locals: (f:, mail_template:, preview_url:) %>
+<% has_error = mail_template.errors.include?(:json_subject) %>
+
+<div class="fr-input-group <%= 'fr-input-group--error' if has_error %>" <%= tag.attributes(data: {
+  controller: 'tiptap',
+  tiptap_single_line_value: true,
+  tiptap_preview_url_value: preview_url,
+  tiptap_tags_value: mail_template.tags.map { |t| { id: t[:id], label: t[:libelle], optional: (t[:maybe_null] || t[:conditional]).present? } }
+}) %>>
+  <label class="fr-label fr-h4" for="mail-subject-editor">
+    Objet de l’email
+  </label>
+
+  <p class="fr-hint-text">
+    Tapez le caractère <strong class="fr-text-title--grey">@</strong> suivi du
+    nom de la balise pour insérer une donnée.
+  </p>
+
+  <div
+    id="mail-subject-editor"
+    class="tiptap-editor"
+    data-tiptap-target="editor"
+    aria-describedby="mail-subject-errors"
+  ></div>
+
+  <%= f.hidden_field :tiptap_subject, data: { tiptap_target: 'input' }, value: mail_template.tiptap_subject_or_default %>
+
+  <div
+    class="fr-error-text <%= 'hidden' unless has_error %>"
+    id="mail-subject-errors"
+  >
+    <% if has_error %>
+      <%= render partial: "shared/errors_list", locals: { object: mail_template, attribute: :json_subject } %>
+    <% end %>
+  </div>
+</div>

@@ -65,6 +65,26 @@ describe Administrateurs::MailTemplatesController, type: :controller do
     end
   end
 
+  describe 'GET edit' do
+    let(:admin) { create(:administrateur) }
+    let(:procedure) { create(:procedure, administrateur: admin) }
+
+    before { sign_in(admin.user) }
+
+    subject { get :edit, params: { procedure_id: procedure.id, id: 'received_mail' } }
+
+    it { expect(subject).to have_http_status(:ok) }
+
+    it 'affiche l’éditeur d’objet en une ligne' do
+      expect(subject.body).to include('data-tiptap-single-line-value')
+    end
+
+    it 'affiche l’aperçu du sujet et du corps' do
+      expect(subject.body).to include('id="mail-body-preview"')
+      expect(subject.body).to include('id="mail-subject-preview"')
+    end
+  end
+
   describe 'POST #preview (turbo_stream)' do
     let(:admin) { create(:administrateur) }
     let(:procedure) { create(:procedure, :published, administrateur: admin) }
