@@ -11,6 +11,8 @@ module MailTemplateConcern
     REPLY        = :reply
   end
 
+  EMPTY_TIPTAP_DOC = { "type" => "doc", "content" => [{ "type" => "paragraph" }] }.freeze
+
   def subject_for_dossier(dossier)
     replace_tags(subject, dossier, escape: false).presence || replace_tags(self.class::DEFAULT_SUBJECT, dossier, escape: false)
   end
@@ -29,6 +31,41 @@ module MailTemplateConcern
 
   def update_rich_body
     self.rich_body = self.body
+  end
+
+  def tiptap_body
+    json_body&.to_json
+  end
+
+  def tiptap_body=(json)
+    self.json_body = JSON.parse(json)
+  end
+
+  def tiptap_subject
+    json_subject&.to_json
+  end
+
+  def tiptap_subject=(json)
+    self.json_subject = JSON.parse(json)
+  end
+
+  def tiptap_body_or_default
+    if json_body.present?
+      json_body.to_json
+    elsif body.present?
+      legacy_html_to_tiptap(body).to_json
+    else
+      EMPTY_TIPTAP_DOC.to_json
+    end
+  end
+
+  def tiptap_subject_or_default
+    if json_subject.present?
+      json_subject.to_json
+    else
+      source = subject.presence || self.class::DEFAULT_SUBJECT
+      { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => tiptap_inline_nodes_for(source) }] }.to_json
+    end
   end
 
   included do
@@ -68,5 +105,11 @@ module MailTemplateConcern
 
   def dossier_tags
     super + TagsSubstitutionConcern::DOSSIER_TAGS_FOR_MAIL
+  end
+
+  private
+
+  def legacy_html_to_tiptap(html)
+    TrixToTiptapService.new(inline_resolver: method(:tiptap_inline_nodes_for)).to_document(html)
   end
 end
