@@ -175,4 +175,33 @@ describe MailTemplateConcern do
 
     it { expect(initiated_mail.rich_body.to_plain_text).to eq(initiated_mail.body) }
   end
+
+  describe '#tiptap_inline_nodes_for' do
+    let(:procedure) { create(:procedure, :with_type_de_champ) }
+    let(:mail) { Mails::ReceivedMail.default_for_procedure(procedure) }
+
+    it 'résout --numéro du dossier-- en mention' do
+      nodes = mail.tiptap_inline_nodes_for('Dossier --numéro du dossier--')
+      expect(nodes).to eq([
+        { "type" => "text", "text" => "Dossier " },
+        { "type" => "mention", "attrs" => { "id" => "dossier_number", "label" => "numéro du dossier" } },
+      ])
+    end
+
+    it 'garde un libellé inconnu en texte littéral' do
+      nodes = mail.tiptap_inline_nodes_for('Bonjour --libellé inexistant--')
+      expect(nodes).to eq([
+        { "type" => "text", "text" => "Bonjour " },
+        { "type" => "text", "text" => "--libellé inexistant--" },
+      ])
+    end
+
+    it 'retourne [] pour une chaîne vide' do
+      expect(mail.tiptap_inline_nodes_for('')).to eq([])
+    end
+
+    it 'préserve un texte composé uniquement d’espaces' do
+      expect(mail.tiptap_inline_nodes_for(' ')).to eq([{ "type" => "text", "text" => " " }])
+    end
+  end
 end

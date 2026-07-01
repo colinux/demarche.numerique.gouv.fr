@@ -49,6 +49,23 @@ module MailTemplateConcern
     end
   end
 
+  def tiptap_inline_nodes_for(text)
+    return [] if text.nil?
+
+    parse_tags(text).filter_map do |token|
+      case token
+      in { tag:, id: }
+        { "type" => "mention", "attrs" => { "id" => id, "label" => tag } }
+      in { tag: }
+        { "type" => "text", "text" => "--#{tag}--" }
+      in { text: }
+        { "type" => "text", "text" => text } unless text.empty?
+      else
+        nil
+      end
+    end
+  end
+
   def dossier_tags
     super + TagsSubstitutionConcern::DOSSIER_TAGS_FOR_MAIL
   end
