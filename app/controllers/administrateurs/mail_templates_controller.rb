@@ -37,15 +37,25 @@ module Administrateurs
 
     def preview
       mail_template = find_mail_template_by_slug(params[:id])
-      dossier = @procedure.active_revision.dossier_for_preview(current_user)
+      submitted = preview_params(mail_template)
+      mail_template.assign_attributes(submitted) if submitted.present?
 
+      dossier = @procedure.active_revision.dossier_for_preview(current_user)
       @dossier = dossier
       @logo_url = @procedure.logo_url
       @service = @procedure.service
-      @rendered_template = sanitize(mail_template.body_for_dossier(dossier), scrubber: Sanitizers::MailScrubber.new)
       @actions = mail_template.actions_for_dossier(dossier)
+      @rendered_template = sanitize(mail_template.body_for_dossier(dossier), scrubber: Sanitizers::MailScrubber.new)
+      @subject_preview = mail_template.subject_for_dossier(dossier)
 
-      render(template: 'notification_mailer/send_notification', layout: 'mailers/layout')
+      respond_to do |format|
+        format.html { render(template: 'notification_mailer/send_notification', layout: 'mailers/layout') }
+        format.turbo_stream do
+          @updated_body = submitted.key?('tiptap_body')
+          @updated_subject = submitted.key?('tiptap_subject')
+          @mail_body_html = render_to_string(template: 'notification_mailer/send_notification', formats: [:html], layout: 'mailers/layout') if @updated_body
+        end
+      end
     end
 
     private
@@ -56,6 +66,11 @@ module Administrateurs
 
     def mail_template_params(mail_template)
       params.require(mail_template.model_name.param_key).permit(:tiptap_body, :tiptap_subject)
+    end
+
+    def preview_params(mail_template)
+      key = mail_template.model_name.param_key
+      params.fetch(key, {}).permit(:tiptap_body, :tiptap_subject)
     end
   end
 end

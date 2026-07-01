@@ -823,7 +823,10 @@ Rails.application.routes.draw do
       end
 
       resources :mail_templates, only: [:index] do
-        get 'preview', on: :member
+        member do
+          get 'preview'
+          post 'preview'
+        end
       end
 
       resources :labels, controller: 'labels' do

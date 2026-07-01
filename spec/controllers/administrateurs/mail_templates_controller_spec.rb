@@ -64,4 +64,22 @@ describe Administrateurs::MailTemplatesController, type: :controller do
       expect(mail.json_subject).to eq(JSON.parse(json_subject))
     end
   end
+
+  describe 'POST #preview (turbo_stream)' do
+    let(:admin) { create(:administrateur) }
+    let(:procedure) { create(:procedure, :published, administrateur: admin) }
+    let(:json_body) { { "type" => "doc", "content" => [{ "type" => "paragraph", "content" => [{ "type" => "text", "text" => "Salut" }] }] }.to_json }
+
+    before { sign_in(admin.user) }
+
+    it 'renvoie un turbo_stream mettant à jour l’aperçu du corps' do
+      post :preview, params: {
+        procedure_id: procedure.id, id: 'received_mail',
+        mails_received_mail: { tiptap_body: json_body },
+      }, format: :turbo_stream
+      expect(response.media_type).to eq('text/vnd.turbo-stream.html')
+      expect(response.body).to include('mail-body-preview')
+      expect(response.body).to include('Salut')
+    end
+  end
 end

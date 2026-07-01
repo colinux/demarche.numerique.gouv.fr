@@ -1,0 +1,9 @@
+<% if @updated_body %>
+  <%= turbo_stream.update "mail-body-preview" do %>
+    <%= tag.iframe(srcdoc: @mail_body_html, class: "mail-preview-frame", title: "Aperçu de l’email", width: "100%", height: "650", sandbox: "") %>
+  <% end %>
+<% end %>
+
+<% if @updated_subject %>
+  <%= turbo_stream.update "mail-subject-preview", @subject_preview %>
+<% end %>
