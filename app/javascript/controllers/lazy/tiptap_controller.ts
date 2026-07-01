@@ -30,7 +30,8 @@ export class TiptapController extends ApplicationController {
     insertAfterTag: { type: String, default: '' },
     attributes: { type: Object, default: {} },
     previewUrl: { type: String, default: '' },
-    singleLine: { type: Boolean, default: false }
+    singleLine: { type: Boolean, default: false },
+    tags: { type: Array, default: [] }
   };
 
   declare editorTarget: Element;
@@ -41,6 +42,7 @@ export class TiptapController extends ApplicationController {
   declare attributesValue: Record<string, string>;
   declare previewUrlValue: string;
   declare singleLineValue: boolean;
+  declare tagsValue: TagSchema[];
 
   // Link modal targets (optional - not all tiptap instances have the modal)
   declare hasLinkModalTarget: boolean;
@@ -263,6 +265,9 @@ export class TiptapController extends ApplicationController {
   }
 
   private get tags(): TagSchema[] {
+    if (this.tagsValue.length > 0) {
+      return this.tagsValue.map((tag) => s.create(tag, tagSchema));
+    }
     return this.tagTargets.map((tag) => s.create(tag.dataset, tagSchema));
   }
 
