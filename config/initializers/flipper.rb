@@ -38,6 +38,7 @@ features = [
   :llm_nightly_improve_procedure,
   :ami_notifications,
   :api_entreprise_tva_job,
+  :api_entreprise_association_job,
   :usager_dossiers_alert_filters,
   :s3_storage,
 ]
@@ -63,7 +64,7 @@ end
 
 ActiveSupport.on_load(:active_record) do
   if database_exists? && ActiveRecord::Base.connection.data_source_exists?('flipper_features')
-    setup_features(features, enabled_by_default: [:api_entreprise_tva_job])
+    setup_features(features, enabled_by_default: [:api_entreprise_tva_job, :api_entreprise_association_job])
   end
 end
 

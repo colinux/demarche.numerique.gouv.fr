@@ -4,7 +4,7 @@ describe APIEntrepriseService do
   shared_examples 'schedule fetch of all etablissement params' do
     [
       APIEntreprise::ExtraitKbisJob,
-      APIEntreprise::AssociationJob, APIEntreprise::ExercicesJob,
+      APIEntreprise::ExercicesJob,
       APIEntreprise::EffectifsJob, APIEntreprise::EffectifsAnnuelsJob, APIEntreprise::AttestationSocialeJob,
       APIEntreprise::BilansBdfJob,
     ].each do |job|
@@ -59,6 +59,22 @@ describe APIEntrepriseService do
 
         it 'should not enqueue TvaJob' do
           expect { subject }.not_to have_enqueued_job(APIEntreprise::TvaJob)
+        end
+      end
+
+      context 'when api_entreprise_association_job feature is enabled' do
+        before { Flipper.enable(:api_entreprise_association_job) }
+
+        it 'should enqueue AssociationJob' do
+          expect { subject }.to have_enqueued_job(APIEntreprise::AssociationJob)
+        end
+      end
+
+      context 'when api_entreprise_association_job feature is disabled' do
+        before { Flipper.disable(:api_entreprise_association_job) }
+
+        it 'should not enqueue AssociationJob' do
+          expect { subject }.not_to have_enqueued_job(APIEntreprise::AssociationJob)
         end
       end
     end

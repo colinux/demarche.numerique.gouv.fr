@@ -70,10 +70,11 @@ class APIEntrepriseService
     def perform_later_fetch_jobs(etablissement, procedure_id, user_id, wait: nil)
       jobs = [
         APIEntreprise::ExtraitKbisJob,
-        APIEntreprise::AssociationJob, APIEntreprise::ExercicesJob,
+        APIEntreprise::ExercicesJob,
         APIEntreprise::EffectifsJob, APIEntreprise::EffectifsAnnuelsJob, APIEntreprise::AttestationSocialeJob,
         APIEntreprise::BilansBdfJob,
       ]
+      jobs << APIEntreprise::AssociationJob if Flipper.enabled?(:api_entreprise_association_job)
       jobs << APIEntreprise::TvaJob if Flipper.enabled?(:api_entreprise_tva_job)
       if etablissement.as_degraded_mode?
         jobs << APIEntreprise::EtablissementJob
