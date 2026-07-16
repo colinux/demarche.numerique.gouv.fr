@@ -1,0 +1,17 @@
+.jdma-button {
+  display: inline-block;
+}
+
+.jdma-button__img--dark {
+  display: none;
+}
+
+[data-fr-theme='dark'] {
+  .jdma-button__img--light {
+    display: none;
+  }
+
+  .jdma-button__img--dark {
+    display: inline;
+  }
+}
