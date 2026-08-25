@@ -1,7 +1,7 @@
 <% if limited? %>
-  <% if render_combobox? %>
-    <react-fragment class="flex-1">
-      <%= render ReactComponent.new("ComboBox/SingleComboBox", **combobox_react_props) %>
+  <% if render_as_autocomplete? %>
+    <react-fragment>
+      <%= render ReactComponent.new("Select/SingleSelect", **select_react_props) %>
     </react-fragment>
   <% else %>
     <%= @form.select :value,

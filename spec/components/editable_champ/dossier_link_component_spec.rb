@@ -128,22 +128,38 @@ describe EditableChamp::DossierLinkComponent, type: :component do
       end
     end
 
-    context 'with at least the combobox threshold of dossiers' do
-      before do
-        stub_const("#{described_class}::COMBOBOX_THRESHOLD", 1)
-        create(:dossier, :en_construction, procedure: linked_procedure, user:)
-      end
+    context 'with at least the autocomplete threshold of dossiers' do
+      let!(:user_dossier) { create(:dossier, :en_construction, procedure: linked_procedure, user:) }
 
-      it 'renders a searchable combobox grouped by procedure without separators' do
+      before { stub_const("#{described_class}::THRESHOLD_NB_OPTIONS_AS_AUTOCOMPLETE", 1) }
+
+      it 'renders a filterable react select grouped by procedure' do
         render
 
-        expect(page).to have_css('react-component[name="ComboBox/SingleComboBox"]')
+        expect(page).to have_css('react-component[name="Select/SingleSelect"]')
         expect(page).not_to have_css('select')
 
         props = JSON.parse(page.find('react-component')['props'])
         expect(props['sections'].first['label']).to eq('Démarche « Démarche A »')
-        # the combobox input gets its accessible name from the field label
-        expect(props['labelId']).to be_present
+        expect(props['sections'].first['items'].map { it['value'] }).to eq([user_dossier.id.to_s])
+        # the select trigger gets its accessible name from the field label
+        expect(props['label_id']).to be_present
+      end
+
+      context 'when the user has no dossier on another allowed procedure' do
+        let(:empty_procedure) { create(:procedure, libelle: 'Démarche B') }
+
+        before { tdc.update!(procedures_limit: '1', dossier_link_procedure_ids: [linked_procedure.id, empty_procedure.id]) }
+
+        it 'renders an unselectable item for the procedure without any dossier' do
+          render
+
+          props = JSON.parse(page.find('react-component')['props'])
+          empty_section = props['sections'].last
+          expect(empty_section['label']).to eq('Démarche « Démarche B »')
+          expect(empty_section['items'].map { it['label'] }).to eq(['Vous n’avez déposé aucun dossier sur cette démarche.'])
+          expect(props['disabled_keys']).to eq(empty_section['items'].map { it['value'] })
+        end
       end
     end
 

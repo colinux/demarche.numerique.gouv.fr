@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComponent
-  COMBOBOX_THRESHOLD = 20
+  THRESHOLD_NB_OPTIONS_AS_AUTOCOMPLETE = 20
 
   def dsfr_input_classname
     limited? ? 'fr-select' : 'fr-input'
@@ -11,8 +11,8 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
     @champ.selectable?
   end
 
-  def render_combobox?
-    total_dossiers >= COMBOBOX_THRESHOLD
+  def render_as_autocomplete?
+    total_dossiers >= THRESHOLD_NB_OPTIONS_AS_AUTOCOMPLETE
   end
 
   def grouped_select_options
@@ -23,19 +23,21 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
         dossiers.map { |dossier| [option_label(dossier), dossier.id.to_s] }
       end
 
-      [t('.procedure_section', libelle: procedure.libelle), options]
+      [section_label(procedure), options]
     end
   end
 
-  def combobox_react_props
+  def select_react_props
     {
-      id: @champ.focusable_input_id,
+      class_name: 'fr-mt-1w',
+      trigger_id: @champ.focusable_input_id,
       name: @form.field_name(:value),
-      sections: combobox_sections,
-      selected_key: @champ.value.presence,
+      sections: select_sections,
+      disabled_keys:,
+      value: @champ.value.presence,
       placeholder: t('.select_placeholder'),
       is_required: @champ.required?,
-      labelId: input_label_id(@champ),
+      label_id: input_label_id(@champ),
       ariaLabelledbyPrefix: aria_labelledby_prefix,
       'aria-describedby': select_aria_describedby,
     }.compact
@@ -54,14 +56,25 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
 
   private
 
-  def combobox_sections
+  # A procedure without any dossier still gets a section, holding a single item explaining
+  # why: its key is disabled so it can be read but never selected.
+  def select_sections
     grouped_dossiers.map do |procedure, dossiers|
-      {
-        label: t('.procedure_section', libelle: procedure.libelle),
-        items: dossiers.map { |dossier| { label: option_label(dossier), value: dossier.id.to_s } },
-      }
+      items = if dossiers.empty?
+        [{ label: t('.no_dossier_in_procedure'), value: empty_procedure_key(procedure) }]
+      else
+        dossiers.map { { label: option_label(it), value: it.id.to_s } }
+      end
+
+      { label: section_label(procedure), items: }
     end
   end
+
+  def disabled_keys
+    grouped_dossiers.filter_map { |procedure, dossiers| empty_procedure_key(procedure) if dossiers.empty? }
+  end
+
+  def empty_procedure_key(procedure) = "no-dossier-#{procedure.id}"
 
   def grouped_dossiers
     @champ.linkable_dossiers_by_procedure
@@ -73,6 +86,10 @@ class EditableChamp::DossierLinkComponent < EditableChamp::EditableChampBaseComp
 
   def contains_long_option?
     @champ.linkable_procedures.any? { |procedure| procedure.libelle.size > 100 }
+  end
+
+  def section_label(procedure)
+    t('.procedure_section', libelle: procedure.libelle)
   end
 
   def option_label(dossier)
