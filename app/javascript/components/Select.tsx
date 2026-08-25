@@ -83,8 +83,11 @@ function Select<M extends SelectionMode = 'single'>({
     throw new Error('Select must be provided with either items or sections');
   }
 
-  if (!props['aria-label'] && labelId && ariaLabelledbyPrefix) {
-    props['aria-labelledby'] = `${ariaLabelledbyPrefix} ${labelId}`;
+  // the prefix is only set inside a repetition (the fieldset legend id)
+  if (!props['aria-label'] && labelId) {
+    props['aria-labelledby'] = ariaLabelledbyPrefix
+      ? `${ariaLabelledbyPrefix} ${labelId}`
+      : labelId;
   }
 
   return (
