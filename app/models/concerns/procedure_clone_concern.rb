@@ -86,6 +86,7 @@ module ProcedureCloneConcern
     'admin_default_procedure_presentation_active',
     'admin_default_procedure_presentation_id',
     'api_entreprise_token_expiration_notice_sent_at',
+    'combined_declarative_email',
   ]
 
   NEW_MAX_DUREE_CONSERVATION = Expired::DEFAULT_DOSSIER_RENTENTION_IN_MONTH
@@ -213,6 +214,9 @@ module ProcedureCloneConcern
     procedure.api_entreprise_token = nil if !options[:clone_api_entreprise_token] || !same_admin?(admin)
     procedure.web_hook_url = nil if !same_admin?(admin)
     procedure.sva_svr = {} if !options[:clone_sva_svr]
+    # Le réglage suit les modèles, qu’il fait envoyer ou non : sans eux, le clone
+    # repart sur l’email combiné comme une démarche neuve.
+    procedure.combined_declarative_email = true if !options[:clone_email_templates]
 
     if !options[:clone_instructeurs] || !same_admin?(admin)
       procedure.routing_enabled = false
