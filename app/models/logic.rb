@@ -9,6 +9,9 @@ module Logic
     from_h(JSON.parse(s))
   end
 
+  # Runs the solver: call it from the editors and the publication checks
+  # only, never while a dossier is filled or routed (condition.errors there).
+  #
   # The errors of a whole condition: the structural ones of its terms (unknown
   # champ, incompatible types…), or, when it is well formed, the reason it can
   # never be true (see Logic::Solver). Checked on the root only: a
