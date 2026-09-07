@@ -104,6 +104,14 @@ describe Conditions::ConditionsErrorsComponent, type: :component do
       end
     end
 
+    context 'when a row runs into the validation limits of a number champ' do
+      let(:tdc) { create(:type_de_champ_decimal_number, options: { range_number: '1', min_number: '0', max_number: '5' }) }
+      let(:source_tdcs) { [tdc] }
+      let(:condition) { greater_than(champ_value(tdc.stable_id), constant(6)) }
+
+      it { expect(page).to have_content("Aucune valeur du champ « #{tdc.libelle} » ne vérifie « supérieur à 6 » : ses valeurs sont limitées entre « 0 » et « 5 ».") }
+    end
+
     context 'when the rows are contradictory on a geographic champ' do
       let(:tdc) { create(:type_de_champ_departements) }
       let(:source_tdcs) { [tdc] }
