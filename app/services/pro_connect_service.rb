@@ -60,7 +60,7 @@ class ProConnectService
 
     amr = id_token.amr.present? ? JSON.parse(id_token.amr) : []
 
-    [access_token.userinfo!.raw_attributes, access_token.id_token, amr]
+    [access_token.userinfo!.raw_attributes, access_token.id_token, amr, id_token.acr]
   end
 
   def self.logout_url(id_token, host_with_port:)
