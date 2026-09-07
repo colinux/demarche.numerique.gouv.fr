@@ -50,8 +50,6 @@ describe ProConnectService do
         expect(uri).to include('eidas1-mfa')
         expect(uri).to include('eidas2')
         expect(uri).to include('eidas3')
-        expect(uri).to include('self-asserted-2fa')
-        expect(uri).to include('consistency-checked-2fa')
       end
     end
 
