@@ -22,3 +22,10 @@ en:
       min: "to « %{min} » at least"
       max: "to « %{max} » at most"
     unreachable: "This condition can never be true: the field « %{libelle} » is not displayed in that case."
+    contradiction_branch:
+      one: "One « Or » branch of this condition can never be true: no value of the field « %{libelle} » satisfies %{comparisons} there."
+      other: "One « Or » branch of this condition can never be true: no value of the field « %{libelle} » satisfies %{comparisons} at once there."
+    limited_branch:
+      one: "One « Or » branch of this condition can never be true: no value of the field « %{libelle} » satisfies %{comparisons} there, as its values are limited %{limits}."
+      other: "One « Or » branch of this condition can never be true: no value of the field « %{libelle} » satisfies %{comparisons} at once there, as its values are limited %{limits}."
+    unreachable_branch: "One « Or » branch of this condition can never be true: the field « %{libelle} » is not displayed in that case."

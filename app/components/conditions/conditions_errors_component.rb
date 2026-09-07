@@ -66,6 +66,19 @@ class Conditions::ConditionsErrorsComponent < ApplicationComponent
       targeted_champ = source_tdc(stable_id)
       t('empty_options', scope: '.errors',
         libelle: targeted_champ.libelle)
+    in { type: :contradiction, stable_id: stable_id, comparisons: comparisons, limits: limits, branch: true }
+      targeted_champ = source_tdc(stable_id)
+      t('limited_branch', scope: '.errors',
+        count: comparisons.size,
+        libelle: targeted_champ.libelle,
+        comparisons: comparisons.map { humanize_comparison(it) }.to_sentence,
+        limits: humanize_limits(limits))
+    in { type: :contradiction, stable_id: stable_id, comparisons: comparisons, branch: true }
+      targeted_champ = source_tdc(stable_id)
+      t('contradiction_branch', scope: '.errors',
+        count: comparisons.size,
+        libelle: targeted_champ.libelle,
+        comparisons: comparisons.map { humanize_comparison(it) }.to_sentence)
     in { type: :contradiction, stable_id: stable_id, comparisons: comparisons, limits: limits }
       targeted_champ = source_tdc(stable_id)
       t('limited', scope: '.errors',
@@ -79,6 +92,9 @@ class Conditions::ConditionsErrorsComponent < ApplicationComponent
         count: comparisons.size,
         libelle: targeted_champ.libelle,
         comparisons: comparisons.map { humanize_comparison(it) }.to_sentence)
+    in { type: :unreachable, stable_id: stable_id, branch: true }
+      targeted_champ = source_tdc(stable_id)
+      t('unreachable_branch', scope: '.errors', libelle: targeted_champ.libelle)
     in { type: :unreachable, stable_id: stable_id }
       targeted_champ = source_tdc(stable_id)
       t('unreachable', scope: '.errors', libelle: targeted_champ.libelle)

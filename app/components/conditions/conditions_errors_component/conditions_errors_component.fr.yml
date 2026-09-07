@@ -22,3 +22,10 @@ fr:
       min: "à « %{min} » au minimum"
       max: "à « %{max} » au maximum"
     unreachable: "Cette condition ne peut jamais être vraie : le champ « %{libelle} » n’est pas affiché dans ce cas."
+    contradiction_branch:
+      one: "Une des branches « Ou » de cette condition ne peut jamais être vraie : aucune valeur du champ « %{libelle} » n’y vérifie %{comparisons}."
+      other: "Une des branches « Ou » de cette condition ne peut jamais être vraie : aucune valeur du champ « %{libelle} » n’y vérifie à la fois %{comparisons}."
+    limited_branch:
+      one: "Une des branches « Ou » de cette condition ne peut jamais être vraie : aucune valeur du champ « %{libelle} » n’y vérifie %{comparisons}, ses valeurs étant limitées %{limits}."
+      other: "Une des branches « Ou » de cette condition ne peut jamais être vraie : aucune valeur du champ « %{libelle} » n’y vérifie à la fois %{comparisons}, ses valeurs étant limitées %{limits}."
+    unreachable_branch: "Une des branches « Ou » de cette condition ne peut jamais être vraie : le champ « %{libelle} » n’est pas affiché dans ce cas."
