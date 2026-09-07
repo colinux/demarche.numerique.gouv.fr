@@ -62,4 +62,15 @@ describe ProConnectService do
       end
     end
   end
+
+  describe '.mfa?' do
+    it 'is true when amr or acr asserts a multi factor authentication' do
+      expect(described_class.mfa?(amr: ['pwd', 'mail', 'mfa'], acr: nil)).to be true
+      expect(described_class.mfa?(amr: ['pwd'], acr: 'eidas1-mfa')).to be true
+    end
+
+    it 'is false otherwise' do
+      expect(described_class.mfa?(amr: ['pwd'], acr: 'eidas1')).to be false
+    end
+  end
 end
