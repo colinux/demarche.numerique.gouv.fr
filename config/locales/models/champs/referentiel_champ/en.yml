@@ -1,0 +1,8 @@
+en:
+  activerecord:
+    errors:
+      models:
+        champs/referentiel_champ:
+          attributes:
+            value:
+              unreadable_selection: "could not be saved. Search again, then select a value from the list"

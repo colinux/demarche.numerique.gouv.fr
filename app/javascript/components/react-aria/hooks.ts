@@ -29,26 +29,50 @@ const inputMap = new WeakMap<HTMLInputElement, string>();
 const inputCountMap = new WeakMap<HTMLSpanElement, number>();
 export function useDispatchChangeEvent() {
   const ref = useRef<HTMLSpanElement>(null);
+  const isDispatchPending = useRef(false);
+
+  // Remember the values of every render the user did not cause: the first one, and those
+  // where the server changes the props (a prefill). Otherwise the first dispatch always
+  // looks like a change, and react-aria reports picking the already selected item (click,
+  // Enter, blur) as a selection change — an untouched champ would be submitted. And going
+  // back to a value the server has replaced since would look like no change at all.
+  useEffect(() => {
+    if (ref.current && !isDispatchPending.current) {
+      rememberInputs(
+        ref.current,
+        Array.from(ref.current.querySelectorAll('input'))
+      );
+    }
+  });
 
   return {
     ref,
     dispatch: () => {
+      isDispatchPending.current = true;
       requestAnimationFrame(() => {
+        isDispatchPending.current = false;
         if (ref.current) {
           const container = ref.current;
           const inputs = Array.from(container.querySelectorAll('input'));
           const input = inputs.at(0);
           if (input && inputChanged(container, inputs)) {
-            inputCountMap.set(container, inputs.length);
-            for (const input of inputs) {
-              inputMap.set(input, input.value.trim());
-            }
+            rememberInputs(container, inputs);
             input.dispatchEvent(new Event('change', { bubbles: true }));
           }
         }
       });
     }
   };
+}
+
+function rememberInputs(
+  container: HTMLSpanElement,
+  inputs: HTMLInputElement[]
+) {
+  inputCountMap.set(container, inputs.length);
+  for (const input of inputs) {
+    inputMap.set(input, input.value.trim());
+  }
 }
 
 // I am not proude of this code. We have to tack values and number of values to deal with multi select combobox.
@@ -401,12 +425,13 @@ export function useRemoteList({
     NonNullable<ComboBoxProps['onSelectionChange']>
   >((key) => {
     setIsExplicitlySelected(true);
+    // A freshly loaded item wins over the selected one with the same key: it carries
+    // the same data, but its token is newer (the server rejects an expired one).
     const item =
-      (typeof key != 'string'
+      typeof key != 'string'
         ? null
-        : selectedItem && getKey(selectedItem) == key
-          ? selectedItem
-          : list.getItem(key)) ?? null;
+        : (list.getItem(key) ??
+          (selectedItem && getKey(selectedItem) == key ? selectedItem : null));
     setSelectedItem(item);
     if (item) {
       setInputValue(item.label);

@@ -380,6 +380,95 @@ describe Champs::ReferentielChamp, type: :model do
           expect { subject }.not_to change { referentiel_champ.reload.data }
         end
       end
+
+      context 'when the champ is already filled' do
+        subject { referentiel_champ.update(value: 'other', data:) }
+
+        let(:datasource) { '$.deep.nested' }
+        let(:referentiel_mapping) do
+          {
+            "$.deep.nested[0].string" => { type: types[:string], display_usager: "1" },
+          }
+        end
+        let(:saved_data) { { "deep" => { "nested" => [{ 'string' => 'value' }] } } }
+        let(:value_json) { { '$.deep.nested[0].string' => 'value' } }
+
+        before do
+          referentiel_champ.update_columns(value: 'value', data: saved_data, value_json:)
+        end
+
+        shared_examples 'a rejected selection' do
+          it 'keeps the saved selection and tells the usager' do
+            expect(subject).to be(false)
+            expect(referentiel_champ.errors).to be_of_kind(:value, :unreadable_selection)
+            expect(referentiel_champ.value).to eq('value')
+
+            referentiel_champ.reload
+            expect(referentiel_champ.value).to eq('value')
+            expect(referentiel_champ.data).to eq(saved_data)
+            expect(referentiel_champ.value_json).to eq(value_json)
+          end
+        end
+
+        context 'when data is not a token (the displayed values re-submitted as JSON)' do
+          let(:data) { value_json.to_json }
+
+          it_behaves_like 'a rejected selection'
+        end
+
+        context 'when the token has expired' do
+          let(:raw_data) { { 'string' => 'other' } }
+          let(:data) { travel_to(2.hours.ago) { super() } }
+
+          it_behaves_like 'a rejected selection'
+        end
+
+        context 'when a new value comes without a token' do
+          let(:data) { '' }
+
+          it_behaves_like 'a rejected selection'
+        end
+
+        context 'when the current value is re-submitted without a token' do
+          subject { referentiel_champ.update(value: 'value', data: '') }
+
+          it 'keeps the saved data' do
+            expect(subject).to be(true)
+            expect(referentiel_champ.reload.data).to eq(saved_data)
+          end
+        end
+
+        context 'when the current selection is re-submitted with a fresh token' do
+          subject { referentiel_champ.update(value: 'value', data:) }
+
+          let(:raw_data) { { 'string' => 'value' } }
+
+          it 'rewrites nothing and does not prefill again' do
+            expect(dossier).not_to receive(:prefill_and_enqueue_fetch_external_data_jobs)
+
+            expect(subject).to be(true)
+            expect(referentiel_champ.saved_changes).to be_empty
+          end
+        end
+
+        context 'when the selection is cleared' do
+          subject { referentiel_champ.update(value: '', data: '') }
+
+          it 'voids the data' do
+            expect { subject }.to change { referentiel_champ.reload.data }.from(saved_data).to(nil)
+          end
+        end
+      end
+    end
+  end
+
+  describe '#selected_items' do
+    let(:referentiel) { create(:api_referentiel, :autocomplete) }
+
+    before { referentiel_champ.update_columns(value: 'label', value_json: { '$.string' => 'value' }) }
+
+    it 'seeds the combobox with the label only: the server can only read the encrypted token of a suggestion' do
+      expect(referentiel_champ.selected_items).to eq([{ label: 'label', value: 'label' }])
     end
   end
 end

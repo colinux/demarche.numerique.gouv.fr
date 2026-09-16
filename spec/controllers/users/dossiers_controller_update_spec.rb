@@ -502,6 +502,36 @@ describe Users::DossiersController, type: :controller do
         expect(annotation.value).to eq(suggestion_data[:finess])
         expect(annotation.stream).to eq(Dossier::MAIN_STREAM)
       end
+
+      context 'when the data is not an encrypted token' do
+        let(:submit_payload) do
+          {
+            id: dossier.id,
+            dossier: {
+              champs_public_attributes: {
+                first_champ.public_id => {
+                  value: suggestion_value,
+                  data: suggestion_data.to_json,
+                },
+              },
+            },
+          }
+        end
+
+        it 'rejects the selection instead of failing' do
+          subject
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include(I18n.t('activerecord.errors.models.champs/referentiel_champ.attributes.value.unreadable_selection'))
+
+          dossier.reload
+          dossier.with_update_stream(dossier.user) do
+            referentiel = dossier.root_champs_public.find { it.stable_id == referentiel_stable_id }
+            expect(referentiel.value).to be_nil
+            expect(referentiel.data).to be_nil
+          end
+        end
+      end
     end
 
     context 'when the champ is quotient familial' do
