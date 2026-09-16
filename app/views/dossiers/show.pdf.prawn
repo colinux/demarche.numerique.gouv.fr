@@ -340,7 +340,7 @@ def add_champs(pdf, champs)
     elsif champ.repetition?
       pdf.indent(current_indent) do
         champ.rows.each do |row|
-          row.each do |inner_champ|
+          row.flat_children.each do |inner_champ|
             add_single_champ(pdf, inner_champ)
           end
         end

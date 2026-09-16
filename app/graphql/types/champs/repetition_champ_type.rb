@@ -13,18 +13,16 @@ module Types::Champs
     field :rows, [Row], null: false
 
     def champs
-      object.rows.flat_map { _1.filter(&:visible?) }
+      object.rows.flat_map { it.flat_children.filter(&:visible?) }
     end
 
     def rows
-      object
-        .rows
-        .map do
-          {
-            id: GraphQL::Schema::UniqueWithinType.encode('Row', _1.first.row_id),
-            champs: _1.filter(&:visible?),
-          }
-        end
+      object.rows.map do |row|
+        {
+          id: GraphQL::Schema::UniqueWithinType.encode('Row', row.id),
+          champs: row.flat_children.filter(&:visible?),
+        }
+      end
     end
   end
 end

@@ -9,8 +9,8 @@ RSpec.describe TypesDeChamp::PrefillRepetitionTypeDeChamp, type: :model do
   let(:text_repetition) { prefillable_subchamps.first }
   let(:integer_repetition) { prefillable_subchamps.second }
   let(:region_repetition) { prefillable_subchamps.third }
-  let(:text_repetition_champs) { champ.rows.flat_map(&:first) }
-  let(:integer_repetition_champs) { champ.rows.flat_map(&:second) }
+  let(:text_repetition_champs) { champ.rows.map { it.flat_children.first } }
+  let(:integer_repetition_champs) { champ.rows.map { it.flat_children.second } }
 
   describe 'ancestors' do
     subject { described_class.build(type_de_champ, procedure.active_revision) }
@@ -86,7 +86,7 @@ RSpec.describe TypesDeChamp::PrefillRepetitionTypeDeChamp, type: :model do
         # value for the synchronous ones.
         def expect_both_rows_prefilled(repetition)
           expect(repetition.row_ids.size).to eq(2)
-          subchamps = repetition.rows.flatten
+          subchamps = repetition.rows.flat_map(&:flat_children)
           expect(subchamps.size).to eq(2)
           expect(subchamps).to all(be_prefilled)
 

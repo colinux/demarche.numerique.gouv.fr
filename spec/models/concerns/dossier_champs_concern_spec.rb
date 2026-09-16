@@ -334,23 +334,17 @@ RSpec.describe DossierChampsConcern do
 
     it "returns one row of one child champ" do
       expect(subject.size).to eq(1)
-      expect(subject.first.map(&:libelle)).to eq(['Nom'])
+      expect(subject.first.flat_children.map(&:libelle)).to eq(['Nom'])
+    end
+
+    it "numbers the rows from 1 and keeps their row id" do
+      expect(subject.map(&:index)).to eq([1])
+      expect(subject.map(&:id)).to eq(dossier.repetition_row_ids(type_de_champ_repetition))
+      expect(subject.map(&:dossier)).to eq([dossier])
     end
 
     it "returns [] for a type de champ that is not a repetition" do
       expect(dossier.project_rows_for(dossier.find_type_de_champ_by_stable_id(99))).to eq([])
-    end
-  end
-
-  describe '#repetition_rows_for_export' do
-    let(:type_de_champ_repetition) { dossier.find_type_de_champ_by_stable_id(993) }
-    subject { dossier.repetition_rows_for_export(type_de_champ_repetition) }
-
-    it "wraps each row id in a Row numbered from 1" do
-      expect(subject.size).to eq(1)
-      expect(subject.map(&:index)).to eq([1])
-      expect(subject.map(&:row_id)).to eq(dossier.repetition_row_ids(type_de_champ_repetition))
-      expect(subject.map(&:dossier)).to eq([dossier])
     end
   end
 

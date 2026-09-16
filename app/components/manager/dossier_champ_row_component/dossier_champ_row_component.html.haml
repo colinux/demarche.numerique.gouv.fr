@@ -10,10 +10,10 @@
     = icon
     = status
 
-  - nested_rows.each_with_index do |group_rows, index|
+  - nested_rows.each do |group_row|
     %thead
       %tr
         %td.cell-group-header{ colspan: 3 }
-          = "Bloc ##{index + 1} “#{row.libelle}”"
+          = "Bloc ##{group_row.index} “#{row.libelle}”"
 
-    = render Manager::DossierChampRowComponent.with_collection(group_rows)
+    = render Manager::DossierChampRowComponent.with_collection(group_row.flat_children)

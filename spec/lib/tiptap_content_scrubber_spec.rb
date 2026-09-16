@@ -36,7 +36,7 @@ describe TiptapContentScrubber do
     }
     champ = double(libelle: 'Nom', to_s: 'Dupont', blank?: false)
     blank_champ = double(libelle: 'Prénom', to_s: '', blank?: true)
-    substitutions = { 'bloc' => ChampPresentations::RepetitionPresentation.new('Personnes', [[champ, blank_champ]]) }
+    substitutions = { 'bloc' => ChampPresentations::RepetitionPresentation.new('Personnes', [double(flat_children: [champ, blank_champ])]) }
 
     html = TiptapService.new(hard_break: '<br><br>').to_html(json, substitutions)
     scrubbed = Nokogiri::HTML5.fragment(scrub(html))
