@@ -7,6 +7,14 @@ class PriorizedMailDeliveryJob < ActionMailer::MailDeliveryJob
 
   discard_on ActiveJob::DeserializationError
 
+  # DeviseUserMailer descends from Devise::Mailer, so ApplicationMailer never
+  # tags it.
+  before_perform do |job|
+    mailer, action = job.arguments
+
+    Sentry.set_tags(mailer:, action:)
+  end
+
   def queue_name
     mailer, action_name = @arguments
     if mailer.constantize.critical_email?(action_name)
