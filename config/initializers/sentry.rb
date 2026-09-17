@@ -28,8 +28,11 @@ Sentry.init do |config|
 
   config.excluded_exceptions += ['APIEntreprise::Job::ProviderDownError']
 
-  # Lambda so the app constant is resolved at send time, not at boot.
-  config.before_send = -> (event, hint) { SentryFingerprint.call(event, hint) }
+  # Lambdas so the app constants are resolved at send time, not at boot.
+  config.before_send = -> (event, hint) { SentryJobArguments.scrub(SentryFingerprint.call(event, hint)) }
+  # A sampled job transaction carries the contexts of its scope, the Sidekiq
+  # payload included, and never goes through before_send.
+  config.before_send_transaction = -> (event, _hint) { SentryJobArguments.scrub(event) }
 
   # Note: sentry-ruby's :graphql patch is intentionally NOT enabled here.
   # It attaches GraphQL::Tracing::SentryTrace which wraps every field resolution
