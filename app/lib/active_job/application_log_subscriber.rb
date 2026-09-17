@@ -78,6 +78,15 @@ class ActiveJob::ApplicationLogSubscriber < ::ActiveJob::LogSubscriber
 
   # The default args_info makes a string. We need objects to turn into JSON.
   def args_info(job)
-    job.arguments.map { |arg| arg.try(:to_global_id).try(:to_s) || arg }
+    job.arguments.map { loggable_argument(it) }
+  end
+
+  def loggable_argument(argument)
+    case argument
+    when Hash then argument.transform_values { loggable_argument(it) }
+    when Array then argument.map { loggable_argument(it) }
+    when GlobalID::Identification then argument.to_global_id.to_s
+    else argument
+    end
   end
 end
