@@ -12,14 +12,22 @@ describe ActiveJob::ApplicationLogSubscriber do
     JSON.parse(output.string)['job_args']
   end
 
-  it 'logs the records nested in the arguments of a mailer as global ids' do
-    instructeur = instructeurs.default
-    dossier = dossiers.en_construction
-    job = PriorizedMailDeliveryJob.new('DossierMailer', 'notify_groupe_instructeur_changed', 'deliver_now', args: [instructeur, dossier])
+  it 'logs which mail goes to which record, but not the token next to it' do
+    user = users.usager
+    job = PriorizedMailDeliveryJob.new('DeviseUserMailer', 'reset_password_instructions', 'deliver_now', args: [user, 'a-live-reset-token'])
 
     expect(logged_args(job)).to eq([
-      'DossierMailer', 'notify_groupe_instructeur_changed', 'deliver_now',
-      { 'args' => [instructeur.to_global_id.to_s, dossier.to_global_id.to_s] },
+      'DeviseUserMailer', 'reset_password_instructions', 'deliver_now',
+      { 'args' => [user.to_global_id.to_s, '[FILTERED]'] },
     ])
+  end
+
+  # The cost of filtering mail delivery jobs only: the real AMI payload keeps
+  # its FranceConnect identity hash and the name of the usager in the log.
+  it 'keeps the strings nested in the payload of a job that is not a mailer' do
+    payload = { item_id: '42', content_link: 'https://demarches.gouv.fr/dossiers/42' }
+    job = Ami::SendNotificationJob.new(payload, { dossier: 42 })
+
+    expect(logged_args(job).first).to eq(payload.stringify_keys)
   end
 end
