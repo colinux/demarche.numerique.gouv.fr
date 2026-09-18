@@ -68,7 +68,7 @@ module Instructeurs
           @acls = PiecesJustificativesService.new(user_profile: current_instructeur, export_template: nil).acl_for_dossier_export(dossier.procedure)
           render(template: 'dossiers/show', formats: [:pdf])
         end
-        format.all
+        format.html
       end
     end
 

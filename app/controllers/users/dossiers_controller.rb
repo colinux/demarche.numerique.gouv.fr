@@ -72,7 +72,7 @@ module Users
           @acls = pj_service.acl_for_dossier_export(@dossier.procedure)
           render(template: 'dossiers/show', formats: [:pdf])
         end
-        format.all do
+        format.html do
           @dossier = dossier_with_champs
         end
       end
