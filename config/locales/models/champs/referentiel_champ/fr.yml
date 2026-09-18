@@ -1,0 +1,8 @@
+fr:
+  activerecord:
+    errors:
+      models:
+        champs/referentiel_champ:
+          attributes:
+            value:
+              unreadable_selection: "n’a pas pu être enregistré. Refaites votre recherche puis sélectionnez à nouveau une valeur dans la liste"

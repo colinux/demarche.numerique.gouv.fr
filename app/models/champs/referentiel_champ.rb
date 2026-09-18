@@ -11,6 +11,8 @@ class Champs::ReferentielChamp < ChampData
 
   before_save :clear_previous_result, if: -> { external_id_changed? }
 
+  validate :validate_selection_readable
+
   def fetch_external_data
     # Les tags de l'URL sont résolus sur le stream du champ : sur un buffer, la ligne
     # de répétition en cours de saisie n'existe pas encore sur le stream principal.
@@ -45,13 +47,28 @@ class Champs::ReferentielChamp < ChampData
   end
 
   def data=(data)
-    if exact_match? || data.blank?
+    if exact_match?
       super(data)
+    elsif data.blank?
+      # L'élément présélectionné de la combobox ne porte pas de jeton : resoumettre la valeur
+      # courante ne doit pas effacer la donnée enregistrée, et une nouvelle valeur sans jeton
+      # n'est pas une sélection.
+      if value.blank?
+        super(nil)
+      elsif value_changed?
+        reject_selection
+      end
     else
-      message_encryptor_service = MessageEncryptorService.new
-      data = message_encryptor_service.decrypt_and_verify(data, purpose: :storage)
+      data = decrypt_selected_data(data)
+      # Jeton illisible (altéré, mal formé) ou expiré : la sélection ne peut pas être
+      # enregistrée. Celle déjà enregistrée reste, et l'usager est invité à refaire sa recherche.
+      return reject_selection if data.nil?
+
       data = data.with_indifferent_access if data.is_a?(Hash)
       data = rewrap_selected_object_in_datasource(data)
+      # Resélectionner la valeur courante (nouveau jeton, même donnée) ne réécrit rien et ne
+      # relance pas le préremplissage, qui écraserait les champs modifiés depuis.
+      return if data == self.data
 
       super(data)
       self.value_json = cast_displayable_values(data)
@@ -88,9 +105,11 @@ class Champs::ReferentielChamp < ChampData
     value
   end
 
+  # Pas de `data` sur l'élément présélectionné : la combobox ne sait soumettre que le jeton
+  # chiffré des suggestions, et resélectionner la valeur courante ne doit rien réécrire.
   def selected_items
     if selected_key.present?
-      [{ label: selected_key, value: selected_key, data: value_json }]
+      [{ label: selected_key, value: selected_key }]
     else
       []
     end
@@ -127,6 +146,25 @@ class Champs::ReferentielChamp < ChampData
     self.data = nil
     self.value_json = nil
     self.fetch_external_data_exceptions = []
+  end
+
+  # Un jeton expiré est déchiffré en nil par Rails ; un jeton mal formé lève.
+  def decrypt_selected_data(token)
+    MessageEncryptorService.new.decrypt_and_verify(token, purpose: :storage)
+  rescue ActiveSupport::MessageEncryptor::InvalidMessage
+    nil
+  end
+
+  # `value` est assigné avant `data` (DossierEditConcern) : on le rétablit pour que le champ
+  # soit ré-affiché avec la sélection enregistrée. L'erreur de validation empêche
+  # l'enregistrement et s'affiche sous le champ.
+  def reject_selection
+    restore_attributes(['value'])
+    @selection_rejected = true
+  end
+
+  def validate_selection_readable
+    errors.add(:value, :unreadable_selection) if @selection_rejected
   end
 
   # Les API de liste (Grist, tabular-api, opendatasoft…) répondent 200 avec une collection
