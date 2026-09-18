@@ -1,7 +1,19 @@
 # frozen_string_literal: true
 
 class PriorizedMailDeliveryJob < ActionMailer::MailDeliveryJob
+  # Rails prints job arguments on every enqueue and every run, wherever the app
+  # runs, and here they are a token.
+  self.log_arguments = false
+
   discard_on ActiveJob::DeserializationError
+
+  # DeviseUserMailer descends from Devise::Mailer, so ApplicationMailer never
+  # tags it.
+  before_perform do |job|
+    mailer, action = job.arguments
+
+    Sentry.set_tags(mailer:, action:)
+  end
 
   def queue_name
     mailer, action_name = @arguments

@@ -4,6 +4,8 @@ require 'active_job/logging'
 require 'logstash-event'
 
 class ActiveJob::ApplicationLogSubscriber < ::ActiveJob::LogSubscriber
+  FILTERED = '[FILTERED]'
+
   def enqueue(event)
     process_event(event, 'enqueue')
   end
@@ -78,6 +80,20 @@ class ActiveJob::ApplicationLogSubscriber < ::ActiveJob::LogSubscriber
 
   # The default args_info makes a string. We need objects to turn into JSON.
   def args_info(job)
-    job.arguments.map { |arg| arg.try(:to_global_id).try(:to_s) || arg }
+    filter_strings = job.is_a?(ActionMailer::MailDeliveryJob)
+
+    job.arguments.map { loggable_argument(it, filter_strings:) }
+  end
+
+  # Below its class and its action, a mailer only ever receives a live token or
+  # someone's address.
+  def loggable_argument(argument, filter_strings:, depth: 0)
+    case argument
+    when Hash then argument.transform_values { loggable_argument(it, filter_strings:, depth: depth + 1) }
+    when Array then argument.map { loggable_argument(it, filter_strings:, depth: depth + 1) }
+    when String then filter_strings && depth.positive? ? FILTERED : argument
+    when GlobalID::Identification then argument.to_global_id.to_s
+    else argument
+    end
   end
 end
