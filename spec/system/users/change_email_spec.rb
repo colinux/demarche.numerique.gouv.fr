@@ -32,7 +32,7 @@ describe 'Changing an email' do
   end
 end
 
-describe 'Merging account' do
+describe 'Merging account', js: true do
   let(:old_user) { create(:user) }
   let(:new_user) { create(:user) }
 
@@ -57,7 +57,7 @@ describe 'Merging account' do
     visit '/profil'
 
     expect(page).to have_content("Acceptez-vous d’absorber le compte de #{old_user.email}")
-    click_on 'Accepter la fusion'
+    accept_confirm { click_on 'Accepter la fusion' }
 
     expect(page).not_to have_content(old_user.email)
     expect(page).to have_content(new_user.email)

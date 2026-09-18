@@ -190,6 +190,71 @@ describe 'As an administrateur I can edit types de champ', js: true do
     expect(page).to have_text('Formulaire enregistré')
   end
 
+  # Regression guards for the client-side morph. A save re-renders its champ
+  # and every champ below it, a move re-renders the moved champ and its new
+  # neighbour: neither must discard what the admin is typing in a re-rendered
+  # component. The test debounce is 0, so each scenario first builds two named
+  # champs, then reloads the page with a real debounce so the typed value is
+  # still unsent when the other request's response lands.
+  def two_champs_with_a_slow_autosave
+    add_champ
+    hide_autonotice_message
+    fill_in 'Libellé du champ', with: 'premier champ'
+    within(find('.type-de-champ-add-button', match: :first)) { add_champ }
+    within '.type-de-champ:nth-child(2)' do
+      fill_in 'Libellé du champ', with: 'second champ'
+    end
+    wait_until { root_libelles == ['premier champ', 'second champ'] }
+
+    allow(Rails.application.config).to receive(:ds_autosave).and_return(debounce_delay: 2_000, status_visible_duration: 500)
+    page.refresh
+    expect(page).to have_selector('.type-de-champ', count: 2)
+  end
+
+  def root_libelles
+    procedure.active_revision.reload.public_root_type_de_champs.map(&:libelle)
+  end
+
+  def root_tdc(libelle)
+    procedure.active_revision.reload.public_root_type_de_champs.find { it.libelle == libelle }
+  end
+
+  scenario "saving a champ while the one below holds an unsaved value" do
+    two_champs_with_a_slow_autosave
+
+    within '.type-de-champ:nth-child(2)' do
+      fill_in 'Description du champ (optionnel)', with: 'description en cours de saisie'
+    end
+    # a new champ is mandatory by default: unchecking is what triggers a save
+    within '.type-de-champ:nth-child(1)' do
+      uncheck 'Champ obligatoire'
+    end
+
+    wait_until { !root_tdc('premier champ').mandatory? }
+    within '.type-de-champ:nth-child(2)' do
+      expect(page).to have_field('Description du champ (optionnel)', with: 'description en cours de saisie')
+    end
+    wait_until { root_tdc('second champ').description == 'description en cours de saisie' }
+  end
+
+  scenario "moving a champ while its new neighbour holds an unsaved value" do
+    two_champs_with_a_slow_autosave
+
+    within '.type-de-champ:nth-child(1)' do
+      fill_in 'Description du champ (optionnel)', with: 'description en cours de saisie'
+    end
+    within '.type-de-champ:nth-child(2)' do
+      click_on 'Déplacer le champ vers le haut'
+    end
+
+    wait_until { root_libelles == ['second champ', 'premier champ'] }
+    within '.type-de-champ:nth-child(2)' do
+      expect(page).to have_field('Libellé du champ', with: 'premier champ')
+      expect(page).to have_field('Description du champ (optionnel)', with: 'description en cours de saisie')
+    end
+    wait_until { root_tdc('premier champ').description == 'description en cours de saisie' }
+  end
+
   scenario "adding a repetition champ" do
     add_champ
     hide_autonotice_message
