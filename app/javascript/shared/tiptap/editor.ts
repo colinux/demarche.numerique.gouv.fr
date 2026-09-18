@@ -156,6 +156,7 @@ function getEditorOptions(
   ) {
     extensions.push(
       TextAlign.configure({
+        defaultAlignment: 'left',
         types: actions.includes('title')
           ? ['headerColumn', 'title', 'heading', 'paragraph']
           : ['heading', 'paragraph']
@@ -172,6 +173,15 @@ function getEditorOptions(
     );
 
     const StyledMention = Mention.extend({
+      // Stored documents only carry `id` and `label`: drop the suggestion char
+      // newer Mention versions add, there is a single kind of mention here.
+      addAttributes() {
+        return Object.fromEntries(
+          Object.entries(this.parent?.() ?? {}).filter(
+            ([name]) => name != 'mentionSuggestionChar'
+          )
+        );
+      },
       renderHTML({ node, HTMLAttributes }) {
         const info = tagInfo.get(node.attrs.id);
         const { text, classes } = tagDisplay({
@@ -185,7 +195,7 @@ function getEditorOptions(
 
     extensions.push(
       StyledMention.configure({
-        renderLabel({ node }) {
+        renderText({ node }) {
           return node.attrs.label;
         },
         suggestion: createSuggestionMenu(tags, element)
