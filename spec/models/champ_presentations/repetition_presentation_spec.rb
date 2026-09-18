@@ -22,14 +22,14 @@ describe ChampPresentations::RepetitionPresentation do
     champ_repetition.add_row(updated_by: 'test')
     row1, row2, row3 = champ_repetition.rows
 
-    nom, stars = row1
+    nom, stars = row1.flat_children
     champ_for_update(nom).update(value: "ruby")
     champ_for_update(stars).update(value: 5)
 
-    nom = row2.first
+    nom = row2.flat_children.first
     champ_for_update(nom).update(value: "js")
 
-    nom, stars = row3
+    nom, stars = row3.flat_children
     champ_for_update(nom).update(value: "rust")
     champ_for_update(stars).update(value: 4)
   end
@@ -111,7 +111,7 @@ describe ChampPresentations::RepetitionPresentation do
 
     it 'reads the <br> a champ value carries as a line' do
       champ = double(libelle: 'Adresse', to_s: '12 rue X<br>75001 Paris', blank?: false)
-      node = described_class.new(libelle, [[champ]]).to_tiptap_node
+      node = described_class.new(libelle, [double(flat_children: [champ])]).to_tiptap_node
 
       expect(node[:content].first[:content].first[:content].second).to eq({
         type: "descriptionDetails",

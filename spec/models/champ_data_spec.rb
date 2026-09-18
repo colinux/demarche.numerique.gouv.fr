@@ -119,7 +119,7 @@ describe ChampData do
     let(:standalone_champ) { build(:champ, type_de_champ: build(:type_de_champ), dossier: build(:dossier)) }
     let(:public_sections) { dossier.root_champs_public.filter(&:header_section?) }
     let(:private_sections) { dossier.root_champs_private.filter(&:header_section?) }
-    let(:sections_in_repetition) { dossier.root_champs_public.find(&:repetition?).rows.flatten.filter(&:header_section?) }
+    let(:sections_in_repetition) { dossier.root_champs_public.find(&:repetition?).rows.flat_map(&:flat_children).filter(&:header_section?) }
 
     it 'returns the sibling sections of a champ' do
       expect(public_sections).not_to be_empty

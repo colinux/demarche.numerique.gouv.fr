@@ -47,7 +47,7 @@ module DossierChampsConcern
   def filled_champs_public
     @filled_champs_public ||= root_champs_public.flat_map do |champ|
       if champ.repetition?
-        champ.rows.flatten.filter { _1.persisted? && _1.fillable? }
+        champ.rows.flat_map(&:flat_children).filter { _1.persisted? && _1.fillable? }
       elsif champ.persisted? && champ.fillable?
         champ
       else
@@ -59,7 +59,7 @@ module DossierChampsConcern
   def filled_champs_private
     @filled_champs_private ||= root_champs_private.flat_map do |champ|
       if champ.repetition?
-        champ.rows.flatten.filter { _1.persisted? && _1.fillable? }
+        champ.rows.flat_map(&:flat_children).filter { _1.persisted? && _1.fillable? }
       elsif champ.persisted? && champ.fillable?
         champ
       else
@@ -85,7 +85,7 @@ module DossierChampsConcern
     @flat_champs_public ||= revision.public_root_type_de_champs.flat_map do |type_de_champ|
       champ = project_champ(type_de_champ)
       if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flatten
+        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
       else
         champ
       end
@@ -96,7 +96,7 @@ module DossierChampsConcern
     @flat_champs_private ||= revision.private_root_type_de_champs.flat_map do |type_de_champ|
       champ = project_champ(type_de_champ)
       if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flatten
+        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
       else
         champ
       end
@@ -104,13 +104,13 @@ module DossierChampsConcern
   end
 
   def project_rows_for(type_de_champ)
-    return [] if !type_de_champ.repetition?
-
-    children = revision.children_of(type_de_champ)
     row_ids = repetition_row_ids(type_de_champ)
+    return [] if row_ids.empty?
 
-    row_ids.map do |row_id|
-      children.map { project_champ(_1, row_id:) }
+    children_type_de_champs = revision.children_of(type_de_champ)
+
+    row_ids.map.with_index(1) do |row_id, index|
+      RepetitionRow.new(id: row_id, index:, dossier: self, type_de_champ:, children_type_de_champs:)
     end
   end
 
@@ -171,12 +171,6 @@ module DossierChampsConcern
     stable_id, row_id = public_id.split('-')
     type_de_champ = find_type_de_champ_by_stable_id!(stable_id, :private, row_id:)
     champ_for_update(type_de_champ, row_id:, updated_by:)
-  end
-
-  def repetition_rows_for_export(type_de_champ)
-    repetition_row_ids(type_de_champ).map.with_index(1) do |row_id, index|
-      Champs::RepetitionChamp::Row.new(index:, row_id:, dossier: self)
-    end
   end
 
   def repetition_row_ids(type_de_champ)
