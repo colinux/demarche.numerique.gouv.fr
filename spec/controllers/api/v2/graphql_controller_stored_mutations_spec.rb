@@ -761,6 +761,18 @@ describe API::V2::GraphqlController do
         expect(dossier.labels).to match_array([label])
       }
 
+      # The same global id is legitimate in labelId. Handed to dossierId it used to resolve
+      # as a Dossier, and DossierType.authorized? then raised on Label#revision.
+      context 'with the label global id handed to dossierId' do
+        let(:variables) { { input: { dossierId: label.to_typed_id, labelId: label.to_typed_id } } }
+
+        it 'rejects it instead of resolving the label as a dossier' do
+          expect(subject).to have_http_status(:ok)
+          expect(gql_errors.map { it[:message] }).to all(match(/No object found/))
+          expect(gql_data[:dossierAjouterLabel]).to be_nil
+        end
+      end
+
       context 'when label belongs to another procedure' do
         let(:label) { create(:label) }
 

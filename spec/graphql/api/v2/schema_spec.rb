@@ -82,6 +82,19 @@ RSpec.describe API::V2::Schema do
     end
   end
 
+  describe '.resolve_type' do
+    # A global id decoded from client input reaches resolve_type with the type its `loads:`
+    # argument declares. A model with no branch of its own gets that type echoed back, so the
+    # post-load check in graphql-ruby accepts the record as whatever type the client named.
+    let(:label) { Label.create!(procedure: procedures.individual, name: 'Urgent', color: 'pink_macaron') }
+
+    it 'does not pass a Label off as a GroupeInstructeur' do
+      resolved_type, _object = described_class.resolve_type(Types::GroupeInstructeurType, label, {})
+
+      expect(resolved_type).to eq(Types::LabelType)
+    end
+  end
+
   # Logs and Sentry reports carry the query text and its variables, which are not
   # request parameters: nothing upstream filters them.
   describe '#query_info' do
