@@ -60,6 +60,8 @@ class API::V2::Schema < GraphQL::Schema
       Types::PersonneMoraleType
     when GroupeInstructeur
       Types::GroupeInstructeurType
+    when Label
+      Types::LabelType
     else
       type_definition
     end
