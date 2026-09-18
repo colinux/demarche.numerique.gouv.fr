@@ -26,6 +26,23 @@ Capybara::Screenshot.register_driver :playwright do |driver, path|
   driver.save_screenshot(path)
 end
 
+# capybara-screenshot sets `Capybara.save_path` to nil while it writes the
+# failure dump, a workaround for Capybara 1 prepending save_path to the absolute
+# paths it passes. Capybara 3 ignores save_path for an absolute path, so the
+# workaround is a no-op — except that capybara-playwright-driver reads
+# `Capybara.save_path` in its `download` handler, on the Playwright transport
+# thread. A download landing during the dump raises `mkdir_p(nil)` there, the
+# transport thread dies, and every later Playwright call blocks until the CI
+# job times out. Keep save_path set for the whole dump.
+module Capybara::Screenshot::KeepSavePath
+  private
+
+  def clear_save_path
+    yield
+  end
+end
+Capybara::Screenshot::Saver.prepend(Capybara::Screenshot::KeepSavePath)
+
 RSpec.configure do |config|
   config.before(:each, type: :system) do
     driven_by :rack_test
