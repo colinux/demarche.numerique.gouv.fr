@@ -198,6 +198,14 @@ module Instructeurs
 
       @projected_dossiers = DossierProjectionService.project(@filtered_sorted_paginated_ids, @displayed_columns)
 
+      # Reprend le scope de `Instructeur#follow?`, que les opérations de masse
+      # appelaient par ligne : plus large que @followed_dossiers_id, qui ne retient
+      # que les dossiers en cours et pilote le bouton « suivre » de chaque ligne.
+      @followed_dossier_ids_on_page = current_instructeur
+        .followed_dossiers
+        .where(id: @filtered_sorted_paginated_ids)
+        .ids
+
       @disable_checkbox_all = @projected_dossiers.all? { it.dossier.batch_operation_id.present? }
 
       @batch_operations = BatchOperation.joins(:groupe_instructeurs)

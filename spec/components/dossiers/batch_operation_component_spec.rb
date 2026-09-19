@@ -106,7 +106,22 @@ RSpec.describe Dossiers::BatchOperationComponent, type: :component do
     let(:statut) { 'whatever' }
     let(:instructeur) { create(:instructeur) }
 
-    subject { described_class.new(statut: statut, procedure: procedure).operations_for_dossier(dossier, instructeur) }
+    subject { described_class.new(statut:, procedure:, followed_dossier_ids: instructeur.followed_dossiers.ids).operations_for_dossier(dossier) }
+
+    context "when rendered for each row of the dossier list" do
+      let(:dossier) { create(:dossier, :en_instruction) }
+
+      it "does not query the database" do
+        component = described_class.new(statut:, procedure:, followed_dossier_ids: [dossier.id])
+
+        queries = []
+        ActiveSupport::Notifications.subscribed(-> (*, payload) { queries << payload[:sql] }, 'sql.active_record') do
+          expect(component.operations_for_dossier(dossier)).to include("unfollow")
+        end
+
+        expect(queries).to eq([])
+      end
+    end
 
     context "when the dossier is en_construction" do
       let(:dossier) { create(:dossier, :en_construction) }
