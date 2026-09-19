@@ -631,10 +631,17 @@ module Instructeurs
         champs_attachments_ids + commentaires_attachments_ids + avis_attachments_ids + [justificatif_motivation_id] + [attestation_id]
       end
 
-      @gallery_attachments = ActiveStorage::Attachment
-        .with_all_variant_records
-        .includes(:record, :blob)
-        .where(id: gallery_attachments_ids)
+      # Hors de la galerie, seul `gallery_attachments.present?` est consulté (l'onglet
+      # « Pièces jointes » ne s'affiche que s'il y en a) : les variantes, les blobs et
+      # les records n'y servent à rien.
+      @gallery_attachments = if action_name == 'pieces_jointes'
+        ActiveStorage::Attachment
+          .with_all_variant_records
+          .includes(:record, :blob)
+          .where(id: gallery_attachments_ids)
+      else
+        ActiveStorage::Attachment.where(id: gallery_attachments_ids)
+      end
     end
   end
 end
