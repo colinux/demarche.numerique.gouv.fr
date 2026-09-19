@@ -480,8 +480,11 @@ module Instructeurs
       params[:procedure_id]
     end
 
+    # Mémoïsé sur une ivar dédiée : `@procedure` est écrasé par certaines actions
+    # (create_avis lui affecte `dossier.procedure`), et chaque chargement coûte le
+    # logo et les deux révisions avec leurs types de champ.
     def procedure
-      Procedure
+      @procedure_from_params ||= Procedure
         .with_attached_logo
         .with_active_revision
         .find(procedure_id)
