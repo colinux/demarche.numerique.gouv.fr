@@ -54,6 +54,72 @@ RSpec.describe ChampExternalDataConcern do
     end
   end
 
+  describe '#update_external_data!' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :rnf }]) }
+    let(:dossier) { create(:dossier, :en_construction, procedure:) }
+    let(:champ) { dossier.champ_data.first }
+    let(:before_fetch) { 1.week.ago.change(usec: 0) }
+    let(:data) { { 'title' => 'Fondation SFR' } }
+
+    before do
+      dossier.update_columns(depose_at: before_fetch, last_champ_updated_at: before_fetch)
+      champ.update_columns(external_state: 'fetching', updated_at: before_fetch, value_updated_at: before_fetch)
+    end
+
+    context 'when the data lands after the deposit' do
+      it 'dates the arrival on the champ and on the dossier, like an edit' do
+        champ.send(:handle_result, Success(data:))
+
+        champ.reload
+        expect(champ.read_attribute(:value_updated_at)).to be > before_fetch
+        expect(dossier.reload.last_champ_updated_at).to eq(champ.read_attribute(:value_updated_at))
+      end
+    end
+
+    context 'when the fetch lands the same data again (retry, idempotent refetch)' do
+      before { champ.update_columns(data:) }
+
+      it 'does not move the timestamps' do
+        champ.send(:handle_result, Success(data:))
+
+        expect(champ.reload.read_attribute(:value_updated_at)).to eq(before_fetch)
+        expect(dossier.reload.last_champ_updated_at).to eq(before_fetch)
+      end
+    end
+
+    context 'when the champ sits on a buffer stream' do
+      before { champ.update_columns(stream: Dossier::USER_BUFFER_STREAM) }
+
+      it 'leaves the stamp to the buffer merge' do
+        champ.send(:handle_result, Success(data:))
+
+        expect(champ.reload.read_attribute(:value_updated_at)).to eq(before_fetch)
+        expect(dossier.reload.last_champ_updated_at).to eq(before_fetch)
+      end
+    end
+
+    context 'when the fetch fails' do
+      it 'does not move the timestamps on a retryable failure' do
+        failure = Failure(retryable: true, error: StandardError.new('degraded'), code: 503)
+
+        expect { champ.send(:handle_result, failure) }.to raise_error(RetryableFetchError)
+        expect(champ.reload.read_attribute(:value_updated_at)).to eq(before_fetch)
+        expect(dossier.reload.last_champ_updated_at).to eq(before_fetch)
+      end
+
+      it 'does not move the timestamps on a final failure' do
+        allow(Sentry).to receive(:capture_exception)
+        failure = Failure(retryable: false, error: StandardError.new('nop'), code: 500)
+
+        champ.send(:handle_result, failure)
+
+        expect(champ).to be_external_error
+        expect(champ.reload.read_attribute(:value_updated_at)).to eq(before_fetch)
+        expect(dossier.reload.last_champ_updated_at).to eq(before_fetch)
+      end
+    end
+  end
+
   describe 'the state machine' do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :rnf }]) }
     let(:dossier) { create(:dossier, procedure:) }

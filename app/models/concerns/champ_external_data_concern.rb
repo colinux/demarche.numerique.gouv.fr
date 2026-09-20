@@ -105,8 +105,14 @@ module ChampExternalDataConcern
     end
   end
 
+  # The visible change of a champ with external data is the arrival of the data,
+  # not the usager's input, so a fetch that actually changes something is dated
+  # like an edit (`value_updated_at`, `dossiers.last_champ_updated_at`). A retry
+  # or an idempotent refetch that lands the same data leaves the timestamps
+  # alone, and so does a failure: an error is a status, not a value.
   def update_external_data!(hash)
     update!(hash.merge(fetch_external_data_exceptions: []))
+    update_timestamps if saved_changes.except('fetch_external_data_exceptions', 'updated_at').any?
   end
 
   def save_external_error(error, code)

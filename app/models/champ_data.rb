@@ -370,8 +370,13 @@ class ChampData < ApplicationRecord
     super || updated_at
   end
 
+  # Dates a user-visible change of this champ, on the row and on the dossier.
+  # A row sitting on a buffer stream is stamped when the buffer is merged, not
+  # here (see `merge_buffer_champ_data`); a row on the main stream is stamped
+  # whatever the dossier state, so that external data landing after the
+  # deposit still counts as a modification for the instructeur.
   def update_timestamps
-    return if public? && dossier.en_construction?
+    return if buffer_stream?
 
     updated_at = Time.zone.now
     attributes = { updated_at: }
