@@ -60,16 +60,31 @@ describe EditableChamp::FranceConnectChampBaseComponent, type: :component do
         end
       end
 
-      context "when last update is older than refresh delay" do
-        before { champ.update(updated_at: 2.days.ago) }
+      context "when last data retrieval is older than refresh delay" do
+        let(:retrieved_at) { 2.days.ago }
+
+        before { champ.update_columns(value_updated_at: retrieved_at) }
 
         it "renders enabled refresh button" do
           expect(subject).to have_button('Actualiser mes données', disabled: false)
         end
+
+        it "dates the retrieval" do
+          expect(subject).to have_text("Dernière récupération des données effectuées le #{I18n.l(retrieved_at, format: :long_with_time)}")
+        end
+
+        context "when machinery bumped updated_at since (attachment purge, backfill…)" do
+          before { champ.update_columns(updated_at: 1.hour.ago) }
+
+          it "still renders enabled refresh button and the retrieval date" do
+            expect(subject).to have_button('Actualiser mes données', disabled: false)
+            expect(subject).to have_text("Dernière récupération des données effectuées le #{I18n.l(retrieved_at, format: :long_with_time)}")
+          end
+        end
       end
 
-      context "when last update is recent (< refresh delay)" do
-        before { champ.update(updated_at: 1.hour.ago) }
+      context "when last data retrieval is recent (< refresh delay)" do
+        before { champ.update_columns(value_updated_at: 1.hour.ago) }
 
         it "renders disabled refresh button" do
           expect(subject).to have_button('Actualiser mes données', disabled: true)

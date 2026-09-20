@@ -215,6 +215,21 @@ RSpec.describe Types::DossierType, type: :graphql do
     end
   end
 
+  describe 'champ updatedAt' do
+    let(:procedure) { create(:procedure, :published, public_type_de_champs: [{ type: :text }]) }
+    let(:dossier) { create(:dossier, :en_construction, :with_populated_champs, procedure:) }
+    let(:query) { CHAMP_UPDATED_AT_QUERY }
+    let(:variables) { { number: dossier.id } }
+    let(:champ) { dossier.champ_data.first }
+    let(:value_updated_at) { 3.days.ago.change(usec: 0) }
+
+    before { champ.update_columns(updated_at: 1.hour.ago, value_updated_at:) }
+
+    it 'dates the last change of the value, not the Rails timestamp' do
+      expect(data[:dossier][:champs].sole[:updatedAt]).to eq(value_updated_at.iso8601)
+    end
+  end
+
   describe 'dossier with annotations' do
     let(:procedure) { create(:procedure, :published, private_type_de_champs: [{ type: :engagement_juridique }]) }
     let(:dossier) { create(:dossier, :accepte, :with_populated_champs, procedure: procedure) }
@@ -997,6 +1012,16 @@ RSpec.describe Types::DossierType, type: :graphql do
   }
 
   GRAPHQL
+  CHAMP_UPDATED_AT_QUERY = <<-GRAPHQL
+  query($number: Int!) {
+    dossier(number: $number) {
+      champs {
+        updatedAt
+      }
+    }
+  }
+  GRAPHQL
+
   DOSSIER_WITH_CHAMPS_QUERY = <<-GRAPHQL
   query($number: Int!) {
     dossier(number: $number) {

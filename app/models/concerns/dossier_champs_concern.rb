@@ -23,7 +23,7 @@ module DossierChampsConcern
     data = champ_data_by_public_id[type_de_champ.public_id(row_id)]
     if data.nil? || !data.is_type?(type_de_champ.type_champ)
       value = type_de_champ.champ_blank?(data) ? nil : data.value
-      updated_at = data&.updated_at || depose_at || created_at
+      updated_at = data&.value_updated_at || depose_at || created_at
       rebased_at = data&.rebased_at
       type_de_champ.build_champ(dossier: self, row_id:, updated_at:, rebased_at:, value:, stream:)
     else
@@ -372,9 +372,9 @@ module DossierChampsConcern
         # only "main" and "history"
         .reject(&:buffer_stream?)
         # only updates made before last submission
-        .filter { _1.updated_at <= en_construction_at }
+        .filter { _1.value_updated_at <= en_construction_at }
         # take last change
-        .sort_by(&:updated_at).reverse
+        .sort_by(&:value_updated_at).reverse
         # compact
         .uniq(&:public_id)
     else

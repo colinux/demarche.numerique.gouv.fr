@@ -1172,6 +1172,28 @@ RSpec.describe DossierChampsConcern do
     end
   end
 
+  describe 'user history stream' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :text }]) }
+    let(:dossier) { create(:dossier, procedure:) }
+    let(:type_de_champ) { dossier.revision.public_root_type_de_champs.sole }
+
+    it 'keeps showing a row whose updated_at machinery bumped after the deposit' do
+      champ = dossier.champ_for_update(type_de_champ, updated_by: 'usager')
+      champ.update!(value: 'before deposit')
+      champ.update_timestamps
+      dossier.passer_en_construction!
+
+      # an attachment purge, a backfill without no_touching…
+      travel_to(1.hour.from_now) { champ.touch }
+      dossier.reload
+
+      history_champ = dossier.with_user_history_stream { dossier.project_champ(type_de_champ) }
+
+      expect(history_champ).to be_persisted
+      expect(history_champ.value).to eq('before deposit')
+    end
+  end
+
   describe '#set_default_value_for_france_connect_champs' do
     let!(:procedure) { create(:procedure, :published, :with_api_particulier_token, public_type_de_champs:, for_individual: true) }
     let(:public_type_de_champs) { [{ type: :quotient_familial }] }
