@@ -153,6 +153,51 @@ describe 'Editing a dossier as an instructeur:', js: true do
     end
   end
 
+  context 'when the dossier has a repetition champ' do
+    let!(:procedure) do
+      create(:procedure, :published,
+        instructeurs: [instructeur],
+        instructeurs_can_edit_dossiers: true,
+        public_type_de_champs: [{ type: :repetition, libelle: 'Enfants', stable_id: 77, children: [{ type: 'text', libelle: 'Prénom' }] }])
+    end
+    let!(:dossier) { create(:dossier, :en_construction, :with_populated_champs, procedure: procedure) }
+
+    before { login_as(instructeur.user, scope: :user) }
+
+    def buffered_rows(stable_id)
+      dossier.reload.champ_data
+        .filter { _1.stream == Dossier::INSTRUCTEUR_BUFFER_STREAM && _1.stable_id == stable_id && _1.row? }
+    end
+
+    scenario 'removing a row is a change the instructeur can save' do
+      visit instructeur_dossier_path(procedure, dossier, statut: 'a-suivre')
+      click_on 'Modifier le dossier'
+
+      expect(page).to have_selector('.repetition-row', count: 2)
+      expect(page).to have_button('Enregistrer les modifications', disabled: true)
+
+      within '.repetition .repetition-row:last-child' do
+        accept_confirm { click_on 'Supprimer' }
+      end
+
+      expect(page).to have_selector('.repetition-row', count: 1)
+      wait_until { buffered_rows(77).any?(&:discarded?) }
+      expect(page).to have_button('Enregistrer les modifications', disabled: false)
+    end
+
+    scenario 'adding a row is a change the instructeur can save' do
+      visit instructeur_dossier_path(procedure, dossier, statut: 'a-suivre')
+      click_on 'Modifier le dossier'
+
+      expect(page).to have_button('Enregistrer les modifications', disabled: true)
+
+      click_on 'Ajouter un élément à « Enfants »'
+
+      expect(page).to have_selector('.repetition-row', count: 3)
+      expect(page).to have_button('Enregistrer les modifications', disabled: false)
+    end
+  end
+
   context 'when the edited dossier is invalid' do
     let!(:procedure) do
       create(:procedure, :published,
