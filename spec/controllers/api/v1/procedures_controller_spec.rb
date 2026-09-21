@@ -57,7 +57,7 @@ describe API::V1::ProceduresController, type: :controller do
           let(:champ) { procedure.active_revision.public_root_type_de_champs.first }
 
           it do
-            expect(subject[:id]).to eq(champ.id)
+            expect(subject[:id]).to eq(champ.stable_id)
             expect(subject[:libelle]).to eq(champ.libelle)
             expect(subject[:type_champ]).to eq(champ.type_champ)
             expect(subject[:description]).to eq(champ.description)

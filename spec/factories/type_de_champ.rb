@@ -7,6 +7,9 @@ FactoryBot.define do
     # STI: attributes must go through new so the subclass is picked from type_champ.
     initialize_with { TypeDeChamp.new(attributes) }
 
+    # Never derived from the id: specs hardcode small stable ids (99, 1, 100…),
+    # and an id-derived one collides with them on a fresh database.
+    stable_id { generate(:stable_id) }
     sequence(:libelle) { |n| "Libelle du champ #{n}" }
     sequence(:description) { |n| "description du champ #{n}" }
     type_champ { TypeDeChamp.type_champs.fetch(:text) }
