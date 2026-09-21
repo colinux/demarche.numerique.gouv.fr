@@ -664,14 +664,24 @@ describe ChampData do
       expect(dossier.reload.last_champ_updated_at).to eq(champ.updated_at)
     end
 
-    it 'does not stamp public champs of a dossier en construction (deferred to buffer merge)' do
+    it 'does not stamp a champ sitting on a buffer stream (deferred to buffer merge)' do
       dossier.update_columns(state: Dossier.states.fetch(:en_construction), depose_at: Time.zone.now)
-      champ = dossier.reload.champ_data.first
-      champ.update_columns(updated_at: 1.day.ago, value_updated_at: nil)
+      champ.update_columns(stream: Dossier::USER_BUFFER_STREAM, updated_at: 1.day.ago, value_updated_at: nil)
 
       champ.update_timestamps
 
       expect(champ.reload.read_attribute(:value_updated_at)).to be_nil
+    end
+
+    it 'stamps a main stream champ of a dossier en construction (external data landing after deposit)' do
+      dossier.update_columns(state: Dossier.states.fetch(:en_construction), depose_at: 1.day.ago, last_champ_updated_at: nil)
+      champ.update_columns(updated_at: 1.day.ago, value_updated_at: nil)
+
+      champ.update_timestamps
+
+      champ.reload
+      expect(champ.read_attribute(:value_updated_at)).to eq(champ.updated_at)
+      expect(dossier.reload.last_champ_updated_at).to eq(champ.updated_at)
     end
   end
 
@@ -689,6 +699,34 @@ describe ChampData do
       time = 3.days.ago.change(usec: 0)
       champ.update_columns(value_updated_at: time)
       expect(champ.reload.value_updated_at).to eq(time)
+    end
+
+    it 'is not moved by a plain save, unlike updated_at (a backfill without no_touching)' do
+      stamp = 3.days.ago.change(usec: 0)
+      champ.update_columns(updated_at: stamp, value_updated_at: stamp)
+
+      champ.update!(value: 'backfilled')
+
+      champ.reload
+      expect(champ.updated_at).to be > stamp
+      expect(champ.value_updated_at).to eq(stamp)
+    end
+
+    context 'with a piece justificative' do
+      let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :piece_justificative }]) }
+      let(:dossier) { create(:dossier, procedure:) }
+
+      it 'is not moved by an attachment purge, unlike updated_at' do
+        champ.piece_justificative_file.attach(io: StringIO.new('contenu'), filename: 'piece.txt', content_type: 'text/plain')
+        stamp = 3.days.ago.change(usec: 0)
+        champ.update_columns(updated_at: stamp, value_updated_at: stamp)
+
+        champ.piece_justificative_file.purge
+
+        champ.reload
+        expect(champ.updated_at).to be > stamp
+        expect(champ.value_updated_at).to eq(stamp)
+      end
     end
   end
 

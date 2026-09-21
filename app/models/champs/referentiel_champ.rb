@@ -41,7 +41,7 @@ class Champs::ReferentielChamp < ChampData
     dossier.with_champ_stream(self)
 
     transaction do
-      update!(hash.merge(fetch_external_data_exceptions: [])) # void previous errors
+      super
       dossier.prefill_and_enqueue_fetch_external_data_jobs(self, prefillable_type_de_champs)
     end
   end

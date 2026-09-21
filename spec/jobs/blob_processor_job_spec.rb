@@ -209,6 +209,25 @@ describe BlobProcessorJob, :external_deps, type: :job do
         expect(blob.watermarked_at).to be_present
       end
     end
+
+    context 'when the blob is the titre identite of a champ' do
+      let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :piece_justificative, nature: 'titre_identite' }]) }
+      let(:dossier) { create(:dossier, procedure:) }
+      let(:champ) { dossier.champ_data.first }
+      let(:stamp) { 3.days.ago.change(usec: 0) }
+      let(:blob) do
+        champ.piece_justificative_file.attach(file)
+        champ.update_columns(updated_at: stamp, value_updated_at: stamp)
+        champ.piece_justificative_file.blobs.first
+      end
+
+      it 'watermarks without dating the champ as modified' do
+        described_class.perform_now(blob)
+
+        expect(blob.reload.watermarked_at).to be_present
+        expect(champ.reload.read_attribute(:value_updated_at)).to eq(stamp)
+      end
+    end
   end
 
   describe 'add ocr data' do

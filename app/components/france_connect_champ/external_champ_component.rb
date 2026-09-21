@@ -24,7 +24,7 @@ class FranceConnectChamp::ExternalChampComponent < ApplicationComponent
   def refresh_disabled?
     return true if @for_preview
 
-    @champ.updated_at > Champs::FranceConnectChamp::REFRESH_DELAY.ago
+    @champ.value_updated_at > Champs::FranceConnectChamp::REFRESH_DELAY.ago
   end
 
   private
