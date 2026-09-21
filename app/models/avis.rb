@@ -44,10 +44,11 @@ class Avis < ApplicationRecord
   scope :by_latest, -> { order(updated_at: :desc) }
   scope :termine_expired_after_notice_grace, -> { unscope(:joins).where(dossier: Dossier.termine_expired_after_notice_grace) }
   scope :not_hidden_by_administration, -> { where(dossiers: { hidden_by_administration_at: nil }) }
-  # Both revocations cut the expert off: the avis itself (instructeur) or the
-  # expert's whole link to the procedure (admin "révoquer l'expert"). Keep them
-  # in a single scope so no call site can filter on one dimension only.
-  scope :not_revoked, -> { joins(:experts_procedure).where(revoked_at: nil, experts_procedures: { revoked_at: nil }) }
+  scope :not_revoked, -> {
+    joins(experts_procedure: :procedure)
+      .where(revoked_at: nil)
+      .where("experts_procedures.revoked_at IS NULL OR procedures.experts_require_administrateur_invitation IS NOT TRUE")
+  }
   scope :not_termine, -> { where.not(dossiers: { state: Dossier::TERMINE }) }
 
   attr_accessor :invite_linked_dossiers

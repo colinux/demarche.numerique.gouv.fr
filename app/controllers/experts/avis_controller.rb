@@ -277,13 +277,10 @@ module Experts
     end
 
     def check_if_avis_revoked
-      avis = Avis.find(params[:id])
-      # Two independent revocations both remove access: the avis itself
-      # (instructeur) or the expert's whole link to the procedure (admin).
-      if avis.revoked? || avis.experts_procedure.revoked?
-        flash.alert = "Vous n’avez plus accès à ce dossier."
-        redirect_to url_for(root_path)
-      end
+      return if Avis.not_revoked.exists?(id: params[:id])
+
+      flash.alert = "Vous n’avez plus accès à ce dossier."
+      redirect_to url_for(root_path)
     end
 
     def set_avis_and_dossier
