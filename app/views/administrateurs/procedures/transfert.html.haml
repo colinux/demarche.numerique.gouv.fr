@@ -14,6 +14,11 @@
             Cette fonctionnalité permet de cloner votre démarche vers le compte d’un autre administrateur.
             Il ou elle pourra ensuite la modifier et la publier, indépendamment de votre démarche.
 
+      - if @procedure.legacy_declarative_emails? && @procedure.email_depose.present?
+        = render Dsfr::AlertComponent.new(state: :warning, extra_class_names: "fr-my-4w") do |c|
+          - c.with_body do
+            %p= t('administrateurs.procedures.clone.email_templates_declarative_notice.desc_html')
+
       = form_tag admin_procedure_transfer_path(procedure_id: @procedure.id), method: :post do
         %fieldset.fr-fieldset
           .fr-fieldset__element
