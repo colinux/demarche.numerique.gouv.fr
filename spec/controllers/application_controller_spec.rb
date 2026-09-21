@@ -9,7 +9,26 @@ describe ApplicationController, type: :controller do
         .map(&:filter)
 
       expect(before_actions).to include(:set_sentry_user)
+      expect(before_actions).to include(:set_sentry_dossier_from_params)
       expect(before_actions).to include(:redirect_if_untrusted)
+    end
+  end
+
+  describe 'set_sentry_dossier_from_params' do
+    before { allow(Sentry).to receive(:set_tags) }
+
+    it 'tags the dossier of the route' do
+      @request.path_parameters = { dossier_id: '42' }
+      @controller.send(:set_sentry_dossier_from_params)
+
+      expect(Sentry).to have_received(:set_tags).with(dossier: '42')
+    end
+
+    it 'ignores a dossier_id sent outside the route' do
+      @controller.params[:dossier_id] = '42'
+      @controller.send(:set_sentry_dossier_from_params)
+
+      expect(Sentry).not_to have_received(:set_tags)
     end
   end
 

@@ -657,6 +657,14 @@ module Users
       end
     end
 
+    # /dossiers/:id, else /users/dossiers/:dossier_id/repousser-expiration
+    def set_sentry_dossier_from_params
+      dossier_id = request.path_parameters[:id]
+      return super if dossier_id.nil?
+
+      Sentry.set_tags(dossier: dossier_id)
+    end
+
     def dossier
       @dossier ||= dossier_scope.find(params[:id] || params[:dossier_id]).tap do
         set_sentry_dossier(_1)
