@@ -16,6 +16,26 @@ describe Users::DossiersController, type: :controller do
     end
   end
 
+  describe 'set_sentry_dossier_from_params' do
+    before do
+      allow(Sentry).to receive(:set_tags)
+      @request.path_parameters = path_parameters
+      @controller.send(:set_sentry_dossier_from_params)
+    end
+
+    context 'on /dossiers/:id' do
+      let(:path_parameters) { { id: '42' } }
+
+      it { expect(Sentry).to have_received(:set_tags).with(dossier: '42') }
+    end
+
+    context 'on /users/dossiers/:dossier_id/repousser-expiration' do
+      let(:path_parameters) { { dossier_id: '42' } }
+
+      it { expect(Sentry).to have_received(:set_tags).with(dossier: '42') }
+    end
+  end
+
   shared_examples_for 'does not redirect nor flash' do
     before { @controller.send(ensure_authorized) }
 
