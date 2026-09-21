@@ -14,6 +14,22 @@ describe Dossier, type: :model do
     it 'returns commentaires in desc order' do
       expect(dossier.preloaded_commentaires).to eq([commentaire_3, commentaire_2, commentaire])
     end
+
+    context 'with attachments' do
+      before { create_list(:commentaire, 2, :with_file, dossier:) }
+
+      it 'preloads what BlobProcessorConcern reads on each attachment' do
+        blobs = Dossier.find(dossier.id).preloaded_commentaires.flat_map { it.piece_jointe.map(&:blob) }
+
+        queries = []
+        ActiveSupport::Notifications.subscribed(-> (*, payload) { queries << payload[:sql] }, 'sql.active_record') do
+          blobs.each { [it.representation_required?, it.watermark_pending?] }
+        end
+
+        expect(blobs.size).to eq(2)
+        expect(queries).to eq([])
+      end
+    end
   end
 
   describe 'scopes' do
