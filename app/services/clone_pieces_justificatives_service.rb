@@ -7,6 +7,7 @@ class ClonePiecesJustificativesService
       clone_many_attachments(original, kopy, :piece_justificative_file)
     when TypeDeChamp
       clone_one_attachment(original, kopy, :piece_justificative_template)
+      clone_one_attachment(original, kopy, :notice_explicative)
     when Procedure
       clone_one_attachment(original, kopy, :logo)
       clone_one_attachment(original, kopy, :notice)

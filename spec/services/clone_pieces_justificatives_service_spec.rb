@@ -1,6 +1,21 @@
 # frozen_string_literal: true
 
 describe ClonePiecesJustificativesService do
+  describe '.clone_attachments with a type de champ' do
+    let(:original) { create(:type_de_champ_explication) }
+    let(:kopy) { original.dup }
+
+    before { original.notice_explicative.attach(io: StringIO.new("notice"), filename: "notice.txt", content_type: "text/plain") }
+
+    it 'clones the notice explicative to the copy' do
+      described_class.clone_attachments(original, kopy)
+      kopy.save!
+
+      expect(kopy.notice_explicative.attachment).not_to eq(original.notice_explicative.attachment)
+      expect(kopy.notice_explicative.blob).to eq(original.notice_explicative.blob)
+    end
+  end
+
   describe '.clone_attachments with a piece justificative champ' do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :piece_justificative }]) }
     let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }

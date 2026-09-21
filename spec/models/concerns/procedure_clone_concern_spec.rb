@@ -391,6 +391,17 @@ describe ProcedureCloneConcern, type: :model do
       expect(subject.draft_revision.public_root_type_de_champs.find(&:piece_justificative?).piece_justificative_template.attached?).to be_truthy
     end
 
+    context 'with a notice explicative on a type_de_champ' do
+      let(:public_type_de_champs) { [{ type: :explication }] }
+      let(:explication) { procedure.draft_revision.public_root_type_de_champs.find(&:explication?) }
+
+      before { explication.notice_explicative.attach(io: StringIO.new("notice"), filename: "notice.txt", content_type: "text/plain") }
+
+      it 'should duplicate notice_explicative on a type_de_champ' do
+        expect(subject.draft_revision.public_root_type_de_champs.find(&:explication?).notice_explicative.blob).to eq(explication.notice_explicative.blob)
+      end
+    end
+
     context 'with a notice attached' do
       let(:procedure) { create(:procedure, :with_notice, email_passe_en_instruction: email_passe_en_instruction, service: service) }
 
