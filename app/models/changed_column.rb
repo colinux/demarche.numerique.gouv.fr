@@ -63,7 +63,9 @@ class ChangedColumn
     def diff_column(column, champ, reference_champ, row_id: nil)
       return nil if column.nil? || (champ.nil? && reference_champ.nil?)
 
-      value = column.value(champ)
+      # no champ carrying the change means the answer went away with its row: that
+      # stays nil, even for a column reading no answer as a value (a checkbox)
+      value = champ.nil? ? nil : column.value(champ)
       previous_value = column.value(reference_champ)
       return nil if comparable(column, value) == comparable(column, previous_value)
 

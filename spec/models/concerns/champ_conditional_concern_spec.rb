@@ -78,6 +78,22 @@ describe ChampConditionalConcern do
       end
     end
 
+    context 'when the condition reads a checkbox nobody touched' do
+      let(:unchecked) { ds_eq(Logic::ChampColumnValue.new(99, 'type_de_champ/99'), constant(false)) }
+      let(:procedure) do
+        create(:procedure, public_type_de_champs: [
+          { type: :checkbox, stable_id: 99 },
+          { type: :text, stable_id: 999, condition: unchecked },
+        ])
+      end
+      let(:dossier) { create(:dossier, procedure:) }
+      let(:conditional_champ) { dossier.root_champs_public.find { it.stable_id == 999 } }
+
+      it 'reads « Non »' do
+        expect(conditional_champ.visible?).to be true
+      end
+    end
+
     context 'when the condition reads a champ whose type changed since it was written' do
       let(:procedure) do
         create(:procedure, public_type_de_champs: [

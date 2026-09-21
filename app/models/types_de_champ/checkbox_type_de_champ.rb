@@ -46,6 +46,19 @@ class TypesDeChamp::CheckboxTypeDeChamp < TypeDeChamp
 
   def typed_champ_blank_or_invalid?(champ) = !champ_value_true?(champ)
 
+  def canonical_column(procedure_id:, displayable: true, prefix: nil)
+    Columns::CheckboxColumn.new(
+      procedure_id:,
+      stable_id:,
+      tdc_type: type_champ,
+      label: libelle_with_prefix(prefix),
+      type: self.class.column_type,
+      displayable:,
+      options_for_select:,
+      mandatory: mandatory?
+    )
+  end
+
   private
 
   def champ_value_true?(champ) = champ.value == 'true'
