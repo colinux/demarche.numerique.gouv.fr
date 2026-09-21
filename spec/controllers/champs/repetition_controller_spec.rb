@@ -53,6 +53,19 @@ describe Champs::RepetitionController, type: :controller do
       it { expect { subject }.to change { row.reload.discarded_at }.from(nil).to(Time) }
       it { expect { subject }.to change { dossier.reload.last_champ_updated_at } }
     end
+
+    context 'when the dossier is en construction' do
+      render_views
+
+      let(:dossier) { create(:dossier, :en_construction, :with_populated_champs, procedure:) }
+
+      it 'refreshes the footer so the usager can submit the removal' do
+        subject
+
+        expect(response.body).to include('targets=".dossier-edit-footer"')
+        expect(response.body).to include('form-submit-en-construction')
+      end
+    end
   end
 
   describe '#add' do
