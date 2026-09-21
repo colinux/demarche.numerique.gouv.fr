@@ -2354,6 +2354,18 @@ describe Dossier, type: :model do
     end
   end
 
+  describe '#generate_or_reuse_attestation_depot' do
+    let(:dossier) { dossiers.en_construction }
+
+    before { allow(WeasyprintService).to receive(:generate_pdf).and_return('%PDF-1.4 fake') }
+
+    it 'keeps the generated pdf out of the antivirus queue' do
+      dossier.generate_or_reuse_attestation_depot
+
+      expect(dossier.attestation_depot_pdf.blob.virus_scanner.safe?).to be_truthy
+    end
+  end
+
   describe "#skip_user_notification_email?" do
     context "when the dossier is brouillon for a declarative procedure" do
       before { procedures.individual.update!(declarative_with_state: :en_instruction) }
