@@ -180,6 +180,15 @@ RSpec.describe Expert, type: :model do
 
       it { is_expected.to eq(0) }
     end
+
+    context 'when the expert is revoked from a procedure that manages its experts with a predefined list' do
+      before do
+        procedures.individual.update!(experts_require_administrateur_invitation: true)
+        experts_procedures.default.update!(revoked_at: Time.zone.now)
+      end
+
+      it { is_expected.to eq(0) }
+    end
   end
 
   describe '#dossiers_from_not_revoked_avis' do

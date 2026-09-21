@@ -25,7 +25,7 @@ class Expert < ApplicationRecord
   end
 
   def avis_summary
-    @avis_summary ||= { unanswered: avis.without_answer.not_hidden_by_administration.not_termine.count }
+    @avis_summary ||= { unanswered: avis.not_revoked.without_answer.not_hidden_by_administration.not_termine.count }
   end
 
   def self.autocomplete_mails(procedure)
