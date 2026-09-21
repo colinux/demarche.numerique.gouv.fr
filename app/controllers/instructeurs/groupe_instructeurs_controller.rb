@@ -32,14 +32,14 @@ module Instructeurs
         errors += [
           t('.wrong_address',
             count: invalid_emails.size,
-            emails: invalid_emails.join(', ')),
+            emails: emails_for_flash(invalid_emails)),
         ]
       end
 
       if added_instructeurs.present?
         flash[:notice] = if procedure.routing_enabled?
           t('.assignment', count: added_instructeurs.size,
-            emails: added_instructeurs.map(&:email).join(', '),
+            emails: emails_for_flash(added_instructeurs.map(&:email)),
             groupe: groupe_instructeur.label)
         else
           "Les instructeurs ont bien été affectés à la démarche"

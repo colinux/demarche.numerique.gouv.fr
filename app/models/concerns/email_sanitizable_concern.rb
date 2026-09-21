@@ -3,6 +3,16 @@
 module EmailSanitizableConcern
   extend ActiveSupport::Concern
 
+  FLASH_EMAILS_LIMIT = 10
+
+  # The flash travels in the 4 KB session cookie: list the first emails, count the others.
+  def emails_for_flash(emails)
+    listed = emails.first(FLASH_EMAILS_LIMIT).join(', ')
+    others_count = emails.size - FLASH_EMAILS_LIMIT
+
+    others_count.positive? ? I18n.t('utils.emails_and_others', emails: listed, count: others_count) : listed
+  end
+
   def sanitize_email(attribute)
     value_to_sanitize = self.send(attribute)
     if value_to_sanitize.present?
@@ -13,7 +23,7 @@ module EmailSanitizableConcern
   def generate_emails_suggestions_message(suggestions)
     return if suggestions.empty?
 
-    typo_list = suggestions.map(&:first).join(', ')
+    typo_list = emails_for_flash(suggestions.map(&:first))
     verification_link = view_context.link_to("vérifier l’orthographe", "#maybe_typos_errors")
 
     "Attention, nous pensons avoir identifié une faute de frappe dans les invitations : #{typo_list}. Veuillez #{verification_link} des invitations."
