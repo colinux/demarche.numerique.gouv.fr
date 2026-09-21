@@ -452,6 +452,19 @@ describe Administrateurs::GroupeInstructeursController, type: :controller do
       end
     end
 
+    context 'of more instructeurs than a flash message can list' do
+      let(:new_instructeur_emails) { Array.new(25) { "new_i#{it}@gmail.com" } + Array.new(25) { "badly_formed_email_#{it}" } }
+      before { do_request }
+
+      it 'lists the first emails and counts the others, so the session cookie does not overflow' do
+        expect(gi_1_2.instructeurs.pluck(:email)).to include(*new_instructeur_emails.first(25))
+        expect(flash.notice).to include('new_i0@gmail.com', 'new_i9@gmail.com', 'et 15 autres')
+        expect(flash.notice).not_to include('new_i10@gmail.com')
+        expect(flash.alert).to include('badly_formed_email_0', 'badly_formed_email_9', 'et 15 autres')
+        expect(flash.alert).not_to include('badly_formed_email_10')
+      end
+    end
+
     context 'of badly formed email' do
       let(:new_instructeur_emails) { ['badly_formed_email'] }
       before { do_request }

@@ -246,7 +246,7 @@ module Administrateurs
         errors += [
           t('.wrong_address',
                     count: invalid_emails.size,
-                    emails: invalid_emails.join(', ')),
+                    emails: emails_for_flash(invalid_emails)),
         ]
       end
 
@@ -254,7 +254,7 @@ module Administrateurs
         flash[:notice] = if procedure.routing_enabled?
           t('.assignment',
             count: added_instructeurs.size,
-            emails: added_instructeurs.map(&:email).join(', '),
+            emails: emails_for_flash(added_instructeurs.map(&:email)),
             groupe: groupe_instructeur.label)
         else
           "Les instructeurs ont bien été affectés à la démarche"
@@ -294,13 +294,13 @@ module Administrateurs
       end
 
       if all_invalid_emails.any?
-        errors += [t('.wrong_address', count: all_invalid_emails.size, emails: all_invalid_emails.to_a.join(', '))]
+        errors += [t('.wrong_address', count: all_invalid_emails.size, emails: emails_for_flash(all_invalid_emails.to_a))]
       end
 
       if instructeur_groupes.any?
         flash[:notice] = t('.add_all_groupes_assignment',
           count: instructeur_groupes.size,
-          emails: instructeur_groupes.keys.map(&:email).join(', '))
+          emails: emails_for_flash(instructeur_groupes.keys.map(&:email)))
       end
 
       flash[:alert] = errors.join(". ") if errors.any?
@@ -345,13 +345,13 @@ module Administrateurs
       if fully_removed_instructeurs.any?
         flash[:notice] = t('.remove_all_groupes_assignment',
           count: fully_removed_instructeurs.size,
-          emails: fully_removed_instructeurs.map(&:email).join(', '))
+          emails: emails_for_flash(fully_removed_instructeurs.map(&:email)))
       end
 
       if partially_removed_instructeurs.any?
         flash[:alert] = t('.remove_all_groupes_partial',
           count: partially_removed_instructeurs.size,
-          emails: partially_removed_instructeurs.map(&:email).join(', '))
+          emails: emails_for_flash(partially_removed_instructeurs.map(&:email)))
       end
 
       redirect_to admin_procedure_groupe_instructeurs_path(procedure)
@@ -670,7 +670,7 @@ module Administrateurs
       messages = []
 
       if invalid_emails.present?
-        messages << "Import terminé. Cependant les adresses électroniques suivantes ne sont pas prises en compte : #{invalid_emails.join(', ')}"
+        messages << "Import terminé. Cependant les adresses électroniques suivantes ne sont pas prises en compte : #{emails_for_flash(invalid_emails)}"
       end
 
       if preserved_groupes.present?
