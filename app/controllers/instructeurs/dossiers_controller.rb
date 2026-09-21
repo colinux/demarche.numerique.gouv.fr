@@ -107,6 +107,13 @@ module Instructeurs
 
     def annotations_privees
       @annotations_privees_seen_at = current_instructeur.follows.find_by(dossier: dossier)&.annotations_privees_seen_at
+
+      # Chaque annotation éditable affiche la notice et le modèle de pièce jointe
+      # de son type de champ.
+      ActiveRecord::Associations::Preloader.new(
+        records: dossier.revision.private_flat_type_de_champs,
+        associations: [{ notice_explicative_attachment: :blob }, { piece_justificative_template_attachment: :blob }]
+      ).call
     end
 
     def avis
