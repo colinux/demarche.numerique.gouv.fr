@@ -82,10 +82,9 @@ module DossierChampsConcern
   end
 
   def flat_champs_public
-    @flat_champs_public ||= revision.public_root_type_de_champs.flat_map do |type_de_champ|
-      champ = project_champ(type_de_champ)
-      if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
+    @flat_champs_public ||= root_champs_public.flat_map do |champ|
+      if champ.repetition?
+        [champ] + champ.rows.flat_map(&:flat_children)
       else
         champ
       end
@@ -93,10 +92,9 @@ module DossierChampsConcern
   end
 
   def flat_champs_private
-    @flat_champs_private ||= revision.private_root_type_de_champs.flat_map do |type_de_champ|
-      champ = project_champ(type_de_champ)
-      if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
+    @flat_champs_private ||= root_champs_private.flat_map do |champ|
+      if champ.repetition?
+        [champ] + champ.rows.flat_map(&:flat_children)
       else
         champ
       end
