@@ -153,7 +153,7 @@ class ProcedureExportService::XlsxExport
     private
 
     def collect_etablissements(dossier)
-      dossier.filled_champs.filter(&:siret?).filter_map(&:etablissement).each do |etablissement|
+      dossier.champs.filter(&:siret?).filter_map(&:etablissement).each do |etablissement|
         @etablissements_buffer << resolve_values(etablissement, etablissement.spreadsheet_columns)
       end
 

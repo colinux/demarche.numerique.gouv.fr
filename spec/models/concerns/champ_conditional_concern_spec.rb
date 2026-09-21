@@ -77,6 +77,27 @@ describe ChampConditionalConcern do
         end
       end
     end
+
+    context 'when the condition reads a champ whose type changed since it was written' do
+      let(:procedure) do
+        create(:procedure, public_type_de_champs: [
+          { type: :checkbox, stable_id: 99 },
+          { type: :text, stable_id: 999, condition: ds_eq(champ_value(99), constant(true)) },
+        ])
+      end
+      let(:dossier) { create(:dossier, procedure:) }
+      let(:conditional_champ) { dossier.root_champs_public.find { it.stable_id == 999 } }
+
+      before do
+        dossier.champ_data.find { it.stable_id == 99 }.update_columns(type: 'Champs::YesNoChamp', value: 'true')
+        dossier.reload
+      end
+
+      it 'reads the value the form displays' do
+        expect(dossier.root_champs_public.first).to be_true
+        expect(conditional_champ.visible?).to be true
+      end
+    end
   end
 
   describe '#submitted_filled?' do

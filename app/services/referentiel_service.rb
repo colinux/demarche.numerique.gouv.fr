@@ -125,11 +125,11 @@ class ReferentielService
   # autre ligne : mieux vaut ne pas résoudre l'URL que d'appeler l'API avec la donnée
   # d'une ligne voisine.
   # Sans contexte de ligne (référentiel hors répétition), un tag visant une répétition
-  # n'a pas de ligne de référence : on garde alors le premier champ trouvé.
+  # n'a pas de ligne de référence : on garde alors le premier champ rempli.
   def champ_for_tag(dossier, stable_id, row_id)
-    champ = dossier.filled_champs_for_row(row_id).find { it.stable_id == stable_id }
+    champ = dossier.champs_for_row(row_id).find { it.stable_id == stable_id }
     return champ if champ.present? || row_id.present?
 
-    dossier.filled_champs.find { it.stable_id == stable_id }
+    dossier.champs.filter { it.stable_id == stable_id }.compact_blank.first
   end
 end

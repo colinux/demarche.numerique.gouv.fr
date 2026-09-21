@@ -39,7 +39,7 @@ module ChampConditionalConcern
   private
 
   def champs_for_condition
-    dossier.filled_champs_for_row(row_id)
+    dossier.champs_for_row(row_id)
   end
 
   def parent_hidden?

@@ -136,7 +136,7 @@ class PiecesJustificativesService
   end
 
   def pjs_for_champs(dossiers)
-    champs = liste_documents_allows?(:with_champs_private) ? dossiers.flat_map(&:filled_champs) : dossiers.flat_map(&:filled_champs_public)
+    champs = liste_documents_allows?(:with_champs_private) ? dossiers.flat_map(&:champs) : dossiers.flat_map(&:flat_champs_public)
     champs = champs.filter { it.piece_justificative? && !it.titre_identite? }
 
     champs_id_row_index = compute_champ_id_row_index(champs)
@@ -338,7 +338,8 @@ class PiecesJustificativesService
   def compute_champ_id_row_index(champs)
     champs.filter(&:child?).group_by(&:dossier_id).values.each_with_object({}) do |children_for_dossier, hash|
       children_for_dossier.group_by(&:stable_id).values.each do |champs_for_stable_id|
-        champs_for_stable_id.sort_by(&:row_id).each.with_index { |c, index| hash[c.id] = index }
+        # every row counts for the index, a champ without a row of its own has no attachment to name
+        champs_for_stable_id.sort_by(&:row_id).each.with_index { |c, index| hash[c.id] = index if c.persisted? }
       end
     end
   end

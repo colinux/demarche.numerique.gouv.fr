@@ -46,7 +46,7 @@ class ProcedureExportService
   end
 
   def to_geo_json
-    champs_carte = dossiers.flat_map { _1.filled_champs.filter(&:carte?) }
+    champs_carte = dossiers.flat_map(&:persisted_champs_carte)
     features = GeoArea.where(champ_id: champs_carte).map(&:to_feature)
     io = StringIO.new({ type: 'FeatureCollection', features: }.to_json)
     create_blob(io, :json)
@@ -103,7 +103,7 @@ class ProcedureExportService
 
   def etablissements
     @etablissements ||= dossiers
-      .flat_map { _1.filled_champs.filter(&:siret?) }
+      .flat_map { _1.champs.filter(&:siret?) }
       .filter_map(&:etablissement) + dossiers.filter_map(&:etablissement)
   end
 

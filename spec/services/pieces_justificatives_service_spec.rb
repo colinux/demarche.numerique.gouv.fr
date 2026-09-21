@@ -524,7 +524,7 @@ describe PiecesJustificativesService do
 
     let(:procedure) { create(:procedure, public_type_de_champs:) }
     let(:dossier_1) { create(:dossier, :with_populated_champs, procedure:) }
-    let(:champs) { dossier_1.filled_champs }
+    let(:champs) { dossier_1.champs }
 
     def repetition(d, index:) = d.root_champs_public.filter(&:repetition?)[index]
 
