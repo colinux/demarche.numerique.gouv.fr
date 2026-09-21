@@ -12,15 +12,77 @@ describe ProcedureRevision do
 
   describe '#type_de_champ_tree' do
     context 'on a draft' do
-      let(:procedure) { create(:procedure, public_type_de_champs: [{ libelle: 'a' }]) }
+      let(:procedure) { create(:procedure, public_type_de_champs: [{ libelle: 'a' }, { libelle: 'b' }, { type: :repetition, libelle: 'r', children: [{ libelle: 'r1' }] }]) }
 
-      it 'follows the coordinates' do
-        expect(draft.type_de_champ_tree.public_children.map(&:stable_id)).to eq([type_de_champ_public.stable_id])
+      def stored_tree = ProcedureRevision.find(draft.id).read_attribute(:type_de_champ_tree)
+      def stored_libelles(nodes = stored_tree.public_children) = nodes.map { [TypeDeChamp.find(it.type_de_champ_id).libelle, *stored_libelles(it.children).presence] }
 
-        added = draft.add_type_de_champ(type_champ: :text, libelle: 'b', after_stable_id: type_de_champ_public.stable_id)
+      it 'is built from the coordinates until an edit' do
+        expect(stored_tree).to be_nil
+        expect(draft.type_de_champ_tree.public_children.map(&:stable_id)).to eq(draft.public_revision_type_de_champs.map(&:stable_id))
+      end
 
-        expect(draft.type_de_champ_tree.public_children.map(&:stable_id)).to eq([type_de_champ_public.stable_id, added.stable_id])
-        expect(draft.read_attribute(:type_de_champ_tree)).to be_nil
+      it 'is edited on a saved revision only, as the lock reloads it' do
+        draft.ineligibilite_message = 'unsaved'
+        expect { draft.store_type_de_champ_tree }.to raise_error(ArgumentError, /save the revision/)
+        expect { ProcedureRevision.new.store_type_de_champ_tree }.to raise_error(ArgumentError, /save the revision/)
+      end
+
+      it 'is stored with every edit' do
+        a, b, r = draft.public_root_type_de_champs
+
+        added = draft.add_type_de_champ(type_champ: :text, libelle: 'c', after_stable_id: a.stable_id)
+        expect(stored_libelles).to eq([['a'], ['c'], ['b'], ['r', ['r1']]])
+        expect(draft.type_de_champ_tree).to equal(draft.read_attribute(:type_de_champ_tree))
+
+        draft.add_type_de_champ(type_champ: :text, libelle: 'r2', parent_stable_id: r.stable_id)
+        expect(stored_libelles).to eq([['a'], ['c'], ['b'], ['r', ['r2'], ['r1']]])
+
+        draft.move_type_de_champ(added.stable_id, 2)
+        expect(stored_libelles).to eq([['a'], ['b'], ['c'], ['r', ['r2'], ['r1']]])
+
+        draft.move_type_de_champ_after(added.stable_id, 0)
+        expect(stored_libelles).to eq([['a'], ['c'], ['b'], ['r', ['r2'], ['r1']]])
+
+        draft.remove_type_de_champ(b.stable_id)
+        expect(stored_libelles).to eq([['a'], ['c'], ['r', ['r2'], ['r1']]])
+
+        expect(stored_tree).to eq(TypeDeChampTree.from_coordinates(draft.reload.revision_type_de_champs))
+      end
+
+      it 'follows a type de champ becoming a header section, and its level' do
+        a, b = draft.public_root_type_de_champs
+
+        draft.update_type_de_champ(a.becomes_type('header_section'), type_champ: 'header_section', header_section_level: '1')
+        expect(stored_libelles).to eq([['a', ['b'], ['r', ['r1']]]])
+
+        draft.update_type_de_champ(TypeDeChamp.find(b.id).becomes_type('header_section'), type_champ: 'header_section', header_section_level: '2')
+        expect(stored_libelles).to eq([['a', ['b', ['r', ['r1']]]]])
+
+        draft.update_type_de_champ(TypeDeChamp.find(b.id), header_section_level: '1')
+        expect(stored_libelles).to eq([['a'], ['b', ['r', ['r1']]]])
+      end
+
+      it 'names the copy of a type de champ edited after a publication' do
+        procedure.publish!(procedure.administrateurs.first)
+        draft = procedure.reload.draft_revision
+        published = procedure.published_revision.public_root_type_de_champs.first
+
+        copy = draft.find_and_ensure_exclusive_use(published.stable_id)
+
+        expect(copy.id).not_to eq(published.id)
+        expect(ProcedureRevision.find(draft.id).read_attribute(:type_de_champ_tree).public_children.first.type_de_champ_id).to eq(copy.id)
+        expect(procedure.published_revision.reload.type_de_champ_tree.public_children.first.type_de_champ_id).to eq(published.id)
+      end
+
+      it 'holds the edits made through other instances' do
+        a = draft.public_root_type_de_champs.first
+        draft.add_type_de_champ(type_champ: :text, libelle: 'mine')
+
+        ProcedureRevision.find(draft.id).add_type_de_champ(type_champ: :text, libelle: 'theirs')
+        draft.remove_type_de_champ(a.stable_id)
+
+        expect(stored_libelles).to eq([['theirs'], ['mine'], ['b'], ['r', ['r1']]])
       end
     end
 
@@ -235,6 +297,66 @@ describe ProcedureRevision do
         draft.move_type_de_champ(last_child.stable_id, 0)
 
         expect(draft.children_of(type_de_champ_repetition).index(last_child)).to eq(0)
+      end
+    end
+  end
+
+  describe 'an edit racing with another request' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :text, libelle: 'a' }, { type: :text, libelle: 'b' }, { type: :text, libelle: 'c' }]) }
+    let(:other_request) { ProcedureRevision.find(draft.id) }
+
+    def libelles_and_positions = draft.reload.public_revision_type_de_champs.map { [it.libelle, it.position] }
+
+    # what the other request commits after this one read the draft and before
+    # it got the lock
+    def before_the_lock
+      done = false
+      allow(draft).to receive(:with_lock).and_wrap_original do |with_lock, *args, &edit|
+        yield unless done
+        done = true
+        with_lock.call(*args, &edit)
+      end
+    end
+
+    it 'adds a type de champ after the one added in the meantime' do
+      a = draft.public_root_type_de_champs.first
+      before_the_lock { other_request.add_type_de_champ(type_champ: :text, libelle: 'd', after_stable_id: a.stable_id) }
+
+      draft.add_type_de_champ(type_champ: :text, libelle: 'e', after_stable_id: a.stable_id)
+
+      expect(libelles_and_positions).to eq([['a', 0], ['e', 1], ['d', 2], ['b', 3], ['c', 4]])
+    end
+
+    it 'moves a type de champ from where it was moved in the meantime' do
+      a, _, c = draft.public_root_type_de_champs
+      before_the_lock { other_request.move_type_de_champ(c.stable_id, 0) }
+
+      draft.move_type_de_champ(a.stable_id, 2)
+
+      expect(libelles_and_positions).to eq([['c', 0], ['b', 1], ['a', 2]])
+    end
+
+    it 'removes a type de champ from where it was moved in the meantime' do
+      a, _, c = draft.public_root_type_de_champs
+      before_the_lock { other_request.move_type_de_champ(c.stable_id, 0) }
+
+      draft.remove_type_de_champ(a.stable_id)
+
+      expect(libelles_and_positions).to eq([['c', 0], ['b', 1]])
+    end
+
+    context 'on a published procedure' do
+      let(:procedure) { create(:procedure, :published, public_type_de_champs: [{ type: :text, libelle: 'a' }]) }
+
+      it 'edits the clone made in the meantime rather than cloning again' do
+        published_type_de_champ = procedure.published_revision.public_root_type_de_champs.first
+        stable_id = published_type_de_champ.stable_id
+        before_the_lock { other_request.find_and_ensure_exclusive_use(stable_id).update!(libelle: 'a bis') }
+
+        type_de_champ = draft.find_and_ensure_exclusive_use(stable_id)
+
+        expect(type_de_champ.libelle).to eq('a bis')
+        expect(TypeDeChamp.where(stable_id:)).to contain_exactly(published_type_de_champ, type_de_champ)
       end
     end
   end
