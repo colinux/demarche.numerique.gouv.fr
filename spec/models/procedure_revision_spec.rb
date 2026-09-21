@@ -115,6 +115,20 @@ describe ProcedureRevision do
       expect { draft.find_and_ensure_exclusive_use(removed_stable_id) }
         .to raise_error(ActiveRecord::RecordNotFound)
     end
+
+    context 'with a published explication carrying a notice' do
+      let(:procedure) { create(:procedure, :published, public_type_de_champs: [{ type: :explication }]) }
+      let(:published_type_de_champ) { procedure.published_revision.public_root_type_de_champs.first }
+
+      before { published_type_de_champ.notice_explicative.attach(io: StringIO.new("notice"), filename: "notice.txt", content_type: "text/plain") }
+
+      it 'keeps the notice on the clone' do
+        type_de_champ = draft.find_and_ensure_exclusive_use(published_type_de_champ.stable_id)
+
+        expect(type_de_champ).not_to eq(published_type_de_champ)
+        expect(type_de_champ.notice_explicative.blob).to eq(published_type_de_champ.notice_explicative.blob)
+      end
+    end
   end
 
   describe '#move_type_de_champ' do
