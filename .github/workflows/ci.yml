@@ -1,7 +1,8 @@
 name: Continuous Integration
 on:
+  # every pull request, whatever its base: a stacked PR is based on the branch
+  # of the one below it
   pull_request:
-    branches: [main]
   merge_group:
     branches: [main]
 

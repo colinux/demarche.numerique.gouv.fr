@@ -6,8 +6,9 @@ on:
     paths:
       - 'db/migrate/**'
       - 'db/schema.rb'
+  # every pull request, whatever its base: a stacked PR is based on the branch
+  # of the one below it
   pull_request:
-    branches: [main]
     paths:
       - 'db/migrate/**'
       - 'db/schema.rb'
