@@ -69,6 +69,7 @@ describe MainNavigation::InstructeurExpertNavigationComponent, type: :component 
       expect(subject).to have_link('Avis', href: component.helpers.expert_all_avis_path)
       expect(subject).to have_selector('a[aria-current="true"]', text: 'Avis')
       expect(subject).not_to have_selector('span.fr-badge')
+      expect(subject).not_to have_selector('span.fr-sr-only')
     end
 
     it 'does not have Démarches link' do
@@ -80,6 +81,10 @@ describe MainNavigation::InstructeurExpertNavigationComponent, type: :component 
 
       it 'renders an unanswered avis badge for the expert' do
         expect(subject).to have_selector('span.fr-badge', text: '2')
+      end
+
+      it 'tells assistive technologies what the badge counts' do
+        expect(subject).to have_link('2 Avis à donner', exact_text: true, normalize_ws: true)
       end
     end
 
