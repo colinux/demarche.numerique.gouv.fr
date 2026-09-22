@@ -6,6 +6,8 @@ class ExpertsProcedure < ApplicationRecord
 
   has_many :avis, dependent: :destroy
 
+  scope :not_revoked, -> { where(revoked_at: nil) }
+
   def revoked?
     revoked_at.present?
   end

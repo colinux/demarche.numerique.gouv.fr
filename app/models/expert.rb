@@ -35,7 +35,7 @@ class Expert < ApplicationRecord
 
     suggested_expert = if procedure.experts_require_administrateur_invitation?
       procedure_experts
-        .where(experts_procedures: { revoked_at: nil })
+        .merge(ExpertsProcedure.not_revoked)
     else
       procedure_experts
         .where.not(users: { last_sign_in_at: nil })

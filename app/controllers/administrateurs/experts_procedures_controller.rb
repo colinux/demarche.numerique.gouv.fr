@@ -62,7 +62,7 @@ module Administrateurs
 
     def retrieve_experts_procedure
       experts_procedures = @procedure.experts_procedures
-      experts_procedures = experts_procedures.where(revoked_at: nil) if @procedure.experts_require_administrateur_invitation?
+      experts_procedures = experts_procedures.not_revoked if @procedure.experts_require_administrateur_invitation?
       @experts_procedure ||= experts_procedures.sort_by { _1.expert.email }
     end
 
