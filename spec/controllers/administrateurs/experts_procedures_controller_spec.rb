@@ -13,11 +13,31 @@ describe Administrateurs::ExpertsProceduresController, type: :controller do
       get :index, params: { procedure_id: procedure.id }
     end
 
-    before do
-      subject
+    context 'nominal' do
+      before { subject }
+
+      it { expect(response.status).to eq 200 }
     end
 
-    it { expect(response.status).to eq 200 }
+    context 'with a revoked expert' do
+      let!(:revoked) { create(:experts_procedure, procedure:, expert: create(:expert), revoked_at: 1.day.ago) }
+
+      context 'when the procedure manages its experts with a predefined list' do
+        let(:procedure) { create :procedure, administrateur: admin, experts_require_administrateur_invitation: true }
+
+        it 'hides it' do
+          subject
+          expect(assigns(:experts_procedure)).not_to include(revoked)
+        end
+      end
+
+      context 'when the procedure lets instructeurs invite the experts they want' do
+        it 'lists it: the revocation is dormant, so that expert does have access' do
+          subject
+          expect(assigns(:experts_procedure)).to include(revoked)
+        end
+      end
+    end
   end
 
   describe '#create' do

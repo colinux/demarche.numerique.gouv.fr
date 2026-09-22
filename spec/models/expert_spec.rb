@@ -213,7 +213,15 @@ RSpec.describe Expert, type: :model do
     context 'when the expert is revoked from the procedure' do
       before { experts_procedure.update!(revoked_at: Time.zone.now) }
 
-      it { is_expected.to be_empty }
+      context 'and the procedure manages its experts with a predefined list' do
+        before { procedure.update!(experts_require_administrateur_invitation: true) }
+
+        it { is_expected.to be_empty }
+      end
+
+      context 'and the procedure lets instructeurs invite the experts they want' do
+        it { is_expected.to contain_exactly(dossier) }
+      end
     end
   end
 end

@@ -178,9 +178,20 @@ describe Instructeurs::CommentairesController, type: :controller do
         let!(:commentaire) { create(:commentaire, expert: expert, dossier: dossier) }
         subject { delete :destroy, params: { dossier_id: dossier.id, procedure_id: procedure.id, id: commentaire.id, statut: 'a-suivre' }, format: :turbo_stream }
 
-        it 'returns 404 and does not delete the commentaire' do
-          expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
-          expect(commentaire.reload).not_to be_discarded
+        context 'and the procedure manages its experts with a predefined list' do
+          before { procedure.update!(experts_require_administrateur_invitation: true) }
+
+          it 'returns 404 and does not delete the commentaire' do
+            expect { subject }.to raise_error(ActiveRecord::RecordNotFound)
+            expect(commentaire.reload).not_to be_discarded
+          end
+        end
+
+        context 'and the procedure lets instructeurs invite the experts they want' do
+          it 'deletes the commentaire: the revocation is dormant in that mode' do
+            expect(subject).to have_http_status(:ok)
+            expect(commentaire.reload).to be_discarded
+          end
         end
       end
     end

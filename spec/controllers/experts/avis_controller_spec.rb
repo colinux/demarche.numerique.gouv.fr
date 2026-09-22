@@ -43,14 +43,27 @@ describe Experts::AvisController, type: :controller do
       end
 
       context 'when the expert has been revoked from the procedure' do
-        before do
-          experts_procedure.update!(revoked_at: Time.zone.now)
-          get :index
+        before { experts_procedure.update!(revoked_at: Time.zone.now) }
+
+        context 'and the procedure manages its experts with a predefined list' do
+          before do
+            procedure.update!(experts_require_administrateur_invitation: true)
+            get :index
+          end
+
+          it 'hides every avis of that procedure' do
+            expect(response).to have_http_status(:success)
+            expect(assigns(:avis_by_procedure).values.flatten).to be_empty
+          end
         end
 
-        it 'hides every avis of that procedure' do
-          expect(response).to have_http_status(:success)
-          expect(assigns(:avis_by_procedure).values.flatten).not_to include(avis_without_answer, avis_with_answer)
+        context 'and the procedure lets instructeurs invite the experts they want' do
+          before { get :index }
+
+          it 'still lists the avis: the revocation is dormant in that mode' do
+            expect(response).to have_http_status(:success)
+            expect(assigns(:avis_by_procedure).values.flatten).to match_array([avis_without_answer, avis_with_answer])
+          end
         end
       end
 
@@ -192,8 +205,31 @@ describe Experts::AvisController, type: :controller do
       end
 
       context 'when the expert has been revoked from the procedure' do
-        it "refuse l’accès au dossier même si l’avis n’est pas révoqué" do
-          experts_procedure.update!(revoked_at: Time.zone.now)
+        before { experts_procedure.update!(revoked_at: Time.zone.now) }
+
+        context 'and the procedure manages its experts with a predefined list' do
+          before { procedure.update!(experts_require_administrateur_invitation: true) }
+
+          it "refuse l’accès au dossier même si l’avis n’est pas révoqué" do
+            subject
+            expect(flash.alert).to eq("Vous n’avez plus accès à ce dossier.")
+            expect(response).to redirect_to(root_path)
+          end
+        end
+
+        context 'and the procedure lets instructeurs invite the experts they want' do
+          it "laisse l’accès au dossier : la révocation est sans effet dans ce mode" do
+            subject
+            expect(response).to have_http_status(:success)
+            expect(assigns(:avis)).to eq(avis_with_answer)
+          end
+        end
+      end
+
+      context 'with an unknown avis id' do
+        subject { get :show, params: { id: 0, procedure_id: } }
+
+        it "refuse l’accès sans révéler si l’avis existe" do
           subject
           expect(flash.alert).to eq("Vous n’avez plus accès à ce dossier.")
           expect(response).to redirect_to(root_path)

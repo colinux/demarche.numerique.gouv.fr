@@ -22,6 +22,52 @@ RSpec.describe Avis, type: :model do
     it { expect(avis.pending.experts_procedure).to eq(experts_procedures.default) }
   end
 
+  describe ".not_revoked" do
+    subject { Avis.where(id: avis.pending.id).not_revoked }
+
+    it { is_expected.to contain_exactly(avis.pending) }
+
+    context "when the procedure manages its experts with a predefined list" do
+      before { procedures.individual.update!(experts_require_administrateur_invitation: true) }
+
+      it { is_expected.to contain_exactly(avis.pending) }
+    end
+
+    context "when the avis itself is revoked" do
+      before { avis.pending.update_column(:revoked_at, Time.zone.now) }
+
+      it { is_expected.to be_empty }
+    end
+
+    context "when the procedure has been deleted" do
+      before { procedures.individual.update_column(:hidden_at, Time.zone.now) }
+
+      it { is_expected.to be_empty }
+    end
+
+    context "when the expert is revoked from the procedure" do
+      before { experts_procedures.default.update!(revoked_at: Time.zone.now) }
+
+      context "and the procedure lets instructeurs invite the experts they want" do
+        it "keeps the avis accessible: the revocation has no meaning in that mode" do
+          expect(subject).to contain_exactly(avis.pending)
+        end
+      end
+
+      context "and the procedure manages its experts with a predefined list" do
+        before { procedures.individual.update!(experts_require_administrateur_invitation: true) }
+
+        it { is_expected.to be_empty }
+      end
+
+      context "and the procedure has no value for that mode" do
+        before { procedures.individual.update_column(:experts_require_administrateur_invitation, nil) }
+
+        it { is_expected.to contain_exactly(avis.pending) }
+      end
+    end
+  end
+
   describe ".revoke_by!" do
     context "when no answer" do
       it "supprime l’avis" do
