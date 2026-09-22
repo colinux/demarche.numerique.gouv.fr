@@ -25,16 +25,7 @@ class Expert < ApplicationRecord
   end
 
   def avis_summary
-    if @avis_summary.present?
-      @avis_summary
-    else
-      query = <<~EOF
-        COUNT(*) FILTER (where answer IS NULL AND dossiers.hidden_by_administration_at IS NULL AND dossiers.state not in ('accepte', 'refuse', 'sans_suite')) AS unanswered,
-        COUNT(*) AS total
-      EOF
-      result = avis.select(query)[0]
-      @avis_summary = { unanswered: result.unanswered, total: result.total }
-    end
+    @avis_summary ||= { unanswered: avis.not_revoked.without_answer.not_hidden_by_administration.not_termine.count }
   end
 
   def self.autocomplete_mails(procedure)

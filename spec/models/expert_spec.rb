@@ -164,6 +164,33 @@ RSpec.describe Expert, type: :model do
     end
   end
 
+  describe '#avis_summary' do
+    subject { experts.default.avis_summary[:unanswered] }
+
+    it { is_expected.to eq(1) }
+
+    context 'when the dossier is hidden by the administration' do
+      before { avis.pending.dossier.update!(hidden_by_administration_at: Time.zone.now) }
+
+      it { is_expected.to eq(0) }
+    end
+
+    context 'when the dossier is termine' do
+      before { avis.pending.dossier.update_column(:state, Dossier.states.fetch(:accepte)) }
+
+      it { is_expected.to eq(0) }
+    end
+
+    context 'when the expert is revoked from a procedure that manages its experts with a predefined list' do
+      before do
+        procedures.individual.update!(experts_require_administrateur_invitation: true)
+        experts_procedures.default.update!(revoked_at: Time.zone.now)
+      end
+
+      it { is_expected.to eq(0) }
+    end
+  end
+
   describe '#dossiers_from_not_revoked_avis' do
     let(:expert) { create(:expert) }
     let(:claimant) { create(:expert) }
