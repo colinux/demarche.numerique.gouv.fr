@@ -895,7 +895,8 @@ class Dossier < ApplicationRecord
     attestation_depot_pdf.attach(
       io: StringIO.new(pdf),
       filename: "attestation-depot-dossier-#{id}.pdf",
-      content_type: 'application/pdf'
+      content_type: 'application/pdf',
+      metadata: { virus_scan_result: ActiveStorage::VirusScanner::SAFE }
     )
 
     pdf
