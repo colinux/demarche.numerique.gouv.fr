@@ -92,6 +92,25 @@ describe EmptyFileValidator do
     end
   end
 
+  describe "on a signed id held by the record" do
+    def batch(justificatif_motivation)
+      BatchOperation.new(operation: :accepter, instructeur: instructeurs.default, justificatif_motivation:)
+    end
+
+    it "rejects an empty file" do
+      record = batch(empty_blob.signed_id)
+
+      expect(record).not_to be_valid
+      expect(record.errors[:justificatif_motivation].join).to include('vide')
+    end
+
+    it "accepts a file with content" do
+      blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new('x'), filename: 'motif.pdf', content_type: 'application/pdf')
+
+      expect(batch(blob.signed_id)).to be_valid
+    end
+  end
+
   describe "on a has_one_attached association" do
     let(:record) { avis.answered }
 

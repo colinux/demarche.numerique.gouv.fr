@@ -33,6 +33,7 @@ class BatchOperation < ApplicationRecord
   store_accessor :payload, :motivation, :justificatif_motivation, :emails, :introduction, :question_label, :introduction_file, :confidentiel, :body, :piece_jointe, :statut, :mark_as_pending_response
 
   validates :operation, presence: true
+  validates :justificatif_motivation, empty_file: true, on: :create
 
   before_create :build_operations
 

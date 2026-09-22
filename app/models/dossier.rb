@@ -480,6 +480,10 @@ class Dossier < ApplicationRecord
   validates :mandataire_first_name, presence: true, if: -> { for_tiers? && !brouillon? }
   validates :mandataire_last_name, presence: true, if: -> { for_tiers? && !brouillon? }
   validates :for_tiers, inclusion: { in: [true, false] }, if: -> { revision&.procedure&.for_individual? }
+  # A BatchOperation validates up to 500 dossiers at once, and reading the
+  # attachment of each costs a query. The guard also keeps this out of
+  # champs_private_valid?, which would report an empty file as a failed guard.
+  validates :justificatif_motivation, empty_file: true, if: -> { attachment_changes.key?('justificatif_motivation') }
 
   # csv/ods construisent tout le classeur en mémoire d'un coup (spreadsheet_architect) :
   # on matérialise donc l'ensemble des dossiers triés et préchargés. On passe par

@@ -281,6 +281,8 @@ module Instructeurs
         flash.notice = t('instructeurs.dossiers.terminer_notice', state: dossier_display_state(target_state, lower: true))
       rescue AASM::InvalidTransition => e
         flash.alert = aasm_error_message(e, target_state: target_state)
+      rescue ActiveRecord::RecordInvalid => e
+        flash.alert = e.record.errors.full_messages
       end
 
       @dossier = dossier

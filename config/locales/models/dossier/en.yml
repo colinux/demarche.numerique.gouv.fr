@@ -13,6 +13,7 @@ en:
     attributes:
       dossier:
         id: "File number"
+        justificatif_motivation: "Supporting document"
         state: "State"
         pending_correction: Request correction
         mandataire_first_name: First name

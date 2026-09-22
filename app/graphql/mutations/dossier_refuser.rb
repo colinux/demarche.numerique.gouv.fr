@@ -19,6 +19,8 @@ module Mutations
       dossier.refuser!(instructeur:, motivation:, justificatif:, disable_notification:)
 
       { dossier: }
+    rescue ActiveRecord::RecordInvalid => e
+      { errors: e.record.errors.full_messages }
     end
 
     def authorized_before_load?(justificatif: nil, **args)
