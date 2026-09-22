@@ -41,51 +41,22 @@ module DossierChampsConcern
   end
 
   def champs
-    root_champs_public + root_champs_private
-  end
-
-  def filled_champs_public
-    @filled_champs_public ||= root_champs_public.flat_map do |champ|
-      if champ.repetition?
-        champ.rows.flat_map(&:flat_children).filter { _1.persisted? && _1.fillable? }
-      elsif champ.persisted? && champ.fillable?
-        champ
-      else
-        []
-      end
-    end
-  end
-
-  def filled_champs_private
-    @filled_champs_private ||= root_champs_private.flat_map do |champ|
-      if champ.repetition?
-        champ.rows.flat_map(&:flat_children).filter { _1.persisted? && _1.fillable? }
-      elsif champ.persisted? && champ.fillable?
-        champ
-      else
-        []
-      end
-    end
-  end
-
-  def filled_champs
-    filled_champs_public + filled_champs_private
+    flat_champs_public + flat_champs_private
   end
 
   # Les champs qu'un champ situé sur `row_id` peut référencer : ceux de sa propre
   # ligne de répétition, plus ceux qui sont hors répétition. Un champ hors
   # répétition (row_id nil) ne voit que ces derniers.
-  def filled_champs_for_row(row_id)
-    return Array(filled_champs_by_row_id[nil]) if row_id.nil?
+  def champs_for_row(row_id)
+    return Array(champs_by_row_id[nil]) if row_id.nil?
 
-    Array(filled_champs_by_row_id[row_id]) + Array(filled_champs_by_row_id[nil])
+    Array(champs_by_row_id[row_id]) + Array(champs_by_row_id[nil])
   end
 
   def flat_champs_public
-    @flat_champs_public ||= revision.public_root_type_de_champs.flat_map do |type_de_champ|
-      champ = project_champ(type_de_champ)
-      if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
+    @flat_champs_public ||= root_champs_public.flat_map do |champ|
+      if champ.repetition?
+        [champ] + champ.rows.flat_map(&:flat_children)
       else
         champ
       end
@@ -93,10 +64,9 @@ module DossierChampsConcern
   end
 
   def flat_champs_private
-    @flat_champs_private ||= revision.private_root_type_de_champs.flat_map do |type_de_champ|
-      champ = project_champ(type_de_champ)
-      if type_de_champ.repetition?
-        [champ] + project_rows_for(type_de_champ).flat_map(&:flat_children)
+    @flat_champs_private ||= root_champs_private.flat_map do |champ|
+      if champ.repetition?
+        [champ] + champ.rows.flat_map(&:flat_children)
       else
         champ
       end
@@ -501,16 +471,14 @@ module DossierChampsConcern
     end
   end
 
-  def filled_champs_by_row_id
-    @filled_champs_by_row_id ||= filled_champs.group_by(&:row_id)
+  def champs_by_row_id
+    @champs_by_row_id ||= champs.group_by(&:row_id)
   end
 
   def reset_champs_cache
     @champ_data_by_public_id = nil
     @discarded_champ_data_by_public_id = nil
-    @filled_champs_public = nil
-    @filled_champs_private = nil
-    @filled_champs_by_row_id = nil
+    @champs_by_row_id = nil
     @root_champs_public = nil
     @root_champs_private = nil
     @flat_champs_public = nil

@@ -256,8 +256,8 @@ RSpec.describe DossierChampsConcern do
   describe '#champs' do
     subject { dossier.champs }
 
-    it "concatenates public and private root champs" do
-      expect(subject).to eq(dossier.root_champs_public + dossier.root_champs_private)
+    it "concatenates the public and private champs, repetition children included" do
+      expect(subject).to eq(dossier.flat_champs_public + dossier.flat_champs_private)
     end
   end
 
@@ -273,39 +273,6 @@ RSpec.describe DossierChampsConcern do
     subject { dossier.flat_champs_private }
 
     it { expect(subject.map(&:libelle)).to eq(["Une annotation"]) }
-  end
-
-  describe '#filled_champs_public' do
-    let(:public_type_de_champs) do
-      [
-        { type: :header_section, stable_id: 9001 },
-        { type: :text, libelle: "Un champ text", stable_id: 9002 },
-        { type: :text, libelle: "Un autre champ text", stable_id: 9003 },
-        { type: :yes_no, libelle: "Un champ yes no", stable_id: 9004 },
-        { type: :repetition, libelle: "Un champ répétable", stable_id: 9005, mandatory: true, children: [{ type: :text, libelle: 'Nom', stable_id: 9006 }] },
-        { type: :explication, stable_id: 9007 },
-      ]
-    end
-    let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }
-    subject { dossier.filled_champs_public }
-
-    it do
-      expect(subject.size).to eq(5)
-      expect(subject.filter { _1.libelle == 'Nom' }.size).to eq(2)
-    end
-  end
-
-  describe '#filled_champs_private' do
-    let(:private_type_de_champs) do
-      [
-        { type: :header_section, stable_id: 9011 },
-        { type: :text, libelle: "Une annotation", stable_id: 9012 },
-        { type: :explication, stable_id: 9013 },
-      ]
-    end
-    subject { dossier.filled_champs_private }
-
-    it { expect(subject.size).to eq(1) }
   end
 
   describe '#repetition_row_ids' do

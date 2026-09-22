@@ -1928,7 +1928,7 @@ describe Dossier, type: :model do
       let(:public_type_de_champs) { [{ type: :carte }, { type: :carte }, { type: :carte }] }
 
       it do
-        dossier.filled_champs
+        dossier.champs
 
         count = 0
 

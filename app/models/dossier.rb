@@ -588,7 +588,7 @@ class Dossier < ApplicationRecord
   def can_passer_en_construction?
     return true if !revision.ineligibilite_enabled || !revision.ineligibilite_rules
 
-    !revision.ineligibilite_rules.compute(filled_champs_public)
+    !revision.ineligibilite_rules.compute(flat_champs_public)
   end
 
   def can_passer_en_instruction?
@@ -636,7 +636,7 @@ class Dossier < ApplicationRecord
 
   def any_etablissement_as_degraded_mode?
     return true if etablissement&.as_degraded_mode?
-    return true if filled_champs_public.any? { _1.etablissement&.as_degraded_mode? }
+    return true if flat_champs_public.any? { _1.etablissement&.as_degraded_mode? }
 
     false
   end
@@ -1009,7 +1009,7 @@ class Dossier < ApplicationRecord
   end
 
   def linked_dossiers_for(instructeur_or_expert)
-    dossier_ids = filled_champs.filter(&:dossier_link?).filter_map(&:value)
+    dossier_ids = champs.filter(&:dossier_link?).filter_map(&:value)
     instructeur_or_expert.dossiers.where(id: dossier_ids)
   end
 
@@ -1017,8 +1017,13 @@ class Dossier < ApplicationRecord
     { id: self.id, procedure_libelle: self.procedure.libelle, procedure_path: self.procedure.path }
   end
 
+  # geo areas hang off a champ row: a champ projected without one has none
+  def persisted_champs_carte
+    champs.filter { it.carte? && it.persisted? }
+  end
+
   def geo_data?
-    GeoArea.exists?(champ_id: filled_champs)
+    GeoArea.exists?(champ_id: persisted_champs_carte)
   end
 
   def to_feature_collection
@@ -1206,8 +1211,8 @@ class Dossier < ApplicationRecord
   end
 
   def geo_areas
-    ActiveRecord::Associations::Preloader.new(records: filled_champs, associations: :geo_areas).call
-    filled_champs.flat_map(&:geo_areas)
+    ActiveRecord::Associations::Preloader.new(records: persisted_champs_carte, associations: :geo_areas).call
+    persisted_champs_carte.flat_map(&:geo_areas)
   end
 
   def bounding_box
