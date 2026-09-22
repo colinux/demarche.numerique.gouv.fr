@@ -114,6 +114,22 @@ describe Expired::UsersDeletionService do
         end
       end
     end
+
+    context 'when the notification phase raises' do
+      let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: due_close_to_expiration) }
+      let(:dossier) { create(:dossier, :brouillon, user:, created_at: signed_in_expired) }
+
+      it 'reports the error and still deletes the users of the other segment' do
+        allow_any_instance_of(Expired::UsersDeletionService)
+          .to receive(:send_inactive_close_to_expiration_notice)
+          .and_raise(ActiveRecord::QueryCanceled)
+
+        expect(Sentry).to receive(:capture_exception).with(ActiveRecord::QueryCanceled).twice
+
+        subject
+        expect { user.reload }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+    end
   end
 
   describe '#expired_users_without_dossiers' do

@@ -8,8 +8,8 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
     #   inner join on users not having dossier.en_instruction [so we do not destroy users with dossiers.en_instruction]
     #   outer join on users not having dossier at all [so we destroy users without dossiers]
     [expired_users_without_dossiers, expired_users_with_dossiers].each do |expired_segment|
-      delete_notified_users(expired_segment)
-      send_inactive_close_to_expiration_notice(expired_segment)
+      reporting_errors { delete_notified_users(expired_segment) }
+      reporting_errors { send_inactive_close_to_expiration_notice(expired_segment) }
     end
   end
 
@@ -77,5 +77,11 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
 
   def daily_limit
     (ENV['EXPIRE_USER_DELETION_JOB_LIMIT'] || 10_000).to_i
+  end
+
+  def reporting_errors
+    yield
+  rescue => e
+    Sentry.capture_exception(e)
   end
 end
