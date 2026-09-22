@@ -456,6 +456,7 @@ en:
           user_request: File deleted by the user
           expired: The file is expired
           user_removed: The user has deleted his/her account
+          user_expired: The user's account was deleted for inactivity
         acts_on_behalf: "acts for"
         restore: "Restore"
         select_all: Select all

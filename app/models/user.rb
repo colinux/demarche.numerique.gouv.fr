@@ -278,7 +278,7 @@ class User < ApplicationRecord
       # delete invites
       Invite.where(dossier: dossiers).destroy_all
 
-      delete_and_keep_track_dossiers(super_admin, reason: :user_removed)
+      delete_and_keep_track_dossiers(super_admin, reason:)
       destroy!
     end
   end

@@ -457,6 +457,7 @@ fr:
           user_request: Dossier supprimé par l’usager
           expired: Le dossier a expiré
           user_removed: L’usager a supprimé son compte
+          user_expired: Le compte de l’usager a été supprimé pour inactivité
         acts_on_behalf: "agit pour"
         restore: "Restaurer"
         restore_and_extend: "Restaurer et conserver un mois de plus"
