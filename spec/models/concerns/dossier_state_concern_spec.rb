@@ -150,6 +150,21 @@ RSpec.describe DossierStateConcern do
 
         expect { decide }.to have_enqueued_mail(ExpertMailer, :send_dossier_decision).with(pending_avis)
       end
+
+      it 'does not send the decision once the avis has been revoked' do
+        pending_avis.update!(answer: 'Avis favorable', revoked_at: Time.zone.now)
+        experts_procedures.default.update!(allow_decision_access: true)
+
+        expect { decide }.not_to have_enqueued_mail(ExpertMailer, :send_dossier_decision)
+      end
+
+      it 'does not send the decision once the expert has been revoked from a procedure with a predefined list' do
+        pending_avis.update!(answer: 'Avis favorable')
+        procedures.individual.update!(experts_require_administrateur_invitation: true)
+        experts_procedures.default.update!(allow_decision_access: true, revoked_at: Time.zone.now)
+
+        expect { decide }.not_to have_enqueued_mail(ExpertMailer, :send_dossier_decision)
+      end
     end
 
     it 'removes the attente_avis badge' do

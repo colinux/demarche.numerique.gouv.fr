@@ -1271,6 +1271,7 @@ class Dossier < ApplicationRecord
       .joins(:experts_procedure)
       .where(dossier: dossier, experts_procedures: { allow_decision_access: true })
       .with_answer
+      .not_revoked
       .distinct
       .pluck('avis.id, experts_procedures.id')
 
