@@ -14,8 +14,13 @@ module Instructeurs
         return redirect_back_or_to(instructeur_procedure_url(@procedure.id))
       end
 
-      batch = BatchOperation.safe_create!(batch_operation_params)
-      flash[:alert] = "Le traitement de masse n’a pas été lancé. Vérifiez que l’action demandée est possible pour les dossiers sélectionnés" if batch.blank?
+      begin
+        batch = BatchOperation.safe_create!(batch_operation_params)
+        flash[:alert] = "Le traitement de masse n’a pas été lancé. Vérifiez que l’action demandée est possible pour les dossiers sélectionnés" if batch.blank?
+      rescue ActiveRecord::RecordInvalid => e
+        flash[:alert] = e.record.errors.full_messages
+      end
+
       redirect_back_or_to(instructeur_procedure_url(@procedure.id))
     end
 

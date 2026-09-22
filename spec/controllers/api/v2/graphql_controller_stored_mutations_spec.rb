@@ -241,6 +241,16 @@ describe API::V2::GraphqlController do
         }
       end
 
+      context 'with an empty justificatif' do
+        let(:empty_blob) { ActiveStorage::Blob.create_and_upload!(io: StringIO.new(''), filename: 'vide.pdf', content_type: 'application/pdf') }
+        let(:variables) { { input: { dossierId: dossier.to_typed_id, instructeurId: instructeur.to_typed_id, justificatif: empty_blob.signed_id } } }
+
+        it {
+          expect(gql_data[:dossierAccepter][:errors].first[:message]).to include('est vide (vide.pdf)')
+          expect(dossier.reload.state).to eq('en_instruction')
+        }
+      end
+
       context 'without notifications' do
         let(:disableNotification) { true }
 

@@ -216,7 +216,7 @@ class Dossier < ApplicationRecord
     end
 
     event :accepter, after: :after_accepter, after_commit: :after_commit_accepter do
-      transitions from: :en_instruction, to: :accepte, guard: :can_terminer?
+      transitions from: :en_instruction, to: :accepte, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :accepter_automatiquement, after: :after_accepter_automatiquement, after_commit: :after_commit_accepter_automatiquement do
@@ -225,7 +225,7 @@ class Dossier < ApplicationRecord
     end
 
     event :refuser, after: :after_refuser, after_commit: :after_commit_refuser do
-      transitions from: :en_instruction, to: :refuse, guard: :can_terminer?
+      transitions from: :en_instruction, to: :refuse, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :refuser_automatiquement, after: :after_refuser_automatiquement, after_commit: :after_commit_refuser_automatiquement do
@@ -233,7 +233,7 @@ class Dossier < ApplicationRecord
     end
 
     event :classer_sans_suite, after: :after_classer_sans_suite, after_commit: :after_commit_classer_sans_suite do
-      transitions from: :en_instruction, to: :sans_suite, guard: :can_terminer?
+      transitions from: :en_instruction, to: :sans_suite, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :repasser_en_instruction, after: :after_repasser_en_instruction, after_commit: :after_commit_repasser_en_instruction do
@@ -480,6 +480,10 @@ class Dossier < ApplicationRecord
   validates :mandataire_first_name, presence: true, if: -> { for_tiers? && !brouillon? }
   validates :mandataire_last_name, presence: true, if: -> { for_tiers? && !brouillon? }
   validates :for_tiers, inclusion: { in: [true, false] }, if: -> { revision&.procedure&.for_individual? }
+  # A BatchOperation validates up to 500 dossiers at once, and reading the
+  # attachment of each costs a query. The guard also keeps this out of
+  # champs_private_valid?, which would report an empty file as a failed guard.
+  validates :justificatif_motivation, empty_file: true, if: -> { attachment_changes.key?('justificatif_motivation') }
 
   # csv/ods construisent tout le classeur en mémoire d'un coup (spreadsheet_architect) :
   # on matérialise donc l'ensemble des dossiers triés et préchargés. On passe par

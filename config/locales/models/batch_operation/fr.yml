@@ -1,0 +1,5 @@
+fr:
+  activerecord:
+    attributes:
+      batch_operation:
+        justificatif_motivation: "Justificatif"

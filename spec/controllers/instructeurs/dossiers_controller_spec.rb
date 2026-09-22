@@ -384,6 +384,21 @@ describe Instructeurs::DossiersController, type: :controller do
         end
       end
 
+      context 'refusal with an empty justificatif' do
+        let(:empty_justificatif) { ActiveStorage::Blob.create_and_upload!(io: StringIO.new(''), filename: 'vide.pdf', content_type: 'application/pdf').signed_id }
+
+        subject { post :terminer, params: { process_action: "refuser", procedure_id: procedure.id, dossier_id: dossier.id, dossier: { justificatif_motivation: empty_justificatif, motivation: "Motif du refus" }, statut: 'a-suivre' }, format: :turbo_stream }
+
+        it 'leaves the dossier en instruction' do
+          subject
+
+          dossier.reload
+          expect(dossier.state).to eq(Dossier.states.fetch(:en_instruction))
+          expect(dossier.justificatif_motivation).to_not be_attached
+          expect(response.body).to include('est vide (vide.pdf)')
+        end
+      end
+
       context 'refusal with a justificatif' do
         subject { post :terminer, params: { process_action: "refuser", procedure_id: procedure.id, dossier_id: dossier.id, dossier: { justificatif_motivation: fake_justificatif, motivation: "Motif du refus" }, statut: 'a-suivre' }, format: :turbo_stream }
 

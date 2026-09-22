@@ -50,6 +50,26 @@ describe Instructeurs::BatchOperationsController, type: :controller do
       end
     end
 
+    context 'with an empty justificatif' do
+      let(:dossier) { create(:dossier, :en_instruction, :with_individual, procedure: procedure) }
+      let(:params) do
+        {
+          procedure_id: procedure.id,
+          batch_operation: {
+            operation: BatchOperation.operations.fetch(:accepter),
+            dossier_ids: [dossier.id],
+            justificatif_motivation: ActiveStorage::Blob.create_and_upload!(io: StringIO.new(''), filename: 'vide.pdf', content_type: 'application/pdf').signed_id,
+          },
+          statut: 'a-suivre',
+        }
+      end
+
+      it 'does not create a batch operation and warns the instructeur' do
+        expect { subject }.not_to change { instructeur.batch_operations.count }
+        expect(flash.alert.first).to include('est vide (vide.pdf)')
+      end
+    end
+
     context 'fails with no dossiers' do
       let(:dossier) { create(:dossier, :en_instruction, procedure: procedure) }
 

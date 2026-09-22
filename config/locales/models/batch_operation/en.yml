@@ -1,0 +1,5 @@
+en:
+  activerecord:
+    attributes:
+      batch_operation:
+        justificatif_motivation: "Supporting document"

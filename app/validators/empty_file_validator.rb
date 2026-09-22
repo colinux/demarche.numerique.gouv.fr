@@ -13,11 +13,8 @@
 # their dossier. Those are cleaned up by
 # Maintenance::T20260728PurgeEmptyAttachmentsTask instead.
 class EmptyFileValidator < ActiveModel::EachValidator
-  def validate_each(record, attribute, _value)
-    attached = record.public_send(attribute)
-    return if !attached.attached?
-
-    blobs(attached).each do
+  def validate_each(record, attribute, value)
+    blobs(value).each do
       next unless it.byte_size == 0
       next if already_attached?(record, attribute, it)
 
@@ -27,9 +24,15 @@ class EmptyFileValidator < ActiveModel::EachValidator
 
   private
 
-  # Attached::Many exposes #blobs, Attached::One only #blob.
-  def blobs(attached)
-    attached.respond_to?(:blobs) ? attached.blobs : [attached.blob]
+  # Attached::Many exposes #blobs, Attached::One only #blob. A record holding a
+  # signed id it has not attached yet (BatchOperation payload) exposes neither.
+  def blobs(value)
+    case value
+    when ActiveStorage::Attached::Many then value.blobs
+    when ActiveStorage::Attached::One then [value.blob].compact
+    when String then [ActiveStorage::Blob.find_signed(value)].compact
+    else []
+    end
   end
 
   # Attachments are inserted after validation, so a blob already joined to this

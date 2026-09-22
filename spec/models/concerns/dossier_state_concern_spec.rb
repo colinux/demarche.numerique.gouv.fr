@@ -125,6 +125,17 @@ RSpec.describe DossierStateConcern do
       end
     end
 
+    context 'with an empty justificatif' do
+      let(:justificatif) { { io: StringIO.new(''), filename: 'vide.pdf' } }
+
+      it 'refuses the decision' do
+        expect { decide }.to raise_error(ActiveRecord::RecordInvalid)
+        expect(dossier.errors).to be_of_kind(:justificatif_motivation, :file_empty)
+        expect(dossier.reload.state).to eq('en_instruction')
+        expect(dossier.justificatif_motivation).not_to be_attached
+      end
+    end
+
     include_examples 'notifies the usager', state
     include_examples 'can skip the usager notification'
 

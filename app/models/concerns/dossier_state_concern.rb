@@ -177,21 +177,21 @@ module DossierStateConcern
     enqueue_ami_notification
   end
 
+  # On the transition, not on the event: a transition callback runs once the guard
+  # has passed and before AASM writes the new state with `save`, which persists
+  # the attachment along with it.
+  def assign_justificatif(h)
+    self.justificatif_motivation = h[:justificatif] if h[:justificatif]
+  end
+
   def after_accepter(h)
     instructeur = h[:instructeur]
     motivation = h[:motivation]
-    justificatif = h[:justificatif]
 
     self.processed_at = self.traitements
       .accepter(motivation: motivation, instructeur: instructeur)
       .processed_at
     self.expired_at = expiration_date
-
-    save!
-
-    if justificatif
-      self.justificatif_motivation.attach(justificatif)
-    end
 
     save!
 
@@ -265,18 +265,11 @@ module DossierStateConcern
   def after_refuser(h)
     instructeur = h[:instructeur]
     motivation = h[:motivation]
-    justificatif = h[:justificatif]
 
     self.processed_at = self.traitements
       .refuser(motivation: motivation, instructeur: instructeur)
       .processed_at
     self.expired_at = expiration_date
-
-    save!
-
-    if justificatif
-      self.justificatif_motivation.attach(justificatif)
-    end
 
     save!
 
@@ -340,19 +333,12 @@ module DossierStateConcern
   def after_classer_sans_suite(h)
     instructeur = h[:instructeur]
     motivation = h[:motivation]
-    justificatif = h[:justificatif]
 
     self.processed_at = self.traitements
       .classer_sans_suite(motivation: motivation, instructeur: instructeur)
       .processed_at
     self.expired_at = expiration_date
     attestation&.destroy
-
-    save!
-
-    if justificatif
-      self.justificatif_motivation.attach(justificatif)
-    end
 
     save!
 

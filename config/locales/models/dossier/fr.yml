@@ -13,6 +13,7 @@ fr:
     attributes:
       dossier:
         id: "Numéro de dossier"
+        justificatif_motivation: "Justificatif"
         state: "État"
         pending_correction: Demande de correction
         mandataire_first_name: Prénom
