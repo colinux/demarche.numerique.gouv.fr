@@ -3,12 +3,15 @@
 class Dossiers::BatchOperationComponent < ApplicationComponent
   attr_reader :statut, :procedure
 
-  def initialize(statut:, procedure:)
+  # followed_dossier_ids est résolu en une requête pour toute la page : appelé par
+  # ligne, `instructeur.follow?(dossier)` faisait un EXISTS par dossier affiché.
+  def initialize(statut:, procedure:, followed_dossier_ids: [])
     @statut = statut
     @procedure = procedure
+    @followed_dossier_ids = followed_dossier_ids
   end
 
-  def operations_for_dossier(dossier, current_instructeur)
+  def operations_for_dossier(dossier)
     allowed_operations =
       case dossier.state
       when Dossier.states.fetch(:en_construction)
@@ -29,11 +32,11 @@ class Dossiers::BatchOperationComponent < ApplicationComponent
         []
       end.append(BatchOperation.operations.fetch(:create_commentaire))
 
-    allowed_operations + follow_operations_for(dossier, current_instructeur)
+    allowed_operations + follow_operations_for(dossier)
   end
 
-  def follow_operations_for(dossier, current_instructeur)
-    if current_instructeur.follow?(dossier)
+  def follow_operations_for(dossier)
+    if @followed_dossier_ids.include?(dossier.id)
       [BatchOperation.operations.fetch(:unfollow)]
     else
       [BatchOperation.operations.fetch(:follow)]

@@ -33,7 +33,7 @@
   .fr-container--fluid.fr-mx-4w.overflow-y-visible
     = render Instructeurs::EditableFiltersComponent.new(procedure_presentation: @procedure_presentation, instructeur_procedure: @instructeur_procedure, statut: @statut)
 
-    - batch_operation_component = Dossiers::BatchOperationComponent.new(statut: @statut, procedure: @procedure)
+    - batch_operation_component = Dossiers::BatchOperationComponent.new(statut: @statut, procedure: @procedure, followed_dossier_ids: @followed_dossier_ids_on_page)
 
     - if @batch_operations.present?
       - @batch_operations.each do |batch_operation|
@@ -104,7 +104,7 @@
                                   data: { "fr-row-select" => "true" }
                               - else
                                 = check_box_tag "batch_operation[dossier_ids][]", dossier.id, false,
-                                    data: { batch_operation_target: "input", action: "batch-operation#onCheckOne", operations: batch_operation_component.operations_for_dossier(dossier, current_instructeur).join(','), "fr-row-select" => "true" },
+                                    data: { batch_operation_target: "input", action: "batch-operation#onCheckOne", operations: batch_operation_component.operations_for_dossier(dossier).join(','), "fr-row-select" => "true" },
                                     form: dom_id(BatchOperation.new), id: dom_id(BatchOperation.new, "checkbox_#{dossier.id}"),
                                     aria: { label: t('views.instructeurs.dossiers.batch_operation.enabled', dossier_id: dossier.id) }
                               = label_tag dom_id(BatchOperation.new, "checkbox_#{dossier.id}"), "Sélectionner le dossier #{dossier.id}", class: 'fr-label'

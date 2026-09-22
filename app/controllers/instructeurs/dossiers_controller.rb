@@ -107,6 +107,13 @@ module Instructeurs
 
     def annotations_privees
       @annotations_privees_seen_at = current_instructeur.follows.find_by(dossier: dossier)&.annotations_privees_seen_at
+
+      # Chaque annotation éditable affiche la notice et le modèle de pièce jointe
+      # de son type de champ.
+      ActiveRecord::Associations::Preloader.new(
+        records: dossier.revision.private_flat_type_de_champs,
+        associations: [{ notice_explicative_attachment: :blob }, { piece_justificative_template_attachment: :blob }]
+      ).call
     end
 
     def avis
@@ -633,10 +640,17 @@ module Instructeurs
         champs_attachments_ids + commentaires_attachments_ids + avis_attachments_ids + [justificatif_motivation_id] + [attestation_id]
       end
 
-      @gallery_attachments = ActiveStorage::Attachment
-        .with_all_variant_records
-        .includes(:record, :blob)
-        .where(id: gallery_attachments_ids)
+      # Hors de la galerie, seul `gallery_attachments.present?` est consulté (l'onglet
+      # « Pièces jointes » ne s'affiche que s'il y en a) : les variantes, les blobs et
+      # les records n'y servent à rien.
+      @gallery_attachments = if action_name == 'pieces_jointes'
+        ActiveStorage::Attachment
+          .with_all_variant_records
+          .includes(:record, :blob)
+          .where(id: gallery_attachments_ids)
+      else
+        ActiveStorage::Attachment.where(id: gallery_attachments_ids)
+      end
     end
   end
 end

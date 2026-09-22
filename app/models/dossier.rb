@@ -69,7 +69,7 @@ class Dossier < ApplicationRecord
   has_many :champ_data, dependent: :destroy, class_name: 'ChampData', autosave: true, validate: false
   has_many :commentaires, inverse_of: :dossier, dependent: :destroy
   has_many :commentaires_chronological, -> { chronological }, class_name: 'Commentaire', inverse_of: :dossier
-  has_many :preloaded_commentaires, -> { includes(:dossier_correction, :dossier_pending_response, :instructeur, :expert, piece_jointe_attachments: :blob).order(created_at: :desc) }, class_name: 'Commentaire', inverse_of: :dossier
+  has_many :preloaded_commentaires, -> { includes(:dossier_correction, :dossier_pending_response, :instructeur, :expert, piece_jointe_attachments: { blob: { attachments: :record } }).order(created_at: :desc) }, class_name: 'Commentaire', inverse_of: :dossier
 
   has_many :invites, dependent: :destroy
   has_many :follows, -> { active }, inverse_of: :dossier, dependent: :destroy

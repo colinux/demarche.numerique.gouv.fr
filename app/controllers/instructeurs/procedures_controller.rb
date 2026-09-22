@@ -198,6 +198,14 @@ module Instructeurs
 
       @projected_dossiers = DossierProjectionService.project(@filtered_sorted_paginated_ids, @displayed_columns)
 
+      # Reprend le scope de `Instructeur#follow?`, que les opérations de masse
+      # appelaient par ligne : plus large que @followed_dossiers_id, qui ne retient
+      # que les dossiers en cours et pilote le bouton « suivre » de chaque ligne.
+      @followed_dossier_ids_on_page = current_instructeur
+        .followed_dossiers
+        .where(id: @filtered_sorted_paginated_ids)
+        .ids
+
       @disable_checkbox_all = @projected_dossiers.all? { it.dossier.batch_operation_id.present? }
 
       @batch_operations = BatchOperation.joins(:groupe_instructeurs)
@@ -480,9 +488,15 @@ module Instructeurs
       params[:procedure_id]
     end
 
+    # Mémoïsé sur une ivar dédiée : `@procedure` est écrasé par certaines actions
+    # (create_avis lui affecte `dossier.procedure`), et chaque chargement coûte
+    # les deux révisions avec leurs types de champ.
+    #
+    # Pas de `with_attached_logo` : aucune page instructeur n'affiche le logo, et
+    # le précharger coûte six requêtes (l'attachement, le blob, ses variantes, et
+    # les attachements des variantes).
     def procedure
-      Procedure
-        .with_attached_logo
+      @procedure_from_params ||= Procedure
         .with_active_revision
         .find(procedure_id)
         .tap { Sentry.set_tags(procedure: _1.id) }
