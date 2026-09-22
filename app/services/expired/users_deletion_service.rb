@@ -51,7 +51,6 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
         .join_sources
     )
       .where(dossiers[:id].eq(nil))
-      .group("users.id")
   end
 
   def expired_users_without_dossiers
