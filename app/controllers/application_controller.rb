@@ -120,7 +120,7 @@ class ApplicationController < ActionController::Base
   end
 
   def browser_prefers_french?
-    locale_from_accept_language == 'fr'
+    locale_from_accept_language == :fr
   end
 
   def set_locale(locale)
