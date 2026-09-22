@@ -216,7 +216,7 @@ class Dossier < ApplicationRecord
     end
 
     event :accepter, after: :after_accepter, after_commit: :after_commit_accepter do
-      transitions from: :en_instruction, to: :accepte, guard: :can_terminer?
+      transitions from: :en_instruction, to: :accepte, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :accepter_automatiquement, after: :after_accepter_automatiquement, after_commit: :after_commit_accepter_automatiquement do
@@ -225,7 +225,7 @@ class Dossier < ApplicationRecord
     end
 
     event :refuser, after: :after_refuser, after_commit: :after_commit_refuser do
-      transitions from: :en_instruction, to: :refuse, guard: :can_terminer?
+      transitions from: :en_instruction, to: :refuse, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :refuser_automatiquement, after: :after_refuser_automatiquement, after_commit: :after_commit_refuser_automatiquement do
@@ -233,7 +233,7 @@ class Dossier < ApplicationRecord
     end
 
     event :classer_sans_suite, after: :after_classer_sans_suite, after_commit: :after_commit_classer_sans_suite do
-      transitions from: :en_instruction, to: :sans_suite, guard: :can_terminer?
+      transitions from: :en_instruction, to: :sans_suite, guard: :can_terminer?, after: :assign_justificatif
     end
 
     event :repasser_en_instruction, after: :after_repasser_en_instruction, after_commit: :after_commit_repasser_en_instruction do
