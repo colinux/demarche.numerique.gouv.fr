@@ -295,7 +295,6 @@ GEM
       fog-json (>= 1.0)
     formatador (1.2.1)
       reline
-    front_matter_parser (1.0.1)
     fugit (1.14.0)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -984,7 +983,6 @@ DEPENDENCIES
   flipper-active_record
   flipper-active_support_cache_store
   flipper-ui
-  front_matter_parser
   fugit
   geo_coord
   geocoder
