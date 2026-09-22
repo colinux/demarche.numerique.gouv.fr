@@ -231,4 +231,21 @@ describe Expired::UsersDeletionService do
       it { is_expected.not_to include(user) }
     end
   end
+
+  describe '#to_notify_only' do
+    let(:dossier) { nil }
+    let(:service) { Expired::UsersDeletionService.new }
+    let(:user) { create(:user, current_sign_in_at: 4.years.ago) }
+    let!(:oldest) { create(:user, current_sign_in_at: 6.years.ago) }
+    let!(:newest) { create(:user, current_sign_in_at: 3.years.ago) }
+    let!(:middle) { create(:user, current_sign_in_at: 5.years.ago) }
+
+    subject { service.send(:to_notify_only, service.send(:expired_users_without_dossiers)) }
+
+    it 'returns the least recently active users first' do
+      expected = [oldest, middle, user, newest].map(&:id)
+
+      expect(subject.pluck(:id) & expected).to eq(expected)
+    end
+  end
 end
