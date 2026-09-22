@@ -22,9 +22,19 @@ describe Procedure::EstimatedDelayComponent, type: :component do
       context 'with fallback_to_placeholder: true' do
         subject { render_inline(described_class.new(procedure:, fallback_to_placeholder: true)) }
 
-        it 'renders despite the flag being false' do
+        it 'does not render anything either' do
           subject
-          expect(page).to have_text("Dans le meilleur des cas")
+          expect(page).to have_no_text("Dans le meilleur des cas")
+        end
+
+        context 'when the procedure is a brouillon without stats' do
+          let(:procedure) { create(:procedure) }
+          let(:usual_traitement_time) { nil }
+
+          it 'does not render the placeholder' do
+            subject
+            expect(page).to have_no_text("[indication du délai]")
+          end
         end
       end
     end
@@ -33,6 +43,17 @@ describe Procedure::EstimatedDelayComponent, type: :component do
       it 'renders the component' do
         subject
         expect(page).to have_text("Dans le meilleur des cas")
+      end
+    end
+
+    context 'when a published procedure has no stats yet' do
+      let(:usual_traitement_time) { nil }
+
+      subject { render_inline(described_class.new(procedure:, fallback_to_placeholder: true)) }
+
+      it 'does not render the placeholder' do
+        subject
+        expect(page).to have_no_text("[indication du délai]")
       end
     end
   end

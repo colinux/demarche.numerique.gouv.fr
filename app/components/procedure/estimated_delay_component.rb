@@ -19,11 +19,13 @@ class Procedure::EstimatedDelayComponent < ApplicationComponent
 
   def render?
     return false if @procedure.declarative_accepte?
+    return false if !@procedure.estimated_processing_duration_visible?
+    return true if estimation_present?
 
     if @fallback_to_placeholder
-      estimation_present? || placeholder_mode?
+      placeholder_mode?
     else
-      @procedure.estimated_processing_duration_visible? && estimation_present?
+      false
     end
   end
 
