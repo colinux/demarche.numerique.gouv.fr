@@ -74,6 +74,10 @@ describe 'layouts/_header', type: :view do
       is_expected.to have_selector("#lasuite-gaufre-desktop")
     end
 
+    it 'draws the gaufre icon as inline SVG, so it stays visible without CSS (RGAA 10.2)' do
+      expect(subject).to have_css("#lasuite-gaufre-desktop svg[aria-hidden='true']", visible: :all)
+    end
+
     it 'displays the Help dropdown menu' do
       expect(subject).to have_selector("#help-menu")
     end
