@@ -32,6 +32,48 @@ describe ApplicationController, type: :controller do
     end
   end
 
+  describe 'locale_from_accept_language' do
+    subject { @controller.send(:locale_from_accept_language) }
+
+    before { @request.headers['Accept-Language'] = accept_language }
+
+    context 'with the preferred language available' do
+      let(:accept_language) { 'en-US,en;q=0.9,fr;q=0.8' }
+
+      it { is_expected.to eq(:en) }
+    end
+
+    context 'when the qualities are not in order' do
+      let(:accept_language) { 'de;q=0.9,en;q=0.5,fr' }
+
+      it { is_expected.to eq(:fr) }
+    end
+
+    context 'when two languages share the same quality' do
+      let(:accept_language) { 'fr-FR,en' }
+
+      it { is_expected.to eq(:fr) }
+    end
+
+    context 'with no available language' do
+      let(:accept_language) { 'de,*;q=0.5' }
+
+      it { is_expected.to be_nil }
+    end
+
+    context 'without header' do
+      let(:accept_language) { nil }
+
+      it { is_expected.to be_nil }
+    end
+
+    context 'with a malformed header' do
+      let(:accept_language) { 'n;;;q=abc, ,EN' }
+
+      it { is_expected.to eq(:en) }
+    end
+  end
+
   describe 'set_sentry_user and append_info_to_payload' do
     let(:current_user) { nil }
     let(:current_instructeur) { nil }
