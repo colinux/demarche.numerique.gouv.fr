@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Expired::UsersDeletionService < Expired::MailRateLimiter
+  INACTIVITY_CLOCK = Arel.sql("COALESCE(users.current_sign_in_at, users.created_at)")
+
   def process_expired
     # we are working on two dataset because we apply two incompatible join on the same query
     #   inner join on users not having dossier.en_instruction [so we do not destroy users with dossiers.en_instruction]
@@ -59,7 +61,7 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
   def expired_users
     User.unscoped
       .where.missing(:expert, :instructeur, :administrateur)
-      .where(current_sign_in_at: ..Expired::INACTIVE_USER_RETATION_IN_YEAR.years.ago)
+      .where(INACTIVITY_CLOCK.lteq(Expired::INACTIVE_USER_RETATION_IN_YEAR.years.ago))
   end
   # rubocop:enable DS/Unscoped
 

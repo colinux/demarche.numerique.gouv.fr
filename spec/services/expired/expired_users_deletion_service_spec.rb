@@ -155,6 +155,16 @@ describe Expired::UsersDeletionService do
       let(:dossier) { create(:dossier, :brouillon, user:, created_at: signed_in_expired) }
       it { is_expected.not_to include(user) }
     end
+
+    context 'when user never signed in and was created more than two years ago' do
+      let(:user) { create(:user, current_sign_in_at: nil, created_at: signed_in_expired) }
+      it { is_expected.to include(user) }
+    end
+
+    context 'when user never signed in and was created recently' do
+      let(:user) { create(:user, current_sign_in_at: nil, created_at: signed_in_not_expired) }
+      it { is_expected.not_to include(user) }
+    end
   end
 
   describe '#expired_users_with_dossiers' do
