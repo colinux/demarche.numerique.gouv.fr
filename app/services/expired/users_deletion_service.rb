@@ -15,16 +15,17 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
 
   private
 
-  # in case of perf downside :
-  #  consider using perform_all_later
-  #  consider changing notify_inactive_close_to_deletion method, taking a user_id, and updating inactive_close_to_expiration_notice_sent_at
+  # rubocop:disable DS/Unscoped
   def send_inactive_close_to_expiration_notice(users)
     user_ids = to_notify_only(users).pluck(:id)
-    user_ids.each do |user_id|
-      send_with_delay(UserMailer.notify_inactive_close_to_deletion(User.find(user_id)))
+
+    notifiable(user_ids).find_each do |user|
+      send_with_delay(UserMailer.notify_inactive_close_to_deletion(user))
     end
-    User.where(id: user_ids).update_all(inactive_close_to_expiration_notice_sent_at: Time.zone.now.utc)
+
+    User.unscoped.where(id: user_ids).update_all(inactive_close_to_expiration_notice_sent_at: Time.zone.now.utc)
   end
+  # rubocop:enable DS/Unscoped
 
   def delete_notified_users(users)
     user_ids = only_notified(users).pluck(:id)
@@ -61,6 +62,13 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
     User.unscoped
       .where.missing(:expert, :instructeur, :administrateur)
       .where(INACTIVITY_CLOCK.lteq(Expired::INACTIVE_USER_RETATION_IN_YEAR.years.ago))
+  end
+  # rubocop:enable DS/Unscoped
+
+  # BalancerDeliveryMethod drops any mail to an address the user never verified.
+  # rubocop:disable DS/Unscoped
+  def notifiable(user_ids)
+    User.unscoped.where(id: user_ids).where.not(email_verified_at: nil)
   end
   # rubocop:enable DS/Unscoped
 

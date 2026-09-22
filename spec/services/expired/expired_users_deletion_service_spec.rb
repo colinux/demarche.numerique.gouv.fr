@@ -21,7 +21,7 @@ describe Expired::UsersDeletionService do
       let(:dossier) { create(:dossier, user:, created_at: signed_in_expired) }
 
       context 'when user was not notified' do
-        let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
+        let(:user) { create(:user, :with_email_verified, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
 
         it 'update user.inactive_close_to_expiration_notice_sent_at ' do
           expect(UserMailer).to receive(:notify_inactive_close_to_deletion).with(user).and_return(mail_double)
@@ -86,7 +86,7 @@ describe Expired::UsersDeletionService do
       let(:dossier) { nil }
 
       context 'when user was not notified' do
-        let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
+        let(:user) { create(:user, :with_email_verified, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
 
         it 'update user.inactive_close_to_expiration_notice_sent_at ' do
           expect(UserMailer).to receive(:notify_inactive_close_to_deletion).with(user).and_return(mail_double)
@@ -112,6 +112,19 @@ describe Expired::UsersDeletionService do
           subject
           expect { user.reload }.to raise_error(ActiveRecord::RecordNotFound)
         end
+      end
+    end
+
+    context 'when the user email was never verified' do
+      let(:dossier) { nil }
+      let(:user) { create(:user, current_sign_in_at: signed_in_expired) }
+
+      it 'starts the notice period without sending a mail that would be dropped' do
+        expect(UserMailer).not_to receive(:notify_inactive_close_to_deletion)
+
+        expect { subject }
+          .to change { user.reload.inactive_close_to_expiration_notice_sent_at }
+          .from(nil).to(anything)
       end
     end
 
