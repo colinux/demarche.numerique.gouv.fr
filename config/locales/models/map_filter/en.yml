@@ -12,4 +12,5 @@ en:
         detailed_title_for_nb_demarches: "Number of published or closed procedures %{add_on}"
         detailed_title_for_nb_dossiers: "Number of submitted files %{add_on}"
         legend: "Between %{min_thresold} and %{max_thresold}"
+        legend_last: "%{min_thresold} and more"
 

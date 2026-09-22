@@ -4,10 +4,12 @@ class MapFilter
   include ActiveModel::Model
   include ActiveModel::Attributes
 
-  LEGEND = {
-    "nb_demarches" => { 'nothing': -1, 'small': 20, 'medium': 50, 'large': 100, 'xlarge': 500 },
-    "nb_dossiers" => { 'nothing': -1, 'small': 500, 'medium': 2000, 'large': 10000, 'xlarge': 50000 },
-  }.freeze
+  KINDS = ["nb_demarches", "nb_dossiers"].freeze
+
+  # Palette steps, lightest to darkest (see map_info.scss)
+  LEVELS = [:nothing, :small, :medium, :large, :xlarge].freeze
+
+  Bin = Data.define(:css_class, :min, :max)
 
   YEARS_INTERVAL = 2018..Date.current.year
 
@@ -17,28 +19,25 @@ class MapFilter
   validates :year, numericality: { only_integer: true, greater_than_or_equal_to: YEARS_INTERVAL.begin, less_than_or_equal_to: YEARS_INTERVAL.end }
 
   attribute :kind, default: "nb_demarches"
-  validates :kind, inclusion: { in: LEGEND.keys }
+  validates :kind, inclusion: { in: KINDS }
 
   def kind_buttons
-    LEGEND.keys.map do
-      { label: I18n.t("kind.#{_1}", scope:), value: _1 }
+    KINDS.map do
+      { label: I18n.t("kind.#{it}", scope:), value: it }
     end
   end
 
-  def kind_legend_keys
-    LEGEND[kind].keys
+  # Bins are quintiles of the displayed values: each color covers about a fifth
+  # of the départements, whatever the year or the kind, so the map stays
+  # contrasted as volumes grow. Ties collapse bins, so there may be fewer than
+  # LEVELS.size of them.
+  def legend
+    @legend ||= build_legend
   end
 
   def css_class_for_departement(departement)
-    if kind == "nb_demarches"
-      kind_legend_keys.reverse.find do
-        nb_demarches_for_departement(departement) > LEGEND[kind][_1]
-      end
-    else
-      kind_legend_keys.reverse.find do
-        nb_dossiers_for_departement(departement) > LEGEND[kind][_1]
-      end
-    end
+    value = value_for_departement(departement)
+    legend.reverse.find { value >= it.min }.css_class
   end
 
   def nb_demarches_for_departement(departement)
@@ -49,14 +48,12 @@ class MapFilter
     stats[departement.upcase] ? stats[departement.upcase][:nb_dossiers] : 0
   end
 
-  def legende_for(legende)
-    limit = LEGEND[kind][legende]
-    index = LEGEND[kind].keys.index(legende.to_sym)
-    next_limit = LEGEND[kind].to_a[index + 1]
-    if next_limit
-      I18n.t(:legend, min_thresold: limit + 1, max_thresold: next_limit[1], scope:)
+  def label_for(bin)
+    min = ActiveSupport::NumberHelper.number_to_delimited(bin.min)
+    if bin.max
+      I18n.t(:legend, min_thresold: min, max_thresold: ActiveSupport::NumberHelper.number_to_delimited(bin.max), scope:)
     else
-      "> #{limit}"
+      I18n.t(:legend_last, min_thresold: min, scope:)
     end
   end
 
@@ -66,6 +63,30 @@ class MapFilter
   end
 
   private
+
+  def value_for_departement(departement)
+    kind == "nb_demarches" ? nb_demarches_for_departement(departement) : nb_dossiers_for_departement(departement)
+  end
+
+  def build_legend
+    values = stats.except(nil).values.map { it[kind.to_sym] }.sort
+    # Lower bounds: 0 (départements without data), then the values sitting at
+    # 20 %, 40 %, 60 % and 80 % of the sorted list.
+    mins = ([0] + (1...LEVELS.size).map { values[it * values.size / LEVELS.size] }).compact.uniq
+    css_classes = spread_levels(mins.size)
+
+    mins.each_with_index.map do |min, index|
+      next_min = mins[index + 1]
+      Bin.new(css_class: css_classes[index], min:, max: next_min && next_min - 1)
+    end
+  end
+
+  # Fewer bins than colors: keep the lightest and the darkest, spread the rest.
+  def spread_levels(count)
+    return [LEVELS.first] if count == 1
+
+    (0...count).map { LEVELS[(it * (LEVELS.size - 1)).fdiv(count - 1).round] }
+  end
 
   def scope
     'activemodel.attributes.map_filter'
