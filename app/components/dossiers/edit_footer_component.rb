@@ -60,10 +60,12 @@ class Dossiers::EditFooterComponent < ApplicationComponent
     end
   end
 
+  # fr-opened must stay present for the click to work, "true" would open the modal
+  # as soon as DSFR initializes.
   def disabled_submit_button_options
     {
       class: 'fr-text--sm fr-mb-0 fr-mr-2w',
-      data: { 'fr-opened': "true" },
+      data: { 'fr-opened': "false" },
       aria: { controls: 'modal-eligibilite-rules-dialog', haspopup: 'dialog' },
       role: :button,
     }
