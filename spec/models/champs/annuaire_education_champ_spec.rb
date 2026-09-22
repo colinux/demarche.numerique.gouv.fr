@@ -13,11 +13,79 @@ RSpec.describe Champs::AnnuaireEducationChamp do
     subject { champ.fetch_external_data }
 
     context 'when a record is found' do
-      let(:params) { { 'nom_etablissement' => 'karrigel an ankou' } }
+      let(:params) do
+        {
+          'nom_etablissement' => 'École primaire des Lilas',
+          'identifiant_de_l_etablissement' => '0241348K',
+          'siren_siret' => '21240037800254',
+          'nom_commune' => 'Bergerac',
+          'code_commune' => '24037',
+          'code_departement' => '024',
+          'libelle_departement' => 'Dordogne',
+          'libelle_academie' => 'Bordeaux',
+          'code_academie' => '04',
+          'libelle_nature' => 'ECOLE DE NIVEAU ELEMENTAIRE',
+          'code_nature' => 151,
+          'type_contrat_prive' => 'SANS OBJET',
+          'nombre_d_eleves' => 120,
+          'adresse_1' => '4 route de Montpon',
+          'code_postal' => '24100',
+          'libelle_region' => 'Nouvelle-Aquitaine',
+          'code_region' => '75',
+          'telephone' => '0553570866',
+          'mail' => 'ce.0241348K@ac-bordeaux.fr',
+          'web' => 'https://ecole-des-lilas.example',
+        }
+      end
 
       before { allow_any_instance_of(APIEducation::AnnuaireEducationAdapter).to receive(:to_params).and_return(params) }
 
-      it { is_expected.to eq(Success(data: params)) }
+      it {
+        is_expected.to eq(Success(data: params, value_json: {
+          'nom_etablissement' => 'École primaire des Lilas',
+          'identifiant_etablissement' => '0241348K',
+          'siren_siret' => '21240037800254',
+          'street_address' => '4 route de Montpon',
+          'postal_code' => '24100',
+          'city_name' => 'Bergerac',
+          'city_code' => '24037',
+          'department_code' => '24',
+          'region_code' => '75',
+          'academie' => 'Bordeaux (04)',
+          'nature_etablissement' => 'ECOLE DE NIVEAU ELEMENTAIRE (151)',
+          'type_contrat_prive' => nil,
+          'nombre_eleves' => 120,
+          'telephone' => '0553570866',
+          'email' => 'ce.0241348K@ac-bordeaux.fr',
+          'site_internet' => 'https://ecole-des-lilas.example',
+        }))
+      }
+
+      # The éducation API pads metropolitan department codes to 3 characters,
+      # unlike the INSEE codes used everywhere else in the app.
+      context 'with a Corse department code' do
+        let(:params) { super().merge('code_departement' => '02A', 'libelle_departement' => 'Corse-du-Sud') }
+
+        it { expect(subject.success[:value_json]['department_code']).to eq('2A') }
+      end
+
+      context 'with an overseas department code (already 3 characters, no leading zero)' do
+        let(:params) { super().merge('code_departement' => '972', 'libelle_departement' => 'Martinique') }
+
+        it { expect(subject.success[:value_json]['department_code']).to eq('972') }
+      end
+
+      context 'with an unpadded department code, as the oldest rows hold it' do
+        let(:params) { super().merge('code_departement' => '05', 'libelle_departement' => 'Hautes-Alpes') }
+
+        it { expect(subject.success[:value_json]['department_code']).to eq('05') }
+      end
+
+      context 'with a department code our referential does not know' do
+        let(:params) { super().merge('code_departement' => '0XX', 'libelle_departement' => 'Nulle part') }
+
+        it { expect(subject.success[:value_json]['department_code']).to be_nil }
+      end
     end
 
     context 'when no record is found' do
