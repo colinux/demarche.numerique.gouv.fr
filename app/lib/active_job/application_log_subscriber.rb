@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'active_job/logging'
-require 'logstash-event'
 
 class ActiveJob::ApplicationLogSubscriber < ::ActiveJob::LogSubscriber
   FILTERED = '[FILTERED]'
@@ -23,8 +22,11 @@ class ActiveJob::ApplicationLogSubscriber < ::ActiveJob::LogSubscriber
   end
 
   def log(data)
-    event = LogStash::Event.new(data)
-    event['message'] = "#{data[:job_class]}##{data[:job_id]} at #{data[:scheduled_at]}"
+    event = data.merge(
+      '@timestamp' => Time.current.utc,
+      '@version' => '1',
+      'message' => "#{data[:job_class]}##{data[:job_id]} at #{data[:scheduled_at]}"
+    )
     logger.send(Lograge.log_level, event.to_json)
   end
 

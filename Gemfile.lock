@@ -445,7 +445,6 @@ GEM
       activesupport (>= 4)
       railties (>= 4)
       request_store (~> 1.0)
-    logstash-event (1.2.02)
     loofah (2.25.2)
       crass (~> 1.0.2)
       nokogiri (>= 1.12.0)
@@ -1013,7 +1012,6 @@ DEPENDENCIES
   letter_opener_web
   listen
   lograge
-  logstash-event
   mail (~> 2.9.1)
   maintenance_tasks
   matrix

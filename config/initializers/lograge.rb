@@ -1,7 +1,20 @@
 # frozen_string_literal: true
 
+# Same output as Lograge::Formatters::Logstash, without the logstash-event gem
+class LogstashFormatter
+  include Lograge::Formatters::Helpers::MethodAndPath
+
+  def call(data)
+    data.merge(
+      '@timestamp' => Time.current.utc,
+      '@version' => '1',
+      'message' => "[#{data[:status]}]#{method_and_path_string(data)}(#{data[:controller]}##{data[:action]})"
+    ).to_json
+  end
+end
+
 Rails.application.configure do
-  config.lograge.formatter = Lograge::Formatters::Logstash.new
+  config.lograge.formatter = LogstashFormatter.new
   config.lograge.base_controller_class = ['ActionController::Base', 'Manager::ApplicationController']
 
   # This will allow to override custom options from environement file
