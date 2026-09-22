@@ -96,7 +96,6 @@ gem 'siret_validator'
 gem 'skylight'
 gem 'smarter_csv'
 gem 'spreadsheet_architect'
-gem 'string-similarity'
 gem 'strong_migrations' # lint database migrations
 gem 'ttfunk', '~> 1.7.0'
 gem 'turbo-rails'

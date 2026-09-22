@@ -848,7 +848,6 @@ GEM
       sprockets (>= 3.0.0)
     ssrf_filter (1.5.0)
     stackprof (0.2.28)
-    string-similarity (2.1.0)
     stringio (3.2.0)
     strong_migrations (2.8.0)
       activerecord (>= 7.2)
@@ -1077,7 +1076,6 @@ DEPENDENCIES
   spring
   spring-commands-rspec
   stackprof
-  string-similarity
   strong_migrations
   test-prof
   ttfunk (~> 1.7.0)
