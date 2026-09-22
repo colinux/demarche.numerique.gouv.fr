@@ -27,6 +27,14 @@ class Champs::AnnuaireEducationChamp < Champs::TextChamp
     end
   end
 
+  # FIXME: temporary fallback for champs fetched before value_json existed
+  # on this champ (data present, value_json nil). Remove once
+  # MaintenanceTasks::BackfillAnnuaireEducationValueJsonTask has run in
+  # production and every row has value_json persisted.
+  def value_json
+    super || (data.present? ? extract_value_json(data:) : nil)
+  end
+
   private
 
   def extract_value_json(data:)

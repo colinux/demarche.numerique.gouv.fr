@@ -122,6 +122,33 @@ RSpec.describe Champs::AnnuaireEducationChamp do
     end
   end
 
+  describe '#value_json' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :annuaire_education }]) }
+    let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }
+    let(:champ) { dossier.champ_data.first }
+
+    subject { champ.value_json }
+
+    context 'when value_json is already persisted' do
+      before { champ.update_columns(value_json: { 'nom_etablissement' => 'École persistée' }) }
+
+      it { is_expected.to eq({ 'nom_etablissement' => 'École persistée' }) }
+    end
+
+    # FIXME: remove alongside the fallback once
+    # MaintenanceTasks::BackfillAnnuaireEducationValueJsonTask has run in
+    # production.
+    context 'when value_json is nil but data was fetched before it existed' do
+      before { champ.update_columns(data: { 'nom_etablissement' => 'École historique' }, value_json: nil) }
+
+      it { is_expected.to eq(champ.send(:extract_value_json, data: { 'nom_etablissement' => 'École historique' })) }
+    end
+
+    context 'when neither value_json nor data is present' do
+      it { is_expected.to be_nil }
+    end
+  end
+
   describe '#update_external_data!' do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :annuaire_education }]) }
     let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }
