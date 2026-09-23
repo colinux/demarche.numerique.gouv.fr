@@ -56,6 +56,25 @@ describe RoutingEngine, type: :model do
         it { is_expected.to eq(gi_2) }
       end
 
+      context 'with a matching rule that has a dead branch' do
+        let(:rule) do
+          ds_or([
+            ds_eq(champ_value(drop_down_tdc.stable_id), constant('Lyon')),
+            ds_and([ds_eq(champ_value(drop_down_tdc.stable_id), constant('Paris')), ds_eq(champ_value(drop_down_tdc.stable_id), constant('Marseille'))]),
+          ])
+        end
+
+        before do
+          gi_2.update(routing_rule: rule)
+          dossier.champ_data.first.update(value: 'Lyon')
+        end
+
+        it 'routes by it: the solver only runs in the routing rule editor' do
+          expect(Logic.errors(rule, procedure.active_revision.public_root_type_de_champs)).to be_present
+          is_expected.to eq(gi_2)
+        end
+      end
+
       context 'with a closed gi with a matching rule' do
         before { gi_2.update(routing_rule: constant(true), closed: true) }
 

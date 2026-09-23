@@ -11,6 +11,14 @@ class NumberLimitValidator < ActiveModel::Validator
     positive_violations(value, type_de_champ) + range_violations(value, type_de_champ)
   end
 
+  # The bounds of the range option as the validator compares them,
+  # [min, max], nil where unset or when the range is off.
+  def self.range(type_de_champ)
+    return [nil, nil] if !type_de_champ.range_number?
+
+    [type_de_champ.min_number, type_de_champ.max_number].map { convert_to_number(it, type_de_champ).presence }
+  end
+
   def validate(record)
     self.class.violations(record.value, record).each do |error, details|
       record.errors.add(:value, error, **details)
@@ -33,8 +41,7 @@ class NumberLimitValidator < ActiveModel::Validator
       return [] if !type_de_champ.range_number?
 
       number = convert_to_number(value, type_de_champ)
-      min = convert_to_number(type_de_champ.min_number, type_de_champ)
-      max = convert_to_number(type_de_champ.max_number, type_de_champ)
+      min, max = range(type_de_champ)
 
       if min.present? && max.present? && !(min..max).cover?(number)
         # i18n-tasks-use t('errors.messages.not_in_range')

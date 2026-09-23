@@ -2,3 +2,20 @@ en:
   logic:
     empty: empty member
     empty_operator: empty operator
+    is: Is
+    is_not: Is not
+    operators:
+      'Logic::LessThan': Less than
+      'Logic::LessThanEq': Less than or equal to
+      'Logic::Eq': Equal to
+      'Logic::GreaterThan': Greater than
+      'Logic::GreaterThanEq': Greater than or equal to
+      'Logic::And': And
+      'Logic::Or': Or
+      'Logic::NotEq': Is not
+      'Logic::IncludeOperator': Includes
+      'Logic::ExcludeOperator': Does not include
+      'Logic::InDepartementOperator': Is in the departement
+      'Logic::NotInDepartementOperator': Is not in the departement
+      'Logic::InRegionOperator': Is in the region
+      'Logic::NotInRegionOperator': Is not in the region

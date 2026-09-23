@@ -382,7 +382,10 @@ class ProcedureRevision < ApplicationRecord
   def ineligibilite_rules_are_valid?
     return unless ineligibilite_rules
 
-    rules_errors = ineligibilite_rules.errors(type_de_champs_for(scope: :public).to_a)
+    # The solver only judges rules that are in use: leftover rules of a
+    # disabled ineligibility must not block publication
+    tdcs = type_de_champs_for(scope: :public).to_a
+    rules_errors = ineligibilite_enabled? ? Logic.errors(ineligibilite_rules, tdcs) : ineligibilite_rules.errors(tdcs)
 
     if rules_errors.any? || ineligibilite_rules.type == :empty
       errors.add(:ineligibilite_rules, :invalid)

@@ -50,6 +50,15 @@ describe Conditions::RoutingRulesComponent, type: :component do
     end
 
     context 'with two rows' do
+      context 'when routing rule can never be true' do
+        let(:routing_rule) { ds_and([ds_eq(champ_value(drop_down_tdc.stable_id), constant('Lyon')), ds_eq(champ_value(drop_down_tdc.stable_id), constant('Paris'))]) }
+
+        it 'explains why, without invalidating the rule used for routing' do
+          expect(page).to have_text('Aucune valeur du champ « Votre ville » ne vérifie à la fois « est Lyon » et « est Paris »')
+          expect(page).not_to have_text('règle invalide')
+        end
+      end
+
       context 'when routing rule is valid' do
         let(:routing_rule) { ds_and([ds_eq(champ_value(drop_down_tdc.stable_id), constant('Lyon')), ds_not_eq(champ_value(integer_number_tdc.stable_id), constant(33))]) }
 
