@@ -6,6 +6,12 @@ on:
   merge_group:
     branches: [main]
 
+# A push to a pull request cancels the run still going on its previous head.
+# Merge queue runs are never cancelled: it would eject the PR from the queue.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   DISABLE_SPRING: '1'
 
