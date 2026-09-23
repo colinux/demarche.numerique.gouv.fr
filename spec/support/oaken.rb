@@ -6,6 +6,19 @@
 # dossiers.en_construction, …) in every example; per-example mutations roll
 # back via transactional fixtures. Scenario seeds (db/seeds/cases/) still load
 # per group with `before_all { seed "cases/sva" }`.
+#
+# A type de champ created without a stable_id (add_type_de_champ, seeds) takes
+# its id as stable_id (TypeDeChamp#populate_stable_id), while many specs pick
+# small stable_ids by hand. On a fresh CI database the id sequence starts at 1
+# and eventually hits those values, and two types de champ of one revision
+# share a stable_id. Start the sequence far above them, and above the factory's
+# stable_id sequence, before the seeds are planted.
+RSpec.configure do |config|
+  config.before(:suite) do
+    ActiveRecord::Base.connection.execute("SELECT setval('types_de_champ_id_seq', GREATEST(10000000, (SELECT last_value FROM types_de_champ_id_seq)))")
+  end
+end
+
 require 'oaken/rspec_setup'
 
 # Specs asserting on global aggregates or unparameterized scopes (raw SQL over
