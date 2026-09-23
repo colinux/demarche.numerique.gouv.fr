@@ -120,7 +120,7 @@ class ApplicationController < ActionController::Base
   end
 
   def browser_prefers_french?
-    http_accept_language.compatible_language_from(I18n.available_locales) == 'fr'
+    locale_from_accept_language == :fr
   end
 
   def set_locale(locale)
@@ -466,8 +466,16 @@ class ApplicationController < ActionController::Base
 
   def extract_locale_from_accept_language_header
     if localization_enabled?
-      http_accept_language.compatible_language_from(I18n.available_locales)
+      locale_from_accept_language
     end
+  end
+
+  # "en-US,fr;q=0.8" => :en
+  def locale_from_accept_language
+    Rack::Utils.q_values(request.accept_language)
+      .sort_by.with_index { |(_, quality), index| [-quality, index] }
+      .map { |language, _| language.split('-').first.to_s.downcase.to_sym }
+      .find { it.in?(I18n.available_locales) }
   end
 
   def set_customizable_view_path

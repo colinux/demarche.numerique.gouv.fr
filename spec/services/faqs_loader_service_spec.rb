@@ -123,7 +123,7 @@ RSpec.describe FAQsLoaderService do
     # name is the only way to notice a typo in one of them.
     it 'names every file after its slug, with an optional ordering prefix' do
       Dir.glob("#{FAQsLoaderService::PATH}/**/*.md").each do |file_path|
-        front_matter = FrontMatterParser::Parser.parse_file(file_path).front_matter
+        front_matter = YAML.safe_load(File.read(file_path)[FAQsLoaderService::FRONT_MATTER, :front_matter])
 
         expect(File.basename(file_path))
           .to eq("#{front_matter['slug']}.#{front_matter['locale']}.md")

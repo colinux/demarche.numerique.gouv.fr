@@ -3,6 +3,10 @@
 class FAQsLoaderService
   PATH = Rails.root.join('doc', 'faqs').freeze
   ORDER = ['usager', 'instructeur', 'administrateur'].freeze
+  # "---\nslug: foo\n---\n# Title" => front_matter: "\nslug: foo\n", content: "# Title"
+  FRONT_MATTER = /\A\s*---(?<front_matter>.*?)---\s*$\n(?<content>.*)\z/m.freeze
+
+  Parsed = Data.define(:front_matter, :content)
 
   attr_reader :substitutions
 
@@ -52,12 +56,14 @@ class FAQsLoaderService
     end
   end
 
-  # Substitute all string before front matter parser so metadata are also substituted.
+  # Substitute all string before parsing the front matter so metadata are also substituted.
   # using standard ruby formatting, ie => `%{my_var} % { my_var: 'value' }`
   # We have to escape % chars not used for substitutions, ie. not preceeded by {
   def parse_with_substitutions(file_path)
     substituted_content = File.read(file_path).gsub(/%(?!{)/, '%%') % substitutions
 
-    FrontMatterParser::Parser.new(:md).call(substituted_content)
+    match = FRONT_MATTER.match(substituted_content)
+
+    Parsed.new(front_matter: YAML.safe_load(match[:front_matter]), content: match[:content])
   end
 end

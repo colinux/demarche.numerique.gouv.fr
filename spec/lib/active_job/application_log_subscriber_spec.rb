@@ -12,6 +12,17 @@ describe ActiveJob::ApplicationLogSubscriber do
     JSON.parse(output.string)['job_args']
   end
 
+  it 'logs the logstash fields' do
+    freeze_time
+    event = ActiveSupport::Notifications::Event.new('enqueue.active_job', Time.current, Time.current, SecureRandom.hex, { job: Ami::SendNotificationJob.new })
+    described_class.new.enqueue(event)
+    logged = JSON.parse(output.string)
+
+    expect(logged['@timestamp']).to eq(Time.current.utc.as_json)
+    expect(logged['@version']).to eq('1')
+    expect(logged['message']).to eq("Ami::SendNotificationJob##{logged['job_id']} at ")
+  end
+
   it 'logs which mail goes to which record, but not the token next to it' do
     user = users.usager
     job = PriorizedMailDeliveryJob.new('DeviseUserMailer', 'reset_password_instructions', 'deliver_now', args: [user, 'a-live-reset-token'])

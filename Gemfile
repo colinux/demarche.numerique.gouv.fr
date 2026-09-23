@@ -32,7 +32,6 @@ gem 'flipper'
 gem 'flipper-active_record'
 gem 'flipper-active_support_cache_store'
 gem 'flipper-ui'
-gem 'front_matter_parser'
 gem 'fugit'
 gem 'geocoder'
 gem 'geo_coord', require: "geo/coord"
@@ -42,7 +41,6 @@ gem 'graphql'
 gem 'groupdate'
 gem 'haml-rails'
 gem 'hashie'
-gem 'http_accept_language'
 gem 'i18n_data'
 gem 'i18n-tasks', require: false
 gem 'iban-tools'
@@ -56,7 +54,6 @@ gem 'kredis'
 gem 'langchainrb'
 gem 'listen' # Required by ActiveSupport::EventedFileUpdateChecker
 gem 'lograge'
-gem 'logstash-event'
 gem 'mail', '~> 2.9.1' # pin to 2.8.x: mail 2.9 stopped normalizing 8bit (non-ASCII) bodies to CRLF, sending bare LF in emails. Migrate separately.
 gem 'maintenance_tasks'
 gem 'matrix' # needed by prawn and not default in ruby 3.1
@@ -96,7 +93,6 @@ gem 'siret_validator'
 gem 'skylight'
 gem 'smarter_csv'
 gem 'spreadsheet_architect'
-gem 'string-similarity'
 gem 'strong_migrations' # lint database migrations
 gem 'ttfunk', '~> 1.7.0'
 gem 'turbo-rails'
