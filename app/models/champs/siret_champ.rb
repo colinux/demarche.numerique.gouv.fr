@@ -24,9 +24,14 @@ class Champs::SiretChamp < ChampData
 
   def siret = external_id
 
+  def external_id=(id)
+    super
+    self.value = siret
+  end
+
   def after_reset_external_data(opts = {})
     old_etablissement = etablissement
-    super(etablissement_id: nil, prefilled: false, value: nil)
+    super(etablissement_id: nil, prefilled: false)
     old_etablissement&.destroy
   end
 

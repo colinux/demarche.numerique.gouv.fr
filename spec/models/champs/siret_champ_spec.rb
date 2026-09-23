@@ -441,9 +441,23 @@ describe Champs::SiretChamp do
     end
   end
 
+  describe '#external_id=' do
+    it 'writes the siret as the value, without spaces' do
+      champ.external_id = '306 138 900 01294'
+
+      expect(champ.value).to eq('30613890001294')
+    end
+  end
+
   describe '#reset_external_data!' do
     let(:external_id) { "12345678901245" }
     let(:etablissement) { create(:etablissement, siret: external_id) }
+
+    it 'keeps the value: the siret did not change' do
+      champ.reset_external_data!
+
+      expect(champ.reload.value).to eq(external_id)
+    end
 
     it 'destroys the old etablissement to avoid orphans' do
       old_etablissement = champ.etablissement

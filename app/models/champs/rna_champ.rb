@@ -13,6 +13,11 @@ class Champs::RNAChamp < ChampData
 
   def rna_id = external_id
 
+  def external_id=(id)
+    super
+    self.value = rna_id
+  end
+
   def title
     data&.dig("association_titre")
   end

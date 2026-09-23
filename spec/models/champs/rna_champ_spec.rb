@@ -37,6 +37,14 @@ describe Champs::RNAChamp do
     end
   end
 
+  describe '#external_id=' do
+    let(:value) { nil }
+
+    it 'writes the rna as the value' do
+      expect(with_external_id("W182736273").value).to eq("W182736273")
+    end
+  end
+
   describe '#fetch_external_data' do
     include Dry::Monads[:result]
 
