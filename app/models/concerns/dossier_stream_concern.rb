@@ -9,6 +9,10 @@ module DossierStreamConcern
   USER_HISTORY_STREAM = 'user:history'
   HISTORY_STREAM = 'history:'
 
+  # HISTORY_STREAM is a prefix, so it cannot be listed: a history stream is
+  # "history:<timestamp>". Enumerate the others instead.
+  NON_HISTORY_STREAMS = [MAIN_STREAM, USER_BUFFER_STREAM, INSTRUCTEUR_BUFFER_STREAM, USER_HISTORY_STREAM].freeze
+
   def stream
     @stream || MAIN_STREAM
   end
