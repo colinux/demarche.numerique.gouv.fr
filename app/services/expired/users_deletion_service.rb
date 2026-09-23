@@ -61,7 +61,7 @@ class Expired::UsersDeletionService < Expired::MailRateLimiter
   def expired_users
     User.unscoped
       .where.missing(:expert, :instructeur, :administrateur)
-      .where(INACTIVITY_CLOCK.lteq(Expired::INACTIVE_USER_RETATION_IN_YEAR.years.ago))
+      .where(INACTIVITY_CLOCK.lteq(Expired::INACTIVE_USER_RETENTION_IN_YEAR.years.ago))
   end
   # rubocop:enable DS/Unscoped
 
