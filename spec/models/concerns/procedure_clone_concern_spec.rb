@@ -427,7 +427,7 @@ describe ProcedureCloneConcern, type: :model do
 
     it 'should keep type_de_champs ids stable' do
       expect(subject.draft_revision.public_root_type_de_champs.first.id).not_to eq(procedure.draft_revision.public_root_type_de_champs.first.id)
-      expect(subject.draft_revision.public_root_type_de_champs.first.stable_id).to eq(procedure.draft_revision.public_root_type_de_champs.first.id)
+      expect(subject.draft_revision.public_root_type_de_champs.first.stable_id).to eq(procedure.draft_revision.public_root_type_de_champs.first.stable_id)
     end
 
     it 'should duplicate piece_justificative_template on a type_de_champ' do

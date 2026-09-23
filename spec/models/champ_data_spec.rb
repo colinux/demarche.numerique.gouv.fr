@@ -576,7 +576,7 @@ describe ChampData do
     it do
       expect(champ.public_id).to eq("#{champ.stable_id}-#{champ.row_id}")
       expect(ActionView::RecordIdentifier.dom_id(champ)).to eq("champ_#{champ.public_id}")
-      expect(ActionView::RecordIdentifier.dom_id(champ.type_de_champ)).to eq("type_de_champ_#{champ.type_de_champ.id}")
+      expect(ActionView::RecordIdentifier.dom_id(champ.type_de_champ)).to eq("type_de_champ_#{champ.type_de_champ.stable_id}")
       expect(ActionView::RecordIdentifier.dom_class(champ)).to eq("champ")
     end
   end

@@ -42,7 +42,7 @@ describe TypeDeChamp do
 
     context 'stable_id' do
       it {
-        type_de_champ = create(:type_de_champ_text)
+        type_de_champ = create(:type_de_champ_text, stable_id: nil)
         expect(type_de_champ.id).to eq(type_de_champ.stable_id)
         cloned_type_de_champ = type_de_champ.clone
         expect(cloned_type_de_champ.stable_id).to eq(type_de_champ.stable_id)

@@ -26,7 +26,7 @@ describe TypesDeChampEditor::DossierLinkChampComponent, type: :component do
       it 'returns the correct props' do
         props = subject.react_props
 
-        expect(props[:id]).to eq("procedures_type_de_champ")
+        expect(props[:id]).to eq("procedures_type_de_champ_#{type_de_champ.stable_id}")
         expect(props[:label]).to eq("Sélectionnez la ou les démarches concernées")
         expect(props[:selected_keys]).to eq([])
         expect(props[:'aria-label']).to eq("Liste des démarches")

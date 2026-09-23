@@ -49,7 +49,7 @@ describe ProcedureRevision do
     end
 
     context 'with a private tdc' do
-      let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.id } }
+      let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.stable_id } }
       let(:tdc_params) { text_params.merge(private: true) }
 
       it 'private' do
@@ -78,7 +78,7 @@ describe ProcedureRevision do
     end
 
     context 'when a parent is incorrect' do
-      let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.id } }
+      let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.stable_id } }
       let(:tdc_params) { text_params.merge(parent_id: 123456789) }
 
       it { expect(subject.errors.full_messages).not_to be_empty }
@@ -86,7 +86,7 @@ describe ProcedureRevision do
 
     context 'after_stable_id' do
       context 'with a valid after_stable_id' do
-        let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.id } }
+        let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.stable_id } }
         let(:tdc_params) { text_params.merge(after_stable_id: draft.public_revision_type_de_champs.first.stable_id, libelle: 'in the middle') }
 
         it do
@@ -98,7 +98,7 @@ describe ProcedureRevision do
       end
 
       context 'with blank valid after_stable_id' do
-        let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.id } }
+        let(:text_params) { { type_champ: :text, libelle: 'text', after_stable_id: procedure.draft_revision.private_root_type_de_champs.last.stable_id } }
         let(:tdc_params) { text_params.merge(after_stable_id: '', libelle: 'in the middle') }
 
         it do
