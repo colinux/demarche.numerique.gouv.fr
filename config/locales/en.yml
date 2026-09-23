@@ -1077,7 +1077,9 @@ en:
         to_archive: to archive
         trash: trash
       aasm_error_originating_state: The folder is already %{state}.
-      aasm_error_etablissement_as_degraded_mode: "The data for this folder could not yet be verified: it is not possible to change it to %{state}."
+      aasm_error_etablissement_as_degraded_mode: "The following data could not be verified yet: %{champs}. It is not possible to change the folder to %{state}."
+      unverified_champ: "“%{libelle}”"
+      unverified_demandeur: the applicant's SIRET
       aasm_error_annotations_no_url: The private annotations have not been filled in correctly; they are essential to make a decision.
       aasm_error_annotations: The private annotations have not been filled in correctly; they are essential to make a decision. <a href="%{url}">Edit annotations</a>.
       aasm_error_pending_correction: The folder is awaiting a correction from the user; it is not possible to change it to in instruction.

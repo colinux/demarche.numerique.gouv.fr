@@ -386,12 +386,12 @@ describe BatchOperationProcessOneJob, type: :job do
       end
 
       before do
-        allow_any_instance_of(Dossier).to receive(:any_etablissement_as_degraded_mode?).and_return(true)
+        allow_any_instance_of(Dossier).to receive(:champs_awaiting_verification).and_return([instance_double(Champs::RNAChamp, libelle: 'Numéro RNA')])
       end
 
-      it 'stores a human readable error message without failing the job' do
+      it 'stores a human readable error message naming the champ, without failing the job' do
         expect { subject.perform_now }.not_to raise_error
-        expect(batch_operation.dossier_operations.error.first.error_message).to include("n’ont pas pu encore être vérifiées")
+        expect(batch_operation.dossier_operations.error.first.error_message).to include("vérifiées : « Numéro RNA ».")
       end
     end
   end

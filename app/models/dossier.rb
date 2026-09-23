@@ -641,7 +641,18 @@ class Dossier < ApplicationRecord
   def any_etablissement_as_degraded_mode?
     return true if etablissement&.as_degraded_mode?
 
-    flat_champs_public.any? { _1.awaiting_fix? || _1.etablissement&.as_degraded_mode? }
+    champs_awaiting_verification.any?
+  end
+
+  # What the instructeur waits for before a decision: « Numéro SIRET » et « Numéro RNA »
+  def unverified_data_labels
+    labels = champs_awaiting_verification.map { I18n.t('instructeurs.dossiers.unverified_champ', libelle: it.libelle) }
+    labels.unshift(I18n.t('instructeurs.dossiers.unverified_demandeur')) if etablissement&.as_degraded_mode?
+    labels.to_sentence
+  end
+
+  def champs_awaiting_verification
+    flat_champs_public.filter { _1.awaiting_fix? || _1.etablissement&.as_degraded_mode? }
   end
 
   def messagerie_available?
