@@ -34,10 +34,10 @@ fr:
         label: "Documentation de l’API"
         title: "Documentation de l’API au format graphql"
         url: "https://doc.demarches-simplifiees.fr/api-graphql"
-      dinum:
-        title: "Le site de la DINUM — Direction interministérielle du numérique"
-        url: "https://www.numerique.gouv.fr/dinum/"
-        alt: "Direction Interministérielle du\u00A0Numérique"
+      numerique_gouv:
+        title: "Le site de numerique.gouv"
+        url: "https://www.numerique.gouv.fr/"
+        alt: "numerique.gouv"
       cgu:
         label: "CGU"
         title: "Conditions Générales d’Utilisation"

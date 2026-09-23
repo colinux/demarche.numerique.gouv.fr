@@ -34,10 +34,10 @@ en:
         label: "API Documentation"
         title: "Graphql API Documentation"
         url: "https://doc.demarches-simplifiees.fr/api-graphql"
-      dinum:
-        title: "Le site de la DINUM — Direction interministérielle du numérique"
-        url: "https://www.numerique.gouv.fr/dinum/"
-        alt: "Direction Interministérielle du\u00A0Numérique"
+      numerique_gouv:
+        title: "The numerique.gouv website"
+        url: "https://www.numerique.gouv.fr/"
+        alt: "numerique.gouv"
       code:
         label: "Source code"
         url: "https://github.com/demarche-numerique/demarche.numerique.gouv.fr"

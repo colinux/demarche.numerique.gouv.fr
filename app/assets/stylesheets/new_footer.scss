@@ -3,9 +3,18 @@
 }
 
 .fr-footer__logo {
-  &.logo-beta-gouv-fr {
-    width: 9rem;
+  &.logo-numerique-gouv {
+    width: 10.5rem;
+    max-width: 100%;
+
+    @media (min-width: 48em) {
+      width: 14.5rem;
+    }
   }
+}
+
+.fr-footer__brand-link {
+  min-width: 0;
 }
 
 .fr-footer__top-link p {

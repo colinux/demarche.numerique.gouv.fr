@@ -59,6 +59,13 @@ describe RootController, type: :controller do
     end
 
     it { expect(response.body).to have_css('.landing') }
+
+    it "affiche le marqueur numerique.gouv à la place du logo DINUM" do
+      expect(response.body).to have_link("numerique.gouv", href: "https://www.numerique.gouv.fr/")
+      expect(response.body).to have_css("footer img.hidden-on-dark-theme[src*='logo-numerique-gouv'][alt='numerique.gouv']")
+      expect(response.body).to have_css("footer img.hidden-on-light-theme[src*='logo-numerique-gouv-dark'][alt='numerique.gouv']")
+      expect(response.body).not_to have_css("img[src*='logo-dinum']")
+    end
   end
 
   context "unified login" do
