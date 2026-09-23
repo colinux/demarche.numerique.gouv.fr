@@ -9,12 +9,16 @@ env:
   DISABLE_SPRING: '1'
 
 jobs:
+  # Only the unit test jobs run on GitHub-hosted runners: the free plan caps
+  # the organization at 20 concurrent jobs, so the short jobs run on WarpBuild
+  # to let two CI runs go at once without queueing.
+  #
   # The linters are split in three jobs so they run in parallel: Brakeman alone
   # is slower than every other linter combined, and the JS side needs neither
   # Ruby nor a database.
   linters:
     name: Linters
-    runs-on: ubuntu-24.04
+    runs-on: warp-ubuntu-2204-x64-2x
     timeout-minutes: 10
     services:
       postgres:
@@ -38,7 +42,7 @@ jobs:
 
   js_linters:
     name: JavaScript linters
-    runs-on: ubuntu-24.04
+    runs-on: warp-ubuntu-2204-x64-2x
     timeout-minutes: 10
 
     steps:
@@ -52,7 +56,7 @@ jobs:
 
   brakeman:
     name: Brakeman
-    runs-on: ubuntu-24.04
+    runs-on: warp-ubuntu-2204-x64-2x
     timeout-minutes: 10
 
     steps:
@@ -68,7 +72,7 @@ jobs:
 
   js_tests:
     name: JavaScript tests
-    runs-on: ubuntu-24.04
+    runs-on: warp-ubuntu-2204-x64-2x
     timeout-minutes: 10
 
     steps:
@@ -252,7 +256,7 @@ jobs:
   save_test_reports:
     name: Save test reports
     needs: [unit_tests, system_tests]
-    runs-on: ubuntu-24.04
+    runs-on: warp-ubuntu-2204-x64-2x
     timeout-minutes: 10
 
     steps:
