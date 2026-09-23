@@ -107,6 +107,28 @@ describe Champs::RNAChamp do
       end
     end
 
+    context 'when the address of the association cannot be read' do
+      let(:to_params) { Success({ "association_titre" => "Super asso", "adresse" => nil }) }
+
+      before { allow(Sentry).to receive(:capture_exception) }
+
+      it 'degrades as well' do
+        expect(subject.failure).to include(degraded: true, code: 200)
+      end
+    end
+
+    context 'when something else than the payload fails' do
+      let(:to_params) { Success({ "association_titre" => "Super asso", "adresse" => {} }) }
+
+      before do
+        allow(champ.procedure).to receive(:forget_api_entreprise_token_rejection!).and_raise(ActiveRecord::StatementInvalid)
+      end
+
+      it 'lets the error through instead of passing it off as an API fault' do
+        expect { subject }.to raise_error(ActiveRecord::StatementInvalid)
+      end
+    end
+
     context 'when the token cannot work at all' do
       let(:procedure) { create(:procedure, api_entreprise_token: nil, public_type_de_champs:) }
       let(:to_params) { Success({}) }

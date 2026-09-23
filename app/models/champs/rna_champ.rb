@@ -63,19 +63,26 @@ class Champs::RNAChamp < ChampData
   def fetch_external_data
     return token_unusable_failure if !procedure.api_entreprise_token_usable?
 
-    case APIEntreprise::RNAAdapter.new(rna_id, procedure_id).to_params
-    in Success(data) if data.present?
+    case read_association
+    in Success(data:, value_json:)
       procedure.forget_api_entreprise_token_rejection!
-      Success(data:, value_json: extract_value_json(data:), value: rna_id)
+      Success(data:, value_json:, value: rna_id)
     in Success # not found returns an empty hash
       Failure(retryable: false, error: StandardError.new('NotFound'), code: 404)
     in Failure => failure
       api_entreprise_failure(failure)
     end
+  end
+
+  def read_association
+    APIEntreprise::RNAAdapter.new(rna_id, procedure_id).to_params
+      .fmap { it.present? ? { data: it, value_json: extract_value_json(data: it) } : {} }
   rescue StandardError => e
+    # The API answered, we could not read it. Without this the exception escapes
+    # through the state machine callback and strands the champ in fetching.
     Sentry.capture_exception(e)
 
-    degraded_failure(:unreadable_payload, 200)
+    Failure(type: :unreadable_payload, code: 200, retryable: true)
   end
 
   def extract_value_json(data:)
