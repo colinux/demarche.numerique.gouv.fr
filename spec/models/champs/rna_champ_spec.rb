@@ -59,9 +59,9 @@ describe Champs::RNAChamp do
     context 'when the association is found' do
       let(:to_params) { Success({ "association_titre" => "Super asso", "adresse" => {} }) }
 
-      it 'returns a Success with data, value_json and value' do
+      it 'returns a Success with data and value_json' do
         expect(subject).to be_success
-        expect(subject.value!).to include(data: { "association_titre" => "Super asso", "adresse" => {} }, value: "W182736273")
+        expect(subject.value!).to include(data: { "association_titre" => "Super asso", "adresse" => {} })
       end
     end
 
@@ -77,9 +77,9 @@ describe Champs::RNAChamp do
     context 'when API Entreprise is down' do
       let(:to_params) { Failure(type: :service_unavailable, code: 503, retryable: true, raw_response: nil) }
 
-      it 'degrades instead of failing, and keeps the identifier' do
+      it 'degrades instead of failing' do
         expect(subject).to be_failure
-        expect(subject.failure).to include(degraded: true, value: "W182736273", code: 503)
+        expect(subject.failure).to include(degraded: true, code: 503)
       end
     end
 

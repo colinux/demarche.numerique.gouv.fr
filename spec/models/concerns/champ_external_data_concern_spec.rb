@@ -265,17 +265,17 @@ RSpec.describe ChampExternalDataConcern do
     describe 'fetch a degraded failure, now is degraded state' do
       before do
         allow(champ).to receive(:ready_for_external_call?).and_return(true)
+        champ.update_columns(fetch_external_data_exceptions: [ExternalDataException.new(error: 'previous', code: 502)])
         champ.fetch_later!
 
-        failure = Failure(degraded: true, value_json: { 'carried' => 'data' }, error: Exception.new('nop'), code: 503)
+        failure = Failure(degraded: true, error: Exception.new('nop'), code: 503)
         allow(champ).to receive(:fetch_external_data).and_return(failure)
         champ.fetch!
       end
 
-      it 'keeps the carried data and records the error' do
+      it 'records the last error only: the cron replays it every two hours' do
         expect(champ.reload).to be_degraded
-        expect(champ.value_json).to eq({ 'carried' => 'data' })
-        expect(champ.fetch_external_data_exceptions.last.code).to eq(503)
+        expect(champ.fetch_external_data_exceptions.map(&:code)).to eq([503])
       end
 
       it { expect(champ).to be_done }

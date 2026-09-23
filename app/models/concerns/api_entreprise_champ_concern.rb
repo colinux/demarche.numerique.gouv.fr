@@ -34,7 +34,7 @@ module APIEntrepriseChampConcern
   end
 
   def degraded_failure(type, code)
-    Failure(degraded: true, value: external_id, error: StandardError.new("API Entreprise: #{type}"), code:)
+    Failure(degraded: true, error: StandardError.new("API Entreprise: #{type}"), code:)
   end
 
   # The administrateur can act on a token of their own; on the instance one,

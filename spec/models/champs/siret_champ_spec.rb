@@ -194,20 +194,18 @@ describe Champs::SiretChamp do
     end
 
     context 'when the API answers' do
-      it 'carries the etablissement and the siret' do
+      it 'carries the etablissement' do
         expect(fetch_external_data).to be_success
         expect(fetch_external_data.value![:etablissement].siret).to eq(siret)
-        expect(fetch_external_data.value![:value]).to eq(siret)
       end
     end
 
     context 'when the API does not answer' do
       let(:api_etablissement_status) { 503 }
 
-      it 'is a degraded failure carrying the siret' do
+      it 'is a degraded failure' do
         expect(fetch_external_data).to be_failure
         expect(fetch_external_data.failure[:degraded]).to be true
-        expect(fetch_external_data.failure[:value]).to eq(siret)
       end
     end
 
@@ -293,7 +291,6 @@ describe Champs::SiretChamp do
 
       it 'degrades without spending a call we know will fail' do
         expect(fetch_external_data.failure[:degraded]).to be true
-        expect(fetch_external_data.failure[:value]).to eq(siret)
 
         expect(a_request(:get, /entreprise.api.gouv.fr/)).not_to have_been_made
       end
@@ -379,6 +376,14 @@ describe Champs::SiretChamp do
         subject.validate(:champ_value)
 
         expect(subject.errors[:external_id]).to be_empty
+      end
+
+      context 'on an obligatoire champ' do
+        let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :siret, mandatory: true }]) }
+
+        it 'is not blank: the value is the siret the usager typed' do
+          expect(subject).not_to be_mandatory_blank
+        end
       end
 
       it 'does not ask for the complementary data' do
