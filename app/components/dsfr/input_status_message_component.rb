@@ -94,6 +94,8 @@ module Dsfr
           { state: :info, text: t(".rna.pending", value: @champ.external_id) }
         elsif @champ.external_error?
           { state: :warning, text: t(".rna.error") }
+        elsif @champ.awaiting_fix?
+          { state: :warning, text: t(".rna.degraded", value: @champ.external_id) }
         elsif @champ.value.present?
           { state: :info, text: t(".rna.success", title: @champ.title, address: @champ.full_address) }
         end

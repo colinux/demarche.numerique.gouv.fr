@@ -61,4 +61,19 @@ describe Dsfr::InputStatusMessageComponent, type: :component do
       expect(page).to have_text('vous pouvez continuer')
     end
   end
+
+  describe 'a degraded rna champ' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :rna }]) }
+
+    before do
+      champ.update_columns(external_id: 'W182736273', value: 'W182736273', external_state: 'degraded')
+    end
+
+    it 'tells the user their RNA is kept, instead of announcing an empty success' do
+      render_inline(described_class.new(champ:, as_announcement: true))
+
+      expect(page).to have_text('W182736273')
+      expect(page).to have_text('vous pouvez continuer')
+    end
+  end
 end

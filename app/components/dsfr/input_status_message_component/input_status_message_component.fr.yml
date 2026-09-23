@@ -1,6 +1,7 @@
 ---
 fr:
   rna:
+    degraded: "Le RNA %{value} est bien enregistré. Les informations sur lʼassociation arriveront plus tard : vous pouvez continuer."
     error: "Une erreur est survenue lors de la récupération des informations RNA."
     pending: "Recherche en cours pour le RNA %{value}…"
     success: "Ce RNA correspond à : %{title}, %{address}"
