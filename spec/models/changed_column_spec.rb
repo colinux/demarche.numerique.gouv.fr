@@ -85,6 +85,27 @@ RSpec.describe ChangedColumn do
       end
     end
 
+    context 'when a repetition row holding a checked checkbox is removed' do
+      let(:public_type_de_champs) do
+        [{ type: :repetition, libelle: "Répétition", stable_id: 993, children: [{ type: :text, libelle: 'Nom', stable_id: 994 }, { type: :checkbox, libelle: 'Case', stable_id: 995 }] }]
+      end
+      let(:type_de_champ) { dossier.find_type_de_champ_by_stable_id(993) }
+      let(:row_id) { dossier.repetition_row_ids(type_de_champ).first }
+
+      before do
+        dossier.champ_data.find { it.stable_id == 995 && it.row_id == row_id }.update_columns(value: 'true')
+        dossier.with_instructeur_buffer_stream { dossier.repetition_remove_row(type_de_champ, row_id, updated_by: instructeur.email) }
+      end
+
+      it 'reports the checkbox as removed, like the other champs of the row' do
+        removed = columns.filter { it.row_id == row_id }
+
+        expect(removed.map(&:stable_id)).to eq([994, 995])
+        expect(removed.map(&:value)).to eq([nil, nil])
+        expect(removed.last.previous_value).to be(true)
+      end
+    end
+
     context 'when a titre d’identité is attached' do
       let(:dossier) { create(:dossier, :en_construction, procedure:) }
 

@@ -30,6 +30,42 @@ describe Logic::ChampColumnValue do
     context 'when the targeted champ is missing from the list' do
       it { expect(champ_column_value.compute([])).to be_nil }
     end
+
+    context 'when the type de champ no longer offers the column' do
+      let(:champ_column_value) { Logic::ChampColumnValue.new(column.stable_id, "#{column.column_id}-$.postal_code") }
+
+      it { expect(champ_column_value.compute([champ])).to be_nil }
+
+      context 'when the targeted champ is blank' do
+        before { champ.update(value: nil) }
+
+        it { expect(champ_column_value.compute([champ])).to be_nil }
+      end
+    end
+
+    context 'with a checkbox' do
+      let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :checkbox, libelle: 'yes' }]) }
+
+      it { expect(champ_column_value.compute([champ])).to be(true) }
+
+      context 'when nobody touched it' do
+        before { champ.update(value: nil) }
+
+        it 'reads unchecked' do
+          expect(champ_column_value.compute([champ])).to be(false)
+          expect(ds_eq(champ_column_value, constant(false)).compute([champ])).to be(true)
+        end
+      end
+
+      context 'when it is not visible' do
+        before do
+          champ.update(value: nil)
+          allow(champ).to receive(:visible?).and_return(false)
+        end
+
+        it { expect(champ_column_value.compute([champ])).to be_nil }
+      end
+    end
   end
 
   # stable_id is needed when computing error (Eq.errors)

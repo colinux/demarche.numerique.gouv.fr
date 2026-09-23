@@ -7,6 +7,7 @@ module DossierEditConcern
 
   def update_champ_and_compute_errors(scope:)
     champ, champ_changed, refresh_external_data_requested = find_and_prepare_champ(scope:)
+    @updated_champ = champ
     return if champ.type_de_champ.pre_rempli?
     saved = save_champ(champ, champ_changed, scope)
 

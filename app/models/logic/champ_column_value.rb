@@ -14,14 +14,19 @@ class Logic::ChampColumnValue < Logic::Term
 
     return nil if targeted_champ.nil?
     return nil if !targeted_champ.visible?
-    return nil if targeted_champ.blank_for_condition?
 
     column = targeted_column([targeted_champ.type_de_champ])
+
+    # the type de champ no longer offers the column the term was written for
+    return nil if column.nil?
 
     # if it s a dropdown champ and a dropdown tdc (no cast)
     # and the dropdown is other, return other
     if targeted_champ.is_type?(column.tdc_type) && targeted_champ.drop_down_list? && targeted_champ.other?
       Champs::DropDownListChamp::OTHER
+    elsif targeted_champ.blank?
+      # the column says what no answer reads as: nil, or false for a checkbox
+      column.value(nil)
     else
       column.value(targeted_champ)
     end
