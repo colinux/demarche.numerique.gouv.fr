@@ -1094,6 +1094,29 @@ describe ProcedureRevision do
           expect(explication_coord.position).to be > prenom_coord.position
         end
       end
+
+      context 'move_header_section_shared_with_the_published_revision' do
+        let(:procedure) do
+          create(:procedure, :published,
+                 public_type_de_champs: [
+                   { type: :header_section, stable_id: 1, libelle: 'section', level: 1 },
+                   { type: :text, stable_id: 2, libelle: 'nom' },
+                 ])
+        end
+        let(:published_header_section) { procedure.published_revision.public_root_type_de_champs.first }
+        let!(:item) { create(:llm_rule_suggestion_item, llm_rule_suggestion:, verify_status: :accepted, op_kind: 'update', payload: { 'stable_id' => 1, 'after_stable_id' => 2, 'header_section_level' => 2 }) }
+
+        it 'updates a clone on the draft and leaves the published revision as it is' do
+          revision.apply_llm_rule_suggestion_items(llm_rule_suggestion.changes_to_apply)
+          revision.reload
+
+          draft_header_section = revision.public_root_type_de_champs.find { it.stable_id == 1 }
+          expect(draft_header_section).not_to eq(published_header_section)
+          expect(draft_header_section.header_section_level_value).to eq(2)
+          expect(revision.coordinate_for(draft_header_section).position).to eq(1)
+          expect(published_header_section.reload.header_section_level_value).to eq(1)
+        end
+      end
     end
   end
 end

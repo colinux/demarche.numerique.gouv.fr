@@ -304,7 +304,7 @@ class ProcedureRevision < ApplicationRecord
         if after_stable_id.nil? # positionned at first
           coordinate = move_type_de_champ(stable_id, 0)
           if payload.key?(:header_section_level) && coordinate.type_de_champ.header_section? && params.present?
-            coordinate.type_de_champ.update(params)
+            find_and_ensure_exclusive_use(stable_id).update(params)
           end
         else # positionned after another tdc
           if after_stable_id&.negative?
@@ -321,7 +321,7 @@ class ProcedureRevision < ApplicationRecord
           if after_coordinate
             coordinate = move_type_de_champ_after(stable_id, after_coordinate.position)
             if payload.key?(:header_section_level) && coordinate.type_de_champ.header_section? && params.present?
-              coordinate.type_de_champ.update(params)
+              find_and_ensure_exclusive_use(stable_id).update(params)
             end
           end
         end
