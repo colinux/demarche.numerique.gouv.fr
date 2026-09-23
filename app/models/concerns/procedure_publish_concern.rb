@@ -90,23 +90,28 @@ module ProcedurePublishConcern
   def create_new_revision(revision = nil)
     transaction do
       new_revision = (revision || draft_revision)
-        .deep_clone(include: [:revision_type_de_champs])
+        .deep_clone(include: [:revision_type_de_champs], except: [:type_de_champ_tree])
         .tap { |revision| revision.published_at = nil }
         .tap { |revision| revision.administrateur_id = nil }
         .tap(&:save!)
 
       move_new_children_to_new_parent_coordinate(new_revision)
 
-      new_revision
+      new_revision.store_type_de_champ_tree
     end
   end
 
   private
 
   def publish_new_revision(administrateur)
-    cleanup_type_de_champs_options!
-    cleanup_type_de_champs_children!
-    nullify_unused_referentiels
+    # the last edit of the draft: the tree it leaves is the published one, and
+    # the lock, held until publication commits, keeps the editor from changing
+    # the coordinates before the next draft is cloned from them
+    draft_revision.edit_type_de_champs do
+      cleanup_type_de_champs_options!
+      cleanup_type_de_champs_children!
+      nullify_unused_referentiels
+    end
     self.published_revision = draft_revision
     self.draft_revision = create_new_revision
     save!(context: :publication)
