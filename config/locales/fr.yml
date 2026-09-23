@@ -783,7 +783,7 @@ fr:
         invalid_email_format: 'est invalide. Saisissez une adresse électronique valide. Exemple : adresse@mail.com'
         api_response_pending: 'En attente de réponse... Réessayez dans quelques instants.'
         api_response_error: 'Aucun résultat ne correspond à votre recherche.'
-        api_response_degraded: 'Les informations sur lʼentreprise nʼont pas pu être récupérées, et une autre question du formulaire en dépend. Nous réessayons pour vous : revenez un peu plus tard pour déposer votre dossier.'
+        api_response_degraded: 'Les informations liées à ce champ nʼont pas pu être récupérées, et la suite du formulaire en dépend. Nous réessayons pour vous : revenez un peu plus tard pour déposer votre dossier.'
         code_429: 'Trop de demandes. Nous réessayons pour vous.'
         code_500: 'Erreur du serveur. Nous réessayons pour vous.'
         code_503: 'Service indisponible. Nous réessayons pour vous.'
@@ -1079,7 +1079,7 @@ fr:
         to_archive: à archiver
         trash: corbeille
       aasm_error_originating_state: Le dossier est déjà %{state}.
-      aasm_error_etablissement_as_degraded_mode: "Les données relatives au SIRET de ce dossier n’ont pas pu encore être vérifiées : il n’est pas possible de le passer en %{state}."
+      aasm_error_etablissement_as_degraded_mode: "Les données relatives à ce dossier n’ont pas pu encore être vérifiées : il n’est pas possible de le passer en %{state}."
       aasm_error_annotations_no_url: Les annotations privées n’ont pas été correctement renseignées, elles sont indispensables pour rendre une décision.
       aasm_error_annotations: Les annotations privées n’ont pas été correctement renseignées, elles sont indispensables pour rendre une décision. <a href="%{url}">Modifier les annotations</a>.
       aasm_error_pending_correction: Le dossier est en attente de correction par l’usager, il n’est pas possible de le passer en instruction.

@@ -391,7 +391,7 @@ describe BatchOperationProcessOneJob, type: :job do
 
       it 'stores a human readable error message without failing the job' do
         expect { subject.perform_now }.not_to raise_error
-        expect(batch_operation.dossier_operations.error.first.error_message).to include("SIRET")
+        expect(batch_operation.dossier_operations.error.first.error_message).to include("n’ont pas pu encore être vérifiées")
       end
     end
   end

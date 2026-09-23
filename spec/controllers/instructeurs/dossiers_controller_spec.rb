@@ -711,7 +711,7 @@ describe Instructeurs::DossiersController, type: :controller do
           expect(dossier.state).to eq(Dossier.states.fetch(:en_instruction))
 
           expect(response).to have_http_status(:ok)
-          expect(response.body).to match(/Les données relatives au SIRET .+ de le passer en accepté/)
+          expect(response.body).to match(/Les données relatives à ce dossier .+ de le passer en accepté/)
         end
       end
     end
