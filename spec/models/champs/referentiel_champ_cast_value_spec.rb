@@ -8,7 +8,7 @@ describe Champs::ReferentielChamp, type: :model do
   let(:public_type_de_champs) { [{ type: :referentiel, referentiel: }] }
   let(:procedure) { create(:procedure, public_type_de_champs:) }
   let(:dossier) { create(:dossier, procedure:) }
-  let(:referentiel_champ) { dossier.champ_data.find(&:referentiel?) }
+  let(:referentiel_champ) { dossier.champs.find(&:referentiel?) }
 
   describe '#cast_value_for_type_de_champ' do
     subject { referentiel_champ.update_external_data!(data:) }
