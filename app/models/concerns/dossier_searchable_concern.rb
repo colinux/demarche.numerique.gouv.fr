@@ -28,9 +28,6 @@ module DossierSearchableConcern
 
     private_search_terms = root_champs_private.flat_map(&:search_terms).compact_blank.join(' ')
 
-    # Mirrors the `search_terms || ' ' || private_search_terms` expression the
-    # annotations index is built on: `to_tsquery` ANDs its terms, so a query
-    # spanning the public and private parts must see them as one document.
     all_search_terms = "#{search_terms} #{private_search_terms}"
 
     sql = <<~SQL.squish
