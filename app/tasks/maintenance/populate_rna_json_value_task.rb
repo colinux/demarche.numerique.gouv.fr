@@ -17,9 +17,9 @@ module Maintenance
       return if champ&.dossier&.procedure&.id.blank?
       result = champ.send(:fetch_external_data)
       case result
-      in Success(data:, value_json:, value:)
+      in Success(data:, value_json:)
         begin
-          champ.send(:update_external_data!, { data:, value_json:, value: })
+          champ.send(:update_external_data!, { data:, value_json: })
         rescue ActiveRecord::RecordInvalid
           # some champ might have dossier nil
         end
