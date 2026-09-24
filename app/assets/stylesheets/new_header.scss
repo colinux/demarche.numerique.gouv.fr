@@ -20,6 +20,11 @@
     margin-left: 0.5rem;
   }
 
+  // Prevent overflow in help menu due to email addresses that are too long
+  .fr-menu__list a {
+    hyphens: auto;
+  }
+
   // Add space between button edge and content
   .fr-container
     .fr-header__menu-links
