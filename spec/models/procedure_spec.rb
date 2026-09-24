@@ -1462,6 +1462,21 @@ describe Procedure do
       let(:lien_dpo) { 'www.démarches-simplifiées.fr' }
       it { expect(procedure.valid?).to be_falsey }
     end
+
+    context 'when several emails with stray spaces, as some procedures have' do
+      let(:lien_dpo) { ' dpo@demarche.numerique.gouv.fr ; rgpd@demarche.numerique.gouv.fr ' }
+
+      it 'rejects them as a new value' do
+        procedure.validate
+        expect(procedure.errors).to be_of_kind(:lien_dpo, :url)
+      end
+
+      it 'does not block a save once stored' do
+        stored = procedures.brouillon.tap { it.update_column(:lien_dpo, lien_dpo) }
+        stored.libelle = 'Nouveau libellé'
+        expect(stored).to be_valid
+      end
+    end
   end
 
   describe 'extend_conservation_for_dossiers' do

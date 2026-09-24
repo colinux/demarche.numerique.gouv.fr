@@ -2,6 +2,8 @@
 
 class ProcedureExternalURLCheckJob < ApplicationJob
   def perform(procedure)
+    procedure.lien_notice_will_change!
+    procedure.lien_dpo_will_change!
     procedure.validate
 
     if procedure.lien_notice.present?

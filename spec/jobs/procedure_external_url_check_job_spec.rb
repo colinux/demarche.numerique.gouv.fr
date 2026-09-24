@@ -43,7 +43,7 @@ describe ProcedureExternalURLCheckJob do
     it "update dpo error" do
       perform
 
-      expect(procedure.lien_dpo_error).to include("pas un lien valide")
+      expect(procedure.lien_dpo_error).to include("adresse locale ou privée")
     end
   end
 

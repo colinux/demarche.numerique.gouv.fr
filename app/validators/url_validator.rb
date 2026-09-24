@@ -1,75 +1,62 @@
 # frozen_string_literal: true
 
-require 'active_model'
-require 'active_support/i18n'
-require 'public_suffix'
-require 'addressable/uri'
-
-# Most of this code is borowed from https://github.com/perfectline/validates_url
-
+# An http(s) url whose host is a dotted name or an ip literal, or with
+# `accept_email: true`, an email.
+# A host that is local or on a private network is rejected: an ip literal of
+# such a network, localhost, or a single label like "intranet". Domain names
+# are not resolved.
 class URLValidator < ActiveModel::EachValidator
-  RESERVED_OPTIONS = [:schemes, :no_local]
-
-  def initialize(options)
-    options.reverse_merge!(schemes: ['http', 'https'])
-    options.reverse_merge!(message: :url)
-    options.reverse_merge!(no_local: false)
-    options.reverse_merge!(public_suffix: false)
-    options.reverse_merge!(accept_array: false)
-    options.reverse_merge!(accept_email: false)
-
-    super(options)
-  end
+  # what IPAddr#private?, #loopback? and #link_local? leave out
+  RESERVED_RANGES = [
+    IPAddr.new('0.0.0.0/8'),     # "this network": 0.0.0.0 reaches the host itself
+    IPAddr.new('100.64.0.0/10'), # carrier-grade NAT
+    IPAddr.new('::/128'),        # unspecified
+  ].freeze
 
   def validate_each(record, attribute, value)
-    message = options.fetch(:message)
-    schemes = [*options.fetch(:schemes)].map(&:to_s)
+    return if options[:accept_email] && email?(value)
 
-    if value.respond_to?(:each)
-      # Error out if we're not allowing arrays
-      if !options.include?(:accept_array) || !options.fetch(:accept_array)
-        record.errors.add(attribute, message, **filtered_options(value))
-      end
-
-      # We have to manually handle `:allow_nil` and `:allow_blank` since it's not caught by
-      # ActiveRecord's own validators. We do that by just removing all the nil's if we want to
-      # allow them so it's not passed on later.
-      value = value.compact if options.include?(:allow_nil) && options.fetch(:allow_nil)
-      value = value.compact_blank if options.include?(:allow_blank) && options.fetch(:allow_blank)
-
-      result = value.flat_map { validate_url(record, attribute, _1, message, schemes) }
-      errors = result.compact
-
-      return errors.any? ? errors.first : true
-    end
-
-    validate_url(record, attribute, value, message, schemes)
-  end
-
-  protected
-
-  def filtered_options(value)
-    filtered = options.except(*RESERVED_OPTIONS)
-    filtered[:value] = value
-    filtered
-  end
-
-  def validate_url(record, attribute, value, message, schemes)
     uri = Addressable::URI.parse(value)
-
-    if !options.fetch(:accept_email) || !uri.path.match?(/^(.+)@(.+)$/)
-      host = uri && uri.host
-      scheme = uri && uri.scheme
-
-      valid_scheme = host && scheme && schemes.include?(scheme)
-      valid_no_local = !options.fetch(:no_local) || (host && host.include?('.'))
-      valid_suffix = !options.fetch(:public_suffix) || (host && PublicSuffix.valid?(host, default_rule: nil))
-
-      if !valid_scheme || !valid_no_local || !valid_suffix
-        record.errors.add(attribute, message, **filtered_options(value))
-      end
+    if uri.host.present? && local_host?(uri.host)
+      record.errors.add(attribute, :private_ip_url)
+    elsif !url?(uri)
+      record.errors.add(attribute, :url)
     end
   rescue Addressable::URI::InvalidURIError
-    record.errors.add(attribute, message, **filtered_options(value))
+    record.errors.add(attribute, :url)
+  end
+
+  private
+
+  # a name needs a dot, an ip literal does not ([2606:4700::1111]): local ones are rejected before
+  def url?(uri)
+    uri.normalized_scheme.in?(['http', 'https']) && uri.host.present? && (uri.host.include?('.') || ip_literal(uri.host).present?)
+  end
+
+  # the regexp alone: StrictEmailValidator falls back to a laxer one for older records
+  def email?(value) = StrictEmailValidator::REGEXP.match?(value)
+
+  def local_host?(host)
+    ip = ip_literal(host)
+    ip ? private_ip?(ip) : internal_name?(host)
+  end
+
+  def internal_name?(host)
+    name = host.downcase.delete_suffix('.')
+    !name.include?('.') || name.end_with?('.localhost')
+  end
+
+  # The host read as the system reads a numeric one, without any DNS query:
+  # 2130706433, 0x7f.0.0.1, 0177.0.0.1 and 127.1 are 127.0.0.1,
+  # ::ffff:127.0.0.1 is 127.0.0.1 too.
+  def ip_literal(host)
+    address = Addrinfo.getaddrinfo(host.delete('[]'), nil, nil, :STREAM, nil, Socket::AI_NUMERICHOST).first.ip_address
+    IPAddr.new(address).native
+  rescue SocketError
+    nil # a domain name
+  end
+
+  def private_ip?(ip)
+    ip.private? || ip.loopback? || ip.link_local? || RESERVED_RANGES.any? { it.include?(ip) }
   end
 end
