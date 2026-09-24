@@ -3,6 +3,10 @@ fr:
     procedures:
       index:
         title: "Démarches"
+        page:
+          title: "Démarches instructeur en cours"
+          brouillons_title: "Démarches instructeur en test"
+          archivees_title: "Démarches instructeur terminées"
       notifications_button:
         notifications_details: Détails des notifications
     procedure:
