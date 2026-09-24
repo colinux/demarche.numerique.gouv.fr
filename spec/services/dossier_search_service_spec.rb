@@ -99,61 +99,6 @@ describe DossierSearchService do
 
       it { expect(searching('martin').size).to eq(1) }
     end
-
-    # The stored columns replace the to_tsvector(...) expression indexes; the two
-    # paths coexist behind the flag until the backfill is done, so they have to
-    # return the same thing.
-    describe 'with the stored tsvector columns' do
-      let(:user) { create(:user, email: 'nicolas@email.com') }
-      let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :text }], private_type_de_champs: [{ type: :text }]) }
-      let(:dossier) do
-        create(:dossier, procedure:, state: :en_construction, user:).tap do |dossier|
-          dossier.root_champs_public.first.update!(value: 'Hélène mange des pommes')
-          dossier.root_champs_private.first.update!(value: 'annotations')
-        end
-      end
-
-      before { Flipper.enable(:search_terms_tsvector) }
-      after { Flipper.disable(:search_terms_tsvector) }
-
-      it do
-        expect(searching('')).to eq([])
-
-        expect(searching('nicolas')).to eq([dossier.id])
-        expect(searching('helene')).to eq([dossier.id])
-        expect(searching('la pomme')).to eq([dossier.id])
-
-        expect(searching('annotations')).to eq([])
-        expect(searching('annotations', with_annotations: true)).to eq([dossier.id])
-        expect(searching('pommes annotations', with_annotations: true)).to eq([dossier.id])
-      end
-
-      it 'ignores dossiers whose tsvector has not been backfilled yet' do
-        dossier
-        Dossier.where(id: dossier.id).update_all(search_terms_tsvector: nil, all_search_terms_tsvector: nil)
-
-        expect(searching('nicolas')).to eq([])
-      end
-    end
-
-    describe 'with the flag enabled for a single actor' do
-      let(:user) { users.usager }
-      let(:dossier) { create(:dossier, state: :en_construction, user:) }
-
-      # Blanking the column makes the two paths disagree: only the stored one
-      # stops matching, which is what tells them apart.
-      before do
-        Flipper.enable_actor(:search_terms_tsvector, user)
-        Dossier.where(id: dossier.id).update_all(search_terms_tsvector: nil)
-      end
-
-      after { Flipper.disable_actor(:search_terms_tsvector, user) }
-
-      it 'reads the stored column for that actor only' do
-        Current.set(user:) { expect(searching('usager')).to eq([]) }
-        Current.set(user: users.instructeur) { expect(searching('usager')).to eq([dossier.id]) }
-      end
-    end
   end
 
   describe '#matching_dossiers_for_user' do
@@ -200,7 +145,7 @@ describe DossierSearchService do
         end
       end
 
-      it 'qualifies search_terms so it does not raise PG::AmbiguousColumn' do
+      it 'qualifies the tsvector column so it does not raise PG::AmbiguousColumn' do
         self_joined = Dossier
           .joins('INNER JOIN dossiers d2 ON d2.id = dossiers.id')
           .merge(searching('pommes', user))
