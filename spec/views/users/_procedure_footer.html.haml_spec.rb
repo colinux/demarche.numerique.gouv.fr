@@ -88,5 +88,34 @@ describe 'users/procedure_footer', type: :view do
       before { dossier.procedure.update(lien_dpo: 'https://beta.gouv.fr') }
       it { is_expected.to have_link('Contacter le Délégué à la Protection des Données', href: 'https://beta.gouv.fr') }
     end
+
+    context "when a javascript link was stored before validation rejected it" do
+      before { dossier.procedure.update_column(:lien_dpo, 'javascript:alert(window.location)//@almond.eu') }
+      it { is_expected.not_to have_text('Contacter le Délégué à la Protection des Données') }
+    end
+
+    ['JaVaScRiPt:alert(1)//@x.fr', 'vbscript:msgbox(1)//@x.fr', 'data:text/html,<script>alert(1)</script>@x.fr', 'javascript://x@x.fr/%0Aalert(1)'].each do |lien_dpo|
+      context "when #{lien_dpo.inspect} was stored before validation rejected it" do
+        before { dossier.procedure.update_column(:lien_dpo, lien_dpo) }
+        it { is_expected.not_to have_text('Contacter le Délégué à la Protection des Données') }
+      end
+    end
+
+    context "when the scheme hides in an entity" do
+      before { dossier.procedure.update_column(:lien_dpo, 'javascript&#58;alert(1)//@x.fr') }
+      it { is_expected.to have_link('Contacter le Délégué à la Protection des Données', href: '//javascript&#58;alert(1)//@x.fr') }
+    end
+
+    ['" onmouseover="alert(1)" x="@x.fr', '"><script>alert(1)</script>@x.fr', 'https://x.fr/" onmouseover="alert(1)'].each do |lien_dpo|
+      context "when #{lien_dpo.inspect} tries to break out of the href" do
+        before { dossier.procedure.update_column(:lien_dpo, lien_dpo) }
+
+        it "keeps it inside the href" do
+          is_expected.to have_link('Contacter le Délégué à la Protection des Données')
+          is_expected.not_to have_css('[onmouseover]')
+          is_expected.not_to have_css('script', visible: :all)
+        end
+      end
+    end
   end
 end
