@@ -13,10 +13,10 @@ describe DossierSearchableConcern do
     let(:france_connect_information) { build(:france_connect_information, given_name: 'Chris', family_name: 'Harrisson') }
     let(:user) { build(:user, france_connect_informations: [france_connect_information]) }
 
-    let(:result) do
-      Dossier.connection.execute(
-        Dossier.sanitize_sql_array(["SELECT search_terms, private_search_terms FROM dossiers WHERE id = :id", id: dossier.id])
-      ).first
+    def matches?(column, query)
+      Dossier.connection.select_value(
+        Dossier.sanitize_sql_array(["SELECT #{column} @@ to_tsquery('french_unaccent', :query) FROM dossiers WHERE id = :id", query:, id: dossier.id])
+      )
     end
 
     it "update columns" do
@@ -24,8 +24,8 @@ describe DossierSearchableConcern do
       champ_private.update_attribute(:value, "champ privé")
       perform_enqueued_jobs(only: DossierIndexSearchTermsJob)
 
-      expect(result["search_terms"]).to eq("#{user.email} champ public #{etablissement.entreprise_siren} #{etablissement.entreprise_numero_tva_intracommunautaire} #{etablissement.entreprise_forme_juridique} #{etablissement.entreprise_forme_juridique_code} #{etablissement.entreprise_nom_commercial} #{etablissement.entreprise_raison_sociale} #{etablissement.entreprise_siret_siege_social} #{etablissement.entreprise_nom} #{etablissement.entreprise_prenom} #{etablissement.association_rna} #{etablissement.association_titre} #{etablissement.association_objet} #{etablissement.siret} #{etablissement.naf} #{etablissement.libelle_naf} #{etablissement.adresse} #{etablissement.code_postal} #{etablissement.localite} #{etablissement.code_insee_localite}")
-      expect(result["private_search_terms"]).to eq('champ privé')
+      expect(matches?('search_terms_tsvector', "#{user.email} & public & #{etablissement.siret} & Dupont & asso")).to be(true)
+      expect(matches?('all_search_terms_tsvector', 'prive')).to be(true)
     end
 
     it "stores the tsvector columns alongside the text" do
@@ -70,8 +70,8 @@ describe DossierSearchableConcern do
 
         perform_enqueued_jobs(only: DossierIndexSearchTermsJob)
 
-        expect(result["search_terms"]).to include('nouvelle valeur publique')
-        expect(result["private_search_terms"]).to include('nouvelle valeur privee')
+        expect(matches?('search_terms_tsvector', 'nouvelle & valeur & publique')).to be(true)
+        expect(matches?('all_search_terms_tsvector', 'nouvelle & valeur & privee')).to be(true)
       end
 
       it "debounce jobs" do
@@ -98,7 +98,7 @@ describe DossierSearchableConcern do
 
         perform_enqueued_jobs(only: DossierIndexSearchTermsJob)
 
-        expect(result["search_terms"]).to include("Chris")
+        expect(matches?('search_terms_tsvector', 'Chris')).to be(true)
       end
     end
   end

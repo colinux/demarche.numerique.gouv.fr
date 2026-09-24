@@ -17,11 +17,11 @@ RSpec.describe DossierIndexSearchTermsJob, type: :job do
   it "update search terms columns" do
     perform_job
 
-    sql = "SELECT search_terms, private_search_terms FROM dossiers WHERE id = :id"
+    sql = "SELECT search_terms_tsvector @@ to_tsquery('french_unaccent', 'nouveau & champ') AS public_match, all_search_terms_tsvector @@ to_tsquery('french_unaccent', 'private') AS private_match FROM dossiers WHERE id = :id"
     sanitized_sql = Dossier.sanitize_sql_array([sql, id: dossier.id])
     result = Dossier.connection.execute(sanitized_sql).first
 
-    expect(result['search_terms']).to match(/un nouveau champ/)
-    expect(result['private_search_terms']).to match(/private champ/)
+    expect(result['public_match']).to be(true)
+    expect(result['private_match']).to be(true)
   end
 end
