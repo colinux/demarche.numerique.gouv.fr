@@ -105,17 +105,18 @@ describe DossierSearchService do
     let(:user) { create(:user) }
     let(:another_user) { create(:user) }
 
-    before { perform_enqueued_jobs(only: DossierIndexSearchTermsJob) }
-
     def searching(terms, user) = described_class.matching_dossiers_for_user(terms, user)
 
     context 'when the dossier is brouillon' do
-      let(:procedure) { create(:procedure, private_type_de_champs: [{ type: :text }]) }
-      let(:dossier) do
+      let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :text }], private_type_de_champs: [{ type: :text }]) }
+      let!(:dossier) do
         create(:dossier, procedure:, state: :brouillon, user:).tap do |dossier|
+          dossier.root_champs_public.first.update!(value: 'pommes')
           dossier.root_champs_private.first.update!(value: 'annotations')
         end
       end
+
+      before { perform_enqueued_jobs(only: DossierIndexSearchTermsJob) }
 
       it do
         # searching its own dossier by id
@@ -123,6 +124,8 @@ describe DossierSearchService do
 
         # searching another dossier by id
         expect(searching(dossier.id.to_s, another_user)).to eq([])
+
+        expect(searching('pommes', user)).to eq([dossier])
 
         # annotations is unsearchable
         expect(searching('annotations', user)).to eq([])
