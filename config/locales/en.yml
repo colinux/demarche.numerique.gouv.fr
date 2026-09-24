@@ -768,6 +768,7 @@ en:
       messages:
         not_a_phone: 'is invalid. Enter a valid phone number. Example: 0612345678'
         url: 'is not a valid link'
+        private_ip_url: 'must not point to a local or private address'
         invalid_email_format: 'is invalid. Enter a valid email. Example: address@mail.com'
         api_response_pending: 'Pending response... Please try again in a few moments.'
         api_response_error: 'Not found.'
