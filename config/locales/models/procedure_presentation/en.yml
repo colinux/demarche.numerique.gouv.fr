@@ -86,5 +86,18 @@ en:
             association_date_creation: 'Association date de création'
             association_date_declaration: 'Association date de déclaration'
             association_date_publication: 'Association date de publication'
+          annuaire_education:
+            nom_etablissement: School name
+            identifiant_etablissement: School identifier (UAI)
+            siren_siret: SIREN/SIRET
+            street_address: Address (number and street)
+            city_code: Municipality code (INSEE)
+            academie: Academy
+            nature_etablissement: Type of school
+            type_contrat_prive: Private contract type
+            nombre_eleves: Number of students
+            telephone: Phone
+            email: Email
+            site_internet: Website
           dossier_labels:
             label_id: Labels

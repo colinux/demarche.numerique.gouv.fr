@@ -48,7 +48,7 @@ describe Columns::ChampColumn do
         expect_type_de_champ_values('multiple_drop_down_list', eq([["val1", "val2"]]))
         expect_type_de_champ_values('linked_drop_down_list', eq(["primary / secondary", "primary", "secondary"]))
         expect_type_de_champ_values('yes_no', eq([true]))
-        expect_type_de_champ_values('annuaire_education', eq([nil]))
+        expect_type_de_champ_values('annuaire_education', eq(Array.new(17, nil)))
         expect_type_de_champ_values('piece_justificative', be_an_instance_of(Array))
         type_de_champ = type_de_champs.find { it.piece_justificative? && it.titre_identite? }
         champ = dossier.send(:filled_champ, type_de_champ)

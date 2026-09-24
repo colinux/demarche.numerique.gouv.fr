@@ -1,28 +1,26 @@
 # frozen_string_literal: true
 
 RSpec.describe Dossiers::AnnuaireEducationComponent, type: :component do
-  let(:champ) { double('Champ', data: annuaire_data) }
+  let(:champ) { double('Champ', value_json: annuaire_value_json) }
 
-  let(:annuaire_data) do
+  let(:annuaire_value_json) do
     {
       'nom_etablissement' => 'Lycée Jean Moulin',
-      'identifiant_de_l_etablissement' => '0123456A',
+      'identifiant_etablissement' => '0123456A',
       'siren_siret' => '12345678901234',
-      'nom_commune' => 'Paris',
-      'code_commune' => '75001',
-      'libelle_academie' => 'Paris',
-      'code_academie' => '01',
-      'libelle_nature' => 'Lycée général',
-      'code_nature' => 'LGT',
-      'type_contrat_prive' => 'SANS OBJET',
-      'nombre_d_eleves' => '450',
-      'adresse_1' => '123 rue de la République',
-      'code_postal' => '75001',
-      'libelle_region' => 'Île-de-France',
-      'code_region' => '11',
+      'street_address' => '123 rue de la République',
+      'postal_code' => '75001',
+      'city_name' => 'Paris',
+      'city_code' => '75001',
+      'department_code' => '75',
+      'region_code' => '11',
+      'academie' => 'Paris (01)',
+      'nature_etablissement' => 'Lycée général (LGT)',
+      'type_contrat_prive' => nil,
+      'nombre_eleves' => '450',
       'telephone' => '0145123456',
-      'mail' => 'contact@lycee-moulin.fr',
-      'web' => 'https://lycee-moulin.fr',
+      'email' => 'contact@lycee-moulin.fr',
+      'site_internet' => 'https://lycee-moulin.fr',
     }
   end
 
@@ -37,24 +35,24 @@ RSpec.describe Dossiers::AnnuaireEducationComponent, type: :component do
     it 'renders ExternalChampComponent with correct arguments' do
       expect(Dossiers::ExternalChampComponent).to have_received(:new) do |data:, details:, source:|
         expected_data = [
-          ["Nom de l\u2019\u00e9tablissement", "Lycée Jean Moulin"],
-          ["L\u2019identifiant de l\u2019etablissement", "0123456A"],
+          ["Nom de l’établissement", "Lycée Jean Moulin"],
+          ["L’identifiant de l’etablissement", "0123456A"],
           ["SIREN/SIRET", "12345678901234"],
         ]
 
         expected_details = [
           ["Commune", "Paris (75001)"],
-          ["Acad\u00e9mie", "Paris (01)"],
-          ["Nature de l\u2019\u00e9tablissement", "Lycée général (LGT)"],
-          ["Type de contrat priv\u00e9", nil],
-          ["Nombre d\u2019\u00e9l\u00e8ves", "450"],
+          ["Académie", "Paris (01)"],
+          ["Nature de l’établissement", "Lycée général (LGT)"],
+          ["Type de contrat privé", nil],
+          ["Nombre d’élèves", "450"],
           ["Adresse", "123 rue de la République<br>75001 Paris<br>Île-de-France (11)"],
-          ["T\u00e9l\u00e9phone", "0145123456"],
+          ["Téléphone", "0145123456"],
           ["Email", "contact@lycee-moulin.fr"],
           ["Site internet", "https://lycee-moulin.fr"],
         ]
 
-        expected_source = "Annuaire de l\u2019\u00c9ducation Nationale"
+        expected_source = "Annuaire de l’Éducation Nationale"
 
         expect(data).to eq(expected_data)
         expect(details).to eq(expected_details)
@@ -62,27 +60,24 @@ RSpec.describe Dossiers::AnnuaireEducationComponent, type: :component do
       end
     end
 
-    context 'when the code commune is missing and type_de_contrat is not sans objet' do
-      let(:annuaire_data) do
-        super().merge({ 'code_commune' => nil, 'type_contrat_prive' => 'SOUS CONTRAT' })
-      end
+    context 'when the city_code is missing' do
+      let(:annuaire_value_json) { super().merge({ 'city_code' => nil }) }
 
       it do
         expect(Dossiers::ExternalChampComponent).to have_received(:new) do |args|
           details = args[:details]
           expect(details.find { |label, _| label == 'Commune' }[1]).to eq('Paris')
-          expect(details.find { |label, _| label == "Type de contrat priv\u00e9" }[1]).to eq('SOUS CONTRAT')
         end
       end
     end
 
-    context 'when the nom_commune is missing' do
-      let(:annuaire_data) { super().merge({ 'nom_commune' => nil }) }
+    context 'when the city_name is missing' do
+      let(:annuaire_value_json) { super().merge({ 'city_name' => nil }) }
 
       it do
         expect(Dossiers::ExternalChampComponent).to have_received(:new) do |args|
           details = args[:details]
-          expect(details.find { |label, _| label == 'Commune' }[1]).to eq("Non renseign\u00e9e")
+          expect(details.find { |label, _| label == 'Commune' }[1]).to eq("Non renseignée")
         end
       end
     end

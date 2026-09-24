@@ -91,6 +91,19 @@ fr:
             association_date_creation: 'Association date de création'
             association_date_declaration: 'Association date de déclaration'
             association_date_publication: 'Association date de publication'
+          annuaire_education:
+            nom_etablissement: Nom de l’établissement
+            identifiant_etablissement: Identifiant de l’établissement (UAI)
+            siren_siret: SIREN/SIRET
+            street_address: Adresse (numéro et voie)
+            city_code: Code commune (INSEE)
+            academie: Académie
+            nature_etablissement: Nature de l’établissement
+            type_contrat_prive: Type de contrat privé
+            nombre_eleves: Nombre d’élèves
+            telephone: Téléphone
+            email: Adresse électronique
+            site_internet: Site internet
           dossier_labels:
             label_id: Labels
           dossier_notifications:
