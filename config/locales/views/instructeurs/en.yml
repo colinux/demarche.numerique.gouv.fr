@@ -3,6 +3,10 @@ en:
     procedures:
       index:
         title: "Procedures"
+        page:
+          title: "Instructor procedures in progress"
+          brouillons_title: "Instructor procedures in testing"
+          archivees_title: "Instructor finished procedures"
       notifications_button:
         notifications_details: Notifications details
     procedure:
