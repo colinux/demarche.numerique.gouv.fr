@@ -32,13 +32,11 @@ module DossierSearchableConcern
 
     sql = <<~SQL.squish
       UPDATE dossiers SET
-        search_terms = :search_terms,
-        private_search_terms = :private_search_terms,
         search_terms_tsvector = to_tsvector('french_unaccent', :search_terms),
         all_search_terms_tsvector = to_tsvector('french_unaccent', :all_search_terms)
       WHERE id = :id
     SQL
-    sanitized_sql = self.class.sanitize_sql_array([sql, search_terms:, private_search_terms:, all_search_terms:, id:])
+    sanitized_sql = self.class.sanitize_sql_array([sql, search_terms:, all_search_terms:, id:])
     self.class.connection.execute(sanitized_sql)
   end
 

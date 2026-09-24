@@ -28,7 +28,7 @@ describe DossierSearchableConcern do
       expect(matches?('all_search_terms_tsvector', 'prive')).to be(true)
     end
 
-    it "stores the tsvector columns alongside the text" do
+    it "keeps the annotations out of the default vector" do
       champ_public.update_attribute(:value, "champ public")
       champ_private.update_attribute(:value, "champ privé")
       perform_enqueued_jobs(only: DossierIndexSearchTermsJob)
