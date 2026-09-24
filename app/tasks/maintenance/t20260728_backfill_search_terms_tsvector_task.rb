@@ -11,8 +11,12 @@ module Maintenance
     # rather than NULL, which matches nothing — same as before — and keeps them
     # out of the collection on a rerun.
     #
-    # Run this to completion before enabling the :search_terms_tsvector flag:
-    # until then the search still reads the expression indexes.
+    # The search reads only these columns: dossiers not reindexed since they
+    # were added stay unfindable until this completes.
+
+    include RunnableOnDeployConcern
+
+    run_on_first_deploy
 
     BATCH_SIZE = 1_000
 
