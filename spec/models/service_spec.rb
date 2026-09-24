@@ -89,6 +89,17 @@ describe Service, type: :model do
         end
       end
 
+      context 'with a link typed approximately' do
+        [:faq_link, :contact_link].each do |attribute|
+          it "completes #{attribute} into a valid link" do
+            subject[attribute] = ' www.test.fr/faq '
+
+            expect(subject[attribute]).to eq('https://www.test.fr/faq')
+            expect(subject).to be_valid
+          end
+        end
+      end
+
       context 'with a link stored before the validation' do
         [:faq_link, :contact_link].each do |attribute|
           it "does not block a save on #{attribute}" do

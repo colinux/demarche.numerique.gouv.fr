@@ -13,6 +13,26 @@ class URLValidator < ActiveModel::EachValidator
     IPAddr.new('::/128'),        # unspecified
   ].freeze
 
+  # a scheme, not a host followed by its port (www.mairie.fr:8080)
+  SCHEME = /\A[a-z][a-z0-9+.\-]*:(?!\d)/i
+
+  # What an admin types or pastes, made into what the validator expects:
+  # " www.mairie.fr/dpo " is https://www.mairie.fr/dpo, "mailto:DPO@mairie.fr"
+  # is dpo@mairie.fr. Anything else with a scheme is left for the validation.
+  def self.normalize(value)
+    link = value.gsub(/\A[[:space:]]+|[[:space:]]+\z/, '').sub(/\Amailto:/i, '')
+
+    if link.blank?
+      nil
+    elsif link.include?('@') && !link.match?(SCHEME)
+      EmailSanitizableConcern::EmailSanitizer.sanitize(link)
+    elsif !link.match?(SCHEME)
+      "https://#{link.delete_prefix('//')}"
+    else
+      link
+    end
+  end
+
   def validate_each(record, attribute, value)
     return if options[:accept_email] && email?(value)
 

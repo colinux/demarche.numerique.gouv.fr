@@ -70,8 +70,12 @@ describe 'users/procedure_footer', type: :view do
       it { is_expected.to have_selector('a[href="mailto:dpo@beta.gouv.fr?subject="]') }
     end
 
-    context "when there is a lien_dpo with a schemaless link" do
-      before { dossier.procedure.update(lien_dpo: 'beta.gouv.fr') }
+    context "when a schemaless link was stored before links were normalized" do
+      before do
+        # raw sql: an attribute write would normalize it
+        Procedure.where(id: dossier.procedure.id).update_all("lien_dpo = 'beta.gouv.fr'")
+        dossier.procedure.reload
+      end
       it { is_expected.to have_link('Contacter le Délégué à la Protection des Données', href: '//beta.gouv.fr') }
     end
 

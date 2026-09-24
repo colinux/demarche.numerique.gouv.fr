@@ -1,6 +1,27 @@
 # frozen_string_literal: true
 
 describe URLValidator do
+  describe '.normalize' do
+    {
+      '  https://www.mairie.fr/dpo  ' => 'https://www.mairie.fr/dpo',
+      " https://www.mairie.fr/dpo " => 'https://www.mairie.fr/dpo',
+      'www.mairie.fr/dpo' => 'https://www.mairie.fr/dpo',
+      'www.mairie.fr:8080/dpo' => 'https://www.mairie.fr:8080/dpo',
+      '//www.mairie.fr/dpo' => 'https://www.mairie.fr/dpo',
+      'HTTP://www.mairie.fr' => 'HTTP://www.mairie.fr',
+      ' DPO@Mairie.fr ' => 'dpo@mairie.fr',
+      'mailto:dpo@mairie.fr' => 'dpo@mairie.fr',
+      'MAILTO:dpo@mairie.fr' => 'dpo@mairie.fr',
+      'dpo@mairie.fr ; rgpd@mairie.fr' => 'dpo@mairie.fr ; rgpd@mairie.fr',
+      'javascript:alert(1)' => 'javascript:alert(1)',
+      '   ' => nil,
+    }.each do |value, normalized|
+      it "turns #{value.inspect} into #{normalized.inspect}" do
+        expect(described_class.normalize(value)).to eq(normalized)
+      end
+    end
+  end
+
   def record(link, **options)
     record_class = Class.new do
       include ActiveModel::Validations

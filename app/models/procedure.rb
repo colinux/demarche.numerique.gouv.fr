@@ -280,6 +280,8 @@ class Procedure < ApplicationRecord
 
   validates :lien_site_web, presence: true, if: :publiee?
 
+  normalizes :lien_notice, :lien_dpo, :web_hook_url, with: -> { URLValidator.normalize(it) }
+
   validates :lien_notice, url: true, allow_blank: true, if: :will_save_change_to_lien_notice?
   validates :lien_dpo, url: { accept_email: true }, allow_blank: true, if: :will_save_change_to_lien_dpo?
   validates :web_hook_url, url: true, allow_blank: true, if: :will_save_change_to_web_hook_url?

@@ -35,6 +35,7 @@ class Service < ApplicationRecord
   validate :at_least_one_contact
 
   normalizes :siret, with: -> (siret) { siret&.delete(" ") }
+  normalizes :faq_link, :contact_link, with: -> { URLValidator.normalize(it) }
 
   def at_least_one_contact
     if email.blank? && contact_link.blank?
