@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_buffercache"
   enable_extension "pg_catalog.plpgsql"
@@ -553,8 +553,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_140000) do
     t.datetime "termine_close_to_expiration_notice_sent_at", precision: nil
     t.datetime "updated_at", precision: nil
     t.integer "user_id"
-    t.index "to_tsvector('french_unaccent'::regconfig, (((search_terms)::text || ' '::text) || (private_search_terms)::text))", name: "index_dossiers_on_search_terms_private_search_terms", using: :gin
-    t.index "to_tsvector('french_unaccent'::regconfig, (search_terms)::text)", name: "index_dossiers_on_search_terms", using: :gin
     t.index ["all_search_terms_tsvector"], name: "index_dossiers_on_all_search_terms_tsvector", using: :gin
     t.index ["archived"], name: "index_dossiers_on_archived"
     t.index ["batch_operation_id"], name: "index_dossiers_on_batch_operation_id"

@@ -57,11 +57,10 @@ RSpec.describe DossierCloneConcern do
         subject
       end
 
-      sql = "SELECT search_terms, private_search_terms FROM dossiers where id = :id"
-      result = Dossier.connection.execute(Dossier.sanitize_sql_array([sql, id: new_dossier.id])).first
+      sql = "SELECT search_terms_tsvector @@ to_tsquery('french_unaccent', :email) AS email_match FROM dossiers where id = :id"
+      result = Dossier.connection.execute(Dossier.sanitize_sql_array([sql, email: dossier.user.email, id: new_dossier.id])).first
 
-      expect(result["search_terms"]).to match(dossier.user.email)
-      expect(result["private_search_terms"]).to eq("")
+      expect(result["email_match"]).to be(true)
     end
 
     context 'copies some attributes' do
