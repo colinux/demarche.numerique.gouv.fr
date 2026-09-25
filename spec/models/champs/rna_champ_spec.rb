@@ -66,12 +66,86 @@ describe Champs::RNAChamp do
       end
     end
 
-    context 'when the API returns a retryable failure' do
-      let(:to_params) { Failure(type: :network_error, code: 503, retryable: true, raw_response: nil) }
+    context 'when API Entreprise is down' do
+      let(:to_params) { Failure(type: :service_unavailable, code: 503, retryable: true, raw_response: nil) }
 
-      it 'propagates a retryable Failure' do
+      it 'degrades instead of failing, and keeps the identifier' do
         expect(subject).to be_failure
-        expect(subject.failure).to include(retryable: true, code: 503)
+        expect(subject.failure).to include(degraded: true, value: "W182736273", code: 503)
+      end
+    end
+
+    context 'when API Entreprise refuses our token' do
+      let(:to_params) { Failure(type: :unauthorized, code: 401, retryable: false, raw_response: nil) }
+
+      before { allow(Sentry).to receive(:capture_message) }
+
+      it 'degrades too: the usager has no hold on our credentials' do
+        expect(subject.failure).to include(degraded: true, code: 401)
+      end
+    end
+
+    context 'when the association does not exist' do
+      let(:to_params) { Failure(type: :unprocessable, code: 422, retryable: false, raw_response: nil) }
+
+      it 'stays a plain error: only the usager can fix it' do
+        expect(subject.failure).to include(retryable: false, code: 422)
+        expect(subject.failure).not_to have_key(:degraded)
+      end
+    end
+
+    context 'when the payload cannot be read' do
+      let(:to_params) { Success({}) }
+
+      before do
+        allow(adapter).to receive(:to_params).and_raise(NoMethodError.new("undefined method '[]' for nil"))
+        allow(Sentry).to receive(:capture_exception)
+      end
+
+      it 'degrades rather than stranding the champ in fetching' do
+        expect(subject.failure).to include(degraded: true, code: 200)
+      end
+    end
+
+    context 'when the address of the association cannot be read' do
+      let(:to_params) { Success({ "association_titre" => "Super asso", "adresse" => nil }) }
+
+      before { allow(Sentry).to receive(:capture_exception) }
+
+      it 'degrades as well' do
+        expect(subject.failure).to include(degraded: true, code: 200)
+      end
+    end
+
+    context 'when something else than the payload fails' do
+      let(:to_params) { Success({ "association_titre" => "Super asso", "adresse" => {} }) }
+
+      before do
+        allow(champ.procedure).to receive(:forget_api_entreprise_token_rejection!).and_raise(ActiveRecord::StatementInvalid)
+      end
+
+      it 'lets the error through instead of passing it off as an API fault' do
+        expect { subject }.to raise_error(ActiveRecord::StatementInvalid)
+      end
+    end
+
+    context 'when the token cannot work at all' do
+      let(:procedure) { create(:procedure, api_entreprise_token: nil, public_type_de_champs:) }
+      let(:to_params) { Success({}) }
+
+      before do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with('API_ENTREPRISE_KEY').and_return(nil)
+        allow(Sentry).to receive(:capture_message)
+      end
+
+      it 'does not even call the API' do
+        subject
+        expect(APIEntreprise::RNAAdapter).not_to have_received(:new)
+      end
+
+      it 'degrades with the reason operations needs' do
+        expect(subject.failure).to include(degraded: true, code: 401)
       end
     end
   end

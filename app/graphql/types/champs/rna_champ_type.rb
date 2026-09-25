@@ -19,7 +19,7 @@ module Types::Champs
     end
 
     def rna
-      object if object.value.present?
+      object if object.data.present?
     end
   end
 end

@@ -175,6 +175,31 @@ RSpec.describe Types::DossierType, type: :graphql do
       expect(data[:dossier][:champs][3][:rna][:address][:regionName]).to eq(nil)
     end
 
+    context 'with a degraded rna champ' do
+      before do
+        dossier.root_champs_public.find { _1.type_champ == TypeDeChamp.type_champs.fetch(:rna) }
+          .update_columns(external_id: 'W173847273', value: 'W173847273', data: nil, external_state: 'degraded')
+      end
+
+      it 'returns no association rather than a half-empty one', :slow do
+        expect(errors).to be_nil
+        expect(data[:dossier][:champs][3][:rna]).to be_nil
+      end
+    end
+
+    context 'with an rna champ the API did not find' do
+      before do
+        dossier.root_champs_public.find { _1.type_champ == TypeDeChamp.type_champs.fetch(:rna) }
+          .update_columns(external_id: 'W173847273', value: 'W173847273', data: nil, external_state: 'external_error')
+      end
+
+      it 'returns no association: the value is what the usager typed, not a verified rna', :slow do
+        expect(errors).to be_nil
+        expect(data[:dossier][:champs][3][:rna]).to be_nil
+        expect(data[:dossier][:champs][3][:stringValue]).to eq('W173847273')
+      end
+    end
+
     context 'not in ban' do
       before do
         dossier.root_champs_public.find(&:address?).update_columns(value_json: not_in_ban_address)

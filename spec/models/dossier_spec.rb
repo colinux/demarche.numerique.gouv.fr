@@ -1689,6 +1689,20 @@ describe Dossier, type: :model do
         expect(dossier_ok.may_accepter?(instructeur:, motivation:)).to be_truthy
       end
     end
+
+    describe '#unverified_data_labels' do
+      let(:procedure) { create(:procedure, for_individual: false, public_type_de_champs: [{ type: :siret, libelle: 'Numéro SIRET' }, { type: :rna, libelle: 'Numéro RNA' }]) }
+      let(:dossier) { create(:dossier, :en_instruction, :with_entreprise, :with_populated_champs, as_degraded_mode: true, procedure:) }
+
+      before do
+        dossier.champ_data.each { _1.update_columns(external_state: 'degraded') }
+        dossier.reload
+      end
+
+      it 'names every identifier the instructeur waits for' do
+        expect(dossier.unverified_data_labels).to eq("le SIRET du demandeur, « Numéro SIRET » et « Numéro RNA »")
+      end
+    end
   end
 
   describe "can't transition to terminer when annotations privees are not valid" do

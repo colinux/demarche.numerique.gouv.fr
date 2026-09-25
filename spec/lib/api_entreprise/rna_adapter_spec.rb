@@ -14,8 +14,7 @@ describe APIEntreprise::RNAAdapter do
       stub_request(:get, /https:\/\/entreprise.api.gouv.fr\/v4\/djepva\/api-association\/associations\/open_data\/#{rna}/)
         .to_return(body: body, status: status)
     end
-    context 'when rna is not valid' do
-      let(:rna) { '234567' }
+    context 'when the API does not know it' do
       let(:body) { '' }
       let(:status) { 404 }
 
@@ -50,10 +49,9 @@ describe APIEntreprise::RNAAdapter do
     end
   end
 
-  context 'given a SIRET' do
-    let(:siret) { '97948505900013' }
-    let(:siren) { siret[0..8] }
-    let(:adapter) { described_class.new(siret, procedure_id) }
+  context 'given a SIREN' do
+    let(:siren) { '979485059' }
+    let(:adapter) { described_class.new(siren, procedure_id) }
 
     let(:body) { File.read('spec/fixtures/files/api_entreprise/associations.json') }
     let(:status) { 200 }

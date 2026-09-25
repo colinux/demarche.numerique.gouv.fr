@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Champs::RNAChamp < ChampData
+  include APIEntrepriseChampConcern
+
   RNA_REGEXP = /\AW[0-9A-Z]{9}\z/
 
   validates :external_id, allow_blank: true, format: {
@@ -8,6 +10,8 @@ class Champs::RNAChamp < ChampData
   }, if: :should_validate_in_current_context?
 
   delegate :id, to: :procedure, prefix: true
+
+  def rna_id = external_id
 
   def title
     data&.dig("association_titre")
@@ -53,18 +57,32 @@ class Champs::RNAChamp < ChampData
   private
 
   def ready_for_external_call?
-    external_id&.match?(RNA_REGEXP)
+    rna_id&.match?(RNA_REGEXP)
   end
 
   def fetch_external_data
-    case APIEntreprise::RNAAdapter.new(external_id, procedure_id).to_params
-    in Success(data) if data.present?
-      Success(data:, value_json: extract_value_json(data:), value: external_id)
+    return token_unusable_failure if !procedure.api_entreprise_token_usable?
+
+    case read_association
+    in Success(data:, value_json:)
+      procedure.forget_api_entreprise_token_rejection!
+      Success(data:, value_json:, value: rna_id)
     in Success # not found returns an empty hash
       Failure(retryable: false, error: StandardError.new('NotFound'), code: 404)
-    in Failure(type:, code:, retryable:, **)
-      Failure(retryable:, error: StandardError.new("API Entreprise: #{type}"), code:)
+    in Failure => failure
+      api_entreprise_failure(failure)
     end
+  end
+
+  def read_association
+    APIEntreprise::RNAAdapter.new(rna_id, procedure_id).to_params
+      .fmap { it.present? ? { data: it, value_json: extract_value_json(data: it) } : {} }
+  rescue StandardError => e
+    # The API answered, we could not read it. Without this the exception escapes
+    # through the state machine callback and strands the champ in fetching.
+    Sentry.capture_exception(e)
+
+    Failure(type: :unreadable_payload, code: 200, retryable: true)
   end
 
   def extract_value_json(data:)

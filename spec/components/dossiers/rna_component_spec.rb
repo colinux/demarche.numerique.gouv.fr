@@ -76,6 +76,15 @@ RSpec.describe Dossiers::RNAComponent, type: :component do
     end
   end
 
+  context 'when the champ is waiting for the API to come back' do
+    let(:external_state) { 'degraded' }
+    let(:rna_data) { nil }
+
+    it 'still shows the identifier instead of vanishing from the page' do
+      expect(subject).to have_text('W173847273')
+    end
+  end
+
   context 'when the external_id is blank' do
     let(:external_state) { nil }
     let(:external_id) { nil }
