@@ -780,6 +780,7 @@ fr:
         invalid: "n’est pas valide"
         inclusion: "n’est pas inclus(e) dans la liste"
         url: 'n’est pas un lien valide'
+        private_ip_url: 'ne doit pas pointer vers une adresse locale ou privée'
         invalid_email_format: 'est invalide. Saisissez une adresse électronique valide. Exemple : adresse@mail.com'
         api_response_pending: 'En attente de réponse... Réessayez dans quelques instants.'
         api_response_error: 'Aucun résultat ne correspond à votre recherche.'

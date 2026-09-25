@@ -27,12 +27,15 @@ class Service < ApplicationRecord
   validates :siret, comparison: { other_than: SIRET_TEST, message: "n’est pas valide" }, on: :update
   validates :type_organisme, presence: { message: 'doit être renseigné' }, allow_nil: false
   validates :telephone, phone: { possible: true, allow_blank: true }
+  validates :faq_link, url: true, allow_blank: true, if: :will_save_change_to_faq_link?
+  validates :contact_link, url: true, allow_blank: true, if: :will_save_change_to_contact_link?
   validates :horaires, presence: { message: 'doivent être renseignés' }, allow_nil: false
   validates :adresse, presence: { message: 'doit être renseignée' }, allow_nil: false
   validates :administrateur, presence: { message: 'doit être renseigné' }, allow_nil: false
   validate :at_least_one_contact
 
   normalizes :siret, with: -> (siret) { siret&.delete(" ") }
+  normalizes :faq_link, :contact_link, with: -> { URLValidator.normalize(it) }
 
   def at_least_one_contact
     if email.blank? && contact_link.blank?

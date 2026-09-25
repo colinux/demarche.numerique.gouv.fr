@@ -65,13 +65,13 @@ describe Service, type: :model do
 
       it 'should be valid if only contact_link is present' do
         subject.email = nil
-        subject.contact_link = 'www.test.fr/faq'
+        subject.contact_link = 'https://www.test.fr/faq'
         expect(subject).to be_valid
       end
 
       it 'should be valid if email and contact_link are present' do
         subject.email = 'super@email.com'
-        subject.contact_link = 'www.test.fr/faq'
+        subject.contact_link = 'https://www.test.fr/faq'
         expect(subject).to be_valid
       end
 
@@ -79,6 +79,38 @@ describe Service, type: :model do
         subject.email = nil
         subject.contact_link = nil
         expect(subject).not_to be_valid
+      end
+    end
+
+    describe "faq_link and contact_link" do
+      [:faq_link, :contact_link].each do |attribute|
+        it "checks #{attribute} with the url validator" do
+          expect(Service.validators_on(attribute).map(&:class)).to include(URLValidator)
+        end
+      end
+
+      context 'with a link typed approximately' do
+        [:faq_link, :contact_link].each do |attribute|
+          it "completes #{attribute} into a valid link" do
+            subject[attribute] = ' www.test.fr/faq '
+
+            expect(subject[attribute]).to eq('https://www.test.fr/faq')
+            expect(subject).to be_valid
+          end
+        end
+      end
+
+      context 'with a link stored before the validation' do
+        [:faq_link, :contact_link].each do |attribute|
+          it "does not block a save on #{attribute}" do
+            service = Service.create!(params)
+            # raw sql: an attribute write would go through the model
+            Service.where(id: service.id).update_all(["#{attribute} = ?", 'www.test.fr/faq'])
+            service.reload.horaires = 'du lundi au samedi'
+
+            expect(service).to be_valid
+          end
+        end
       end
     end
 

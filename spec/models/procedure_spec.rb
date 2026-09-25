@@ -1419,9 +1419,22 @@ describe Procedure do
       it { expect(procedure.valid?).to be_truthy }
     end
 
-    context 'when not a valid link' do
-      let(:lien_notice) { 'www.démarches-simplifiées.fr' }
-      it { expect(procedure.valid?).to be_falsey }
+    context 'when a link without scheme' do
+      let(:lien_notice) { ' www.démarches-simplifiées.fr ' }
+
+      it 'completes it into a valid link' do
+        expect(procedure.lien_notice).to eq('https://www.démarches-simplifiées.fr')
+        expect(procedure).to be_valid
+      end
+    end
+
+    context 'when not a link' do
+      let(:lien_notice) { 'démarches simplifiées' }
+
+      it do
+        procedure.validate
+        expect(procedure.errors).to be_of_kind(:lien_notice, :url)
+      end
     end
 
     context 'when an email' do
@@ -1458,9 +1471,46 @@ describe Procedure do
       it { expect(procedure.valid?).to be_truthy }
     end
 
-    context 'when not a valid link' do
-      let(:lien_dpo) { 'www.démarches-simplifiées.fr' }
-      it { expect(procedure.valid?).to be_falsey }
+    context 'when a link without scheme' do
+      let(:lien_dpo) { ' www.démarches-simplifiées.fr ' }
+
+      it 'completes it into a valid link' do
+        expect(procedure.lien_dpo).to eq('https://www.démarches-simplifiées.fr')
+        expect(procedure).to be_valid
+      end
+    end
+
+    context 'when an email typed as a mailto link' do
+      let(:lien_dpo) { ' mailto:DPO@demarche.numerique.gouv.fr ' }
+
+      it 'keeps the email alone' do
+        expect(procedure.lien_dpo).to eq('dpo@demarche.numerique.gouv.fr')
+        expect(procedure).to be_valid
+      end
+    end
+
+    context 'when not a link' do
+      let(:lien_dpo) { 'démarches simplifiées' }
+
+      it do
+        procedure.validate
+        expect(procedure.errors).to be_of_kind(:lien_dpo, :url)
+      end
+    end
+
+    context 'when several emails with stray spaces, as some procedures have' do
+      let(:lien_dpo) { ' dpo@demarche.numerique.gouv.fr ; rgpd@demarche.numerique.gouv.fr ' }
+
+      it 'rejects them as a new value' do
+        procedure.validate
+        expect(procedure.errors).to be_of_kind(:lien_dpo, :url)
+      end
+
+      it 'does not block a save once stored' do
+        stored = procedures.brouillon.tap { it.update_column(:lien_dpo, lien_dpo) }
+        stored.libelle = 'Nouveau libellé'
+        expect(stored).to be_valid
+      end
     end
   end
 

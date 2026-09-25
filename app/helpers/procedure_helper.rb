@@ -40,7 +40,7 @@ module ProcedureHelper
   rescue URI::InvalidComponentError
     uri = Addressable::URI.parse(procedure.lien_dpo)
     return "//#{uri}" if uri.scheme.nil?
-    uri.to_s
+    uri.to_s if Loofah::HTML5::Scrub.allowed_uri?(uri.to_s)
   end
 
   def estimated_fill_duration_minutes(procedure)
