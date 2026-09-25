@@ -13,6 +13,11 @@ class Champs::RNAChamp < ChampData
 
   def rna_id = external_id
 
+  def external_id=(id)
+    super
+    self.value = rna_id
+  end
+
   def title
     data&.dig("association_titre")
   end
@@ -66,7 +71,7 @@ class Champs::RNAChamp < ChampData
     case read_association
     in Success(data:, value_json:)
       procedure.forget_api_entreprise_token_rejection!
-      Success(data:, value_json:, value: rna_id)
+      Success(data:, value_json:)
     in Success # not found returns an empty hash
       Failure(retryable: false, error: StandardError.new('NotFound'), code: 404)
     in Failure => failure

@@ -81,7 +81,7 @@ RSpec.describe ChampFetchExternalDataJob, type: :job do
     end
 
     context 'when the API did not answer' do
-      let(:result) { Dry::Monads::Failure(degraded: true, value: external_id, error: StandardError.new('boom'), code: 502) }
+      let(:result) { Dry::Monads::Failure(degraded: true, error: StandardError.new('boom'), code: 502) }
 
       it 'does not make the dossier look freshly modified to its instructeur' do
         expect { described_class.new.perform(champ, external_id) }

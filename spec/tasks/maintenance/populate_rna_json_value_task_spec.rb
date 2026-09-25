@@ -32,8 +32,7 @@ module Maintenance
         allow(element).to receive(:fetch_external_data).and_return(
           Success(
             data: processed_params,
-            value_json: element.send(:extract_value_json, data: processed_params),
-            value: element.value
+            value_json: element.send(:extract_value_json, data: processed_params)
           )
         )
       end

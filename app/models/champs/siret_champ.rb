@@ -24,9 +24,14 @@ class Champs::SiretChamp < ChampData
 
   def siret = external_id
 
+  def external_id=(id)
+    super
+    self.value = siret
+  end
+
   def after_reset_external_data(opts = {})
     old_etablissement = etablissement
-    super(etablissement_id: nil, prefilled: false, value: nil)
+    super(etablissement_id: nil, prefilled: false)
     old_etablissement&.destroy
   end
 
@@ -40,7 +45,7 @@ class Champs::SiretChamp < ChampData
     case APIEntreprise::Sirene.fetch_etablissement(siret, procedure.id)
     in Success(etablissement)
       procedure.forget_api_entreprise_token_rejection!
-      Success(etablissement:, value: siret)
+      Success(etablissement:)
     in Failure => failure
       api_entreprise_failure(failure)
     end
@@ -58,11 +63,8 @@ class Champs::SiretChamp < ChampData
 
   private
 
-  # Only a fetch brings an etablissement: the degraded branch carries the siret alone.
   def update_external_data!(hash)
     etablissement = hash[:etablissement]
-    return super if etablissement.nil?
-
     etablissement.save!
     super(hash.merge(value_json: etablissement.champ_value_json))
     APIEntrepriseService.perform_later_fetch_jobs(etablissement, procedure.id, dossier.user&.id)

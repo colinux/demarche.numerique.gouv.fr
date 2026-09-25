@@ -194,20 +194,18 @@ describe Champs::SiretChamp do
     end
 
     context 'when the API answers' do
-      it 'carries the etablissement and the siret' do
+      it 'carries the etablissement' do
         expect(fetch_external_data).to be_success
         expect(fetch_external_data.value![:etablissement].siret).to eq(siret)
-        expect(fetch_external_data.value![:value]).to eq(siret)
       end
     end
 
     context 'when the API does not answer' do
       let(:api_etablissement_status) { 503 }
 
-      it 'is a degraded failure carrying the siret' do
+      it 'is a degraded failure' do
         expect(fetch_external_data).to be_failure
         expect(fetch_external_data.failure[:degraded]).to be true
-        expect(fetch_external_data.failure[:value]).to eq(siret)
       end
     end
 
@@ -293,7 +291,6 @@ describe Champs::SiretChamp do
 
       it 'degrades without spending a call we know will fail' do
         expect(fetch_external_data.failure[:degraded]).to be true
-        expect(fetch_external_data.failure[:value]).to eq(siret)
 
         expect(a_request(:get, /entreprise.api.gouv.fr/)).not_to have_been_made
       end
@@ -381,6 +378,14 @@ describe Champs::SiretChamp do
         expect(subject.errors[:external_id]).to be_empty
       end
 
+      context 'on an obligatoire champ' do
+        let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :siret, mandatory: true }]) }
+
+        it 'is not blank: the value is the siret the usager typed' do
+          expect(subject).not_to be_mandatory_blank
+        end
+      end
+
       it 'does not ask for the complementary data' do
         expect { champ.fetch! }.not_to have_enqueued_job(APIEntreprise::ExtraitKbisJob)
       end
@@ -441,9 +446,23 @@ describe Champs::SiretChamp do
     end
   end
 
+  describe '#external_id=' do
+    it 'writes the siret as the value, without spaces' do
+      champ.external_id = '306 138 900 01294'
+
+      expect(champ.value).to eq('30613890001294')
+    end
+  end
+
   describe '#reset_external_data!' do
     let(:external_id) { "12345678901245" }
     let(:etablissement) { create(:etablissement, siret: external_id) }
+
+    it 'keeps the value: the siret did not change' do
+      champ.reset_external_data!
+
+      expect(champ.reload.value).to eq(external_id)
+    end
 
     it 'destroys the old etablissement to avoid orphans' do
       old_etablissement = champ.etablissement
