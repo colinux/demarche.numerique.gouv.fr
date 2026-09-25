@@ -477,7 +477,7 @@ describe User, type: :model do
   describe '#delete_and_keep_track_dossiers_also_delete_user' do
     let(:super_admin) { create(:super_admin) }
     let(:user) { create(:user) }
-    let(:reason) { :user_rmoved }
+    let(:reason) { :user_removed }
     context 'without a dossier with processing strted' do
       let!(:dossier_en_construction) { create(:dossier, :en_construction, user: user) }
       let!(:dossier_brouillon) { create(:dossier, user: user) }
@@ -539,6 +539,17 @@ describe User, type: :model do
       it { expect { subject }.not_to raise_error }
       it { expect { subject }.to change { FranceConnectInformation.count }.from(2).to(0) }
       it { expect { subject }.to change { User.count }.by(-1) }
+    end
+
+    context 'when the deletion comes from the expiration job' do
+      let(:reason) { :user_expired }
+      let!(:dossier) { create(:dossier, :en_construction, user:) }
+
+      it 'records that reason on the deleted dossier' do
+        user.delete_and_keep_track_dossiers_also_delete_user(super_admin, reason:)
+
+        expect(DeletedDossier.find_by(dossier_id: dossier.id).reason).to eq('user_expired')
+      end
     end
   end
 

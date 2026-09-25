@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 describe Expired::UsersDeletionService do
-  let(:signed_in_not_expired) { (Expired::INACTIVE_USER_RETATION_IN_YEAR - 1).years.ago }
-  let(:signed_in_expired) { (Expired::INACTIVE_USER_RETATION_IN_YEAR + 1).years.ago }
+  let(:signed_in_not_expired) { (Expired::INACTIVE_USER_RETENTION_IN_YEAR - 1).years.ago }
+  let(:signed_in_expired) { (Expired::INACTIVE_USER_RETENTION_IN_YEAR + 1).years.ago }
   let(:before_close_to_expiration) { nil }
   let(:notified_close_to_expiration) { (Expired::REMAINING_WEEKS_BEFORE_EXPIRATION - 1).weeks.ago }
   let(:due_close_to_expiration) { (Expired::REMAINING_WEEKS_BEFORE_EXPIRATION + 1).weeks.ago }
@@ -21,7 +21,7 @@ describe Expired::UsersDeletionService do
       let(:dossier) { create(:dossier, user:, created_at: signed_in_expired) }
 
       context 'when user was not notified' do
-        let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
+        let(:user) { create(:user, :with_email_verified, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
 
         it 'update user.inactive_close_to_expiration_notice_sent_at ' do
           expect(UserMailer).to receive(:notify_inactive_close_to_deletion).with(user).and_return(mail_double)
@@ -86,7 +86,7 @@ describe Expired::UsersDeletionService do
       let(:dossier) { nil }
 
       context 'when user was not notified' do
-        let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
+        let(:user) { create(:user, :with_email_verified, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: before_close_to_expiration) }
 
         it 'update user.inactive_close_to_expiration_notice_sent_at ' do
           expect(UserMailer).to receive(:notify_inactive_close_to_deletion).with(user).and_return(mail_double)
@@ -112,6 +112,35 @@ describe Expired::UsersDeletionService do
           subject
           expect { user.reload }.to raise_error(ActiveRecord::RecordNotFound)
         end
+      end
+    end
+
+    context 'when the user email was never verified' do
+      let(:dossier) { nil }
+      let(:user) { create(:user, current_sign_in_at: signed_in_expired) }
+
+      it 'starts the notice period without sending a mail that would be dropped' do
+        expect(UserMailer).not_to receive(:notify_inactive_close_to_deletion)
+
+        expect { subject }
+          .to change { user.reload.inactive_close_to_expiration_notice_sent_at }
+          .from(nil).to(anything)
+      end
+    end
+
+    context 'when the notification phase raises' do
+      let(:user) { create(:user, current_sign_in_at: signed_in_expired, inactive_close_to_expiration_notice_sent_at: due_close_to_expiration) }
+      let(:dossier) { create(:dossier, :brouillon, user:, created_at: signed_in_expired) }
+
+      it 'reports the error and still deletes the users of the other segment' do
+        allow_any_instance_of(Expired::UsersDeletionService)
+          .to receive(:send_inactive_close_to_expiration_notice)
+          .and_raise(ActiveRecord::QueryCanceled)
+
+        expect(Sentry).to receive(:capture_exception).with(ActiveRecord::QueryCanceled).twice
+
+        subject
+        expect { user.reload }.to raise_error(ActiveRecord::RecordNotFound)
       end
     end
   end
@@ -153,6 +182,16 @@ describe Expired::UsersDeletionService do
     context 'when user is expired but have a dossier' do
       let(:user) { users.admin.tap { it.update(current_sign_in_at: signed_in_expired) } }
       let(:dossier) { create(:dossier, :brouillon, user:, created_at: signed_in_expired) }
+      it { is_expected.not_to include(user) }
+    end
+
+    context 'when user never signed in and was created more than two years ago' do
+      let(:user) { create(:user, current_sign_in_at: nil, created_at: signed_in_expired) }
+      it { is_expected.to include(user) }
+    end
+
+    context 'when user never signed in and was created recently' do
+      let(:user) { create(:user, current_sign_in_at: nil, created_at: signed_in_not_expired) }
       it { is_expected.not_to include(user) }
     end
   end
@@ -219,6 +258,23 @@ describe Expired::UsersDeletionService do
       let(:dossier) { create(:dossier, user:, created_at: signed_in_expired) }
       let(:user) { users.admin.tap { it.update(current_sign_in_at: signed_in_expired) } }
       it { is_expected.not_to include(user) }
+    end
+  end
+
+  describe '#to_notify_only' do
+    let(:dossier) { nil }
+    let(:service) { Expired::UsersDeletionService.new }
+    let(:user) { create(:user, current_sign_in_at: 4.years.ago) }
+    let!(:oldest) { create(:user, current_sign_in_at: 6.years.ago) }
+    let!(:newest) { create(:user, current_sign_in_at: 3.years.ago) }
+    let!(:middle) { create(:user, current_sign_in_at: 5.years.ago) }
+
+    subject { service.send(:to_notify_only, service.send(:expired_users_without_dossiers)) }
+
+    it 'returns the least recently active users first' do
+      expected = [oldest, middle, user, newest].map(&:id)
+
+      expect(subject.pluck(:id) & expected).to eq(expected)
     end
   end
 end

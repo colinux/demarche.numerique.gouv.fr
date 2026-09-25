@@ -1466,6 +1466,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_140000) do
     t.text "unconfirmed_email"
     t.string "unlock_token"
     t.datetime "updated_at", precision: nil
+    t.index "COALESCE(current_sign_in_at, created_at)", name: "index_users_on_inactivity_clock"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["last_sign_in_at"], name: "index_users_on_last_sign_in_at"

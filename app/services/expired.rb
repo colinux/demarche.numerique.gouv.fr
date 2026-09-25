@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module Expired
-  # User is considered inactive after two years of idleness regarding
+  # User is considered inactive after INACTIVE_USER_RETENTION_IN_YEAR years of idleness regarding
   #   when he does not have a dossier en instruction
-  #   or when his users.current_sign_in_at is smaller than two years ago
-  INACTIVE_USER_RETATION_IN_YEAR = 2
+  #   or when his last sign in (or account creation, if he never signed in) is older than INACTIVE_USER_RETENTION_IN_YEAR years
+  INACTIVE_USER_RETENTION_IN_YEAR = 2
 
   # Dossier are automatically destroyed after a period (it's configured per Procedure)
   #   a Dossier.en_instruction? is never destroyed
