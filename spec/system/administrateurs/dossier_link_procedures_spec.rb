@@ -14,7 +14,7 @@ describe 'Limit a dossier link champ to some procedures', js: true do
   scenario 'the administrateur picks the procedures the champ accepts' do
     visit champs_admin_procedure_path(procedure)
 
-    select_combobox('Sélectionnez la ou les démarches concernées', "N°#{linked_procedure.id} - #{linked_procedure.libelle}")
+    select_react_option("N°#{linked_procedure.id} - #{linked_procedure.libelle}", from: 'Sélectionnez la ou les démarches concernées')
 
     expect(page).to have_content('Formulaire enregistré')
     wait_until { type_de_champ.reload.dossier_link_procedure_ids == [linked_procedure.id] }
