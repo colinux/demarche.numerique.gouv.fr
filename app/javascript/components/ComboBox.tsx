@@ -20,7 +20,6 @@ import * as s from 'superstruct';
 import {
   useDispatchChangeEvent,
   useMultiList,
-  useSingleList,
   useRemoteList,
   useOnFormReset,
   createLoader,
@@ -31,7 +30,6 @@ import {
 import {
   type Item,
   type Section,
-  SingleComboBoxProps,
   MultiComboBoxProps,
   RemoteComboBoxProps
 } from './react-aria/props';
@@ -192,79 +190,6 @@ export function ComboBoxItem(props: ListBoxItemProps<Item>) {
         .filter(Boolean)
         .join(' ')}
     />
-  );
-}
-
-export function SingleComboBox({
-  children,
-  ...maybeProps
-}: SingleComboBoxProps) {
-  const {
-    items: defaultItems,
-    sections: defaultSections,
-    selectedKey: defaultSelectedKey,
-    placeholder,
-    emptyFilterKey,
-    name,
-    formValue,
-    form,
-    data,
-    ...props
-  } = useMemo(() => s.create(maybeProps, SingleComboBoxProps), [maybeProps]);
-
-  const { flatItems, sections } = useMemo(
-    () => getItems(defaultItems, defaultSections),
-    [defaultItems, defaultSections]
-  );
-
-  const { ref, dispatch } = useDispatchChangeEvent();
-
-  const {
-    selectedItem,
-    onReset,
-    items: filteredItems,
-    ...comboBoxProps
-  } = useSingleList({
-    defaultItems: flatItems,
-    defaultSelectedKey,
-    emptyFilterKey,
-    onChange: dispatch
-  });
-
-  const filteredSections = useMemo(
-    () => (sections ? reconstructSections(sections, filteredItems) : null),
-    [sections, filteredItems]
-  );
-
-  return (
-    <>
-      <ComboBox
-        menuTrigger="focus"
-        placeholder={placeholder}
-        {...comboBoxProps}
-        items={filteredItems}
-        sections={filteredSections}
-        {...props}
-      >
-        {(item) => <ComboBoxItem id={getKey(item)}>{item.label}</ComboBoxItem>}
-      </ComboBox>
-      {children || name ? (
-        <span ref={ref}>
-          <SelectedItemProvider value={selectedItem}>
-            {name ? (
-              <ComboBoxValueSlot
-                field={formValue == 'text' ? 'label' : 'value'}
-                name={name}
-                form={form}
-                onReset={onReset}
-                data={data}
-              />
-            ) : null}
-            {children}
-          </SelectedItemProvider>
-        </span>
-      ) : null}
-    </>
   );
 }
 
