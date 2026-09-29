@@ -12,7 +12,7 @@ describe 'Open a procedure from the direct access picker', js: true do
     scenario 'picking a procedure opens it' do
       visit instructeur_procedures_path
 
-      select_combobox('Accès direct Sélectionnez une démarche', "n°#{procedure.id} - #{procedure.libelle}")
+      select_react_option("n°#{procedure.id} - #{procedure.libelle}", from: 'Accès direct Sélectionnez une démarche')
 
       expect(page).to have_current_path(instructeur_procedure_path(procedure), ignore_query: true)
       expect(page).to have_content(procedure.libelle)
@@ -29,7 +29,7 @@ describe 'Open a procedure from the direct access picker', js: true do
     scenario 'picking a procedure opens it' do
       visit admin_procedures_path
 
-      select_combobox('Accès direct Sélectionnez une démarche', "n°#{procedure.id} - #{procedure.libelle}")
+      select_react_option("n°#{procedure.id} - #{procedure.libelle}", from: 'Accès direct Sélectionnez une démarche')
 
       expect(page).to have_current_path(admin_procedure_path(procedure), ignore_query: true)
       expect(page).to have_content(procedure.libelle)

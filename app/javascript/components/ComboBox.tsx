@@ -24,6 +24,7 @@ import {
   useRemoteList,
   useOnFormReset,
   createLoader,
+  dataAttributes,
   getKey,
   type ComboBoxProps
 } from './react-aria/hooks';
@@ -489,12 +490,6 @@ export function ComboBoxValueSlot({
 }) {
   const selectedItem = useContext(SelectedItemContext);
   const value = getSelectedValue(selectedItem, field);
-  const dataProps = Object.fromEntries(
-    Object.entries(data ?? {}).map(([key, value]) => [
-      `data-${key.replace(/_/g, '-')}`,
-      value
-    ])
-  );
   const ref = useOnFormReset(onReset);
   return (
     <input
@@ -503,7 +498,7 @@ export function ComboBoxValueSlot({
       name={name}
       value={value}
       form={form}
-      {...dataProps}
+      {...dataAttributes(data)}
     />
   );
 }

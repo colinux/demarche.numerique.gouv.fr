@@ -645,6 +645,16 @@ export function useOnFormReset(onReset?: () => void) {
   return ref;
 }
 
+// `data: { autosubmit_target: 'input' }` from the server becomes `data-autosubmit-target`.
+export function dataAttributes(data?: Record<string, string>) {
+  return Object.fromEntries(
+    Object.entries(data ?? {}).map(([key, value]) => [
+      `data-${key.replace(/_/g, '-')}`,
+      value
+    ])
+  );
+}
+
 function distinctBy<T>(array: T[], key: keyof T): T[] {
   const keys = array.map((item) => item[key]);
   return array.filter((item, index) => keys.indexOf(item[key]) == index);

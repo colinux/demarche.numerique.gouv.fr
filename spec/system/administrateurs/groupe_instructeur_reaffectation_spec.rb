@@ -17,7 +17,7 @@ describe 'Reassign the dossiers of a groupe instructeur', js: true do
     expect(page).to have_content("Réaffectation des dossiers du groupe « #{groupe.label} »")
     expect(page).to have_button('Réaffecter les dossiers à ce groupe', disabled: true)
 
-    select_combobox('Sélectionner', 'deuxième groupe')
+    select_react_option('deuxième groupe', from: 'Nouveau groupe instructeur')
 
     expect(page).to have_button('Réaffecter les dossiers à ce groupe', disabled: false)
 

@@ -20,7 +20,7 @@ describe 'Reassign a dossier to another groupe instructeur', js: true do
     expect(page).to have_content("Réaffecter le dossier n° #{dossier.id} à un autre groupe instructeur")
     expect(page).to have_button('Réaffecter le dossier à ce groupe', disabled: true)
 
-    select_combobox('Sélectionner', 'deuxième groupe')
+    select_react_option('deuxième groupe', from: 'Nouveau groupe instructeur')
 
     expect(page).to have_button('Réaffecter le dossier à ce groupe', disabled: false)
 
