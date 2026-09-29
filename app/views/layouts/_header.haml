@@ -8,7 +8,7 @@
 - is_user_context = nav_bar_profile == :user
 - is_search_enabled = [params[:controller] == 'recherche', is_instructeur_context, is_expert_context].any?
 %header.fr-header{ role: "banner" }
-  %nav{ :role => "navigation", "aria-label" => t('layouts.header.main_menu') }
+  %div
     .fr-header__body
       .fr-container
         .fr-header__body-row
@@ -25,7 +25,8 @@
 
                 - if is_instructeur_context || is_administrateur_context
                   = render partial: 'layouts/lasuite_gaufre_button', locals: { button_id: 'lasuite-gaufre-mobile' }
-                %button#navbar-burger-button.fr-btn--menu.fr-btn{ "aria-controls" => "modal-header__menu", "aria-haspopup" => "dialog", "data-fr-opened" => "false", title: "Menu" } Menu
+                %nav{ :role => "navigation", "aria-label" => t('layouts.header.main_menu') }
+                  %button#navbar-burger-button.fr-btn--menu.fr-btn{ "aria-controls" => "modal-header__menu", "aria-haspopup" => "dialog", "data-fr-opened" => "false", title: "Menu" } Menu
             .fr-header__service
               - root_profile_link, root_profile_libelle = root_path_info_for_profile(nav_bar_profile)
 
