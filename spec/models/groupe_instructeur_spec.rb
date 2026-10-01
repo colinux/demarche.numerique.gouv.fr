@@ -119,6 +119,30 @@ describe GroupeInstructeur, type: :model do
       it { is_expected.to be_falsey }
     end
 
+    context "when the instructeur follows dossiers of the groupe" do
+      let(:procedure_to_remove) { procedure }
+      let(:groupe_instructeur) { procedure_to_remove.defaut_groupe_instructeur }
+      let(:dossier) { create(:dossier, groupe_instructeur:) }
+      let(:other_dossier) { create(:dossier, groupe_instructeur:) }
+      let(:unfollowed_at) { 1.day.ago }
+
+      before do
+        instructeur.follow(dossier)
+        instructeur.follow(other_dossier)
+        # a concurrent follow of the same dossier, invisible to the unique index
+        Follow.new(instructeur:, dossier:).save!(validate: false)
+        Follow.new(instructeur:, dossier:, unfollowed_at:).save!(validate: false)
+      end
+
+      it "unfollows them, dropping the duplicate active follow" do
+        expect { subject }.not_to raise_error
+
+        expect(instructeur.reload.followed_dossiers).to be_empty
+        expect(Follow.where(instructeur:, dossier:).pluck(:unfollowed_at).map(&:to_i)).to contain_exactly(unfollowed_at.to_i, be > unfollowed_at.to_i)
+        expect(Follow.where(instructeur:, dossier: other_dossier).count).to eq(1)
+      end
+    end
+
     context "when there are notifications for the instructeur" do
       let(:procedure_to_remove) { procedure }
       let(:groupe_instructeur) { procedure_to_remove.defaut_groupe_instructeur }
