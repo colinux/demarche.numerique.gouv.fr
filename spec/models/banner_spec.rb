@@ -23,5 +23,11 @@ describe Banner do
       banner.update!(content: 'V3')
       expect(Banner.cached_for('global').content).to eq('V3')
     end
+
+    it 'ne renvoie rien quand la base est injoignable' do
+      allow(Banner).to receive(:find_by).and_raise(ActiveRecord::DatabaseConnectionError.hostname_error('db'))
+
+      expect(Banner.cached_for('global')).to be_nil
+    end
   end
 end
