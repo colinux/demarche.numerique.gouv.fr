@@ -370,6 +370,9 @@ ul.dropdown-items {
       text-align: left;
       align-items: baseline;
       background-image: none;
+      // The li paints the hover state: keep DSFR's a/button hover tint from covering it
+      --hover-tint: transparent;
+      --active-tint: transparent;
     }
 
     .icon {
