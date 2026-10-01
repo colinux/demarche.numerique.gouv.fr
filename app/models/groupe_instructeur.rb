@@ -49,10 +49,17 @@ class GroupeInstructeur < ApplicationRecord
       instructeur.groupe_instructeurs.destroy(self)
       InstructeursProcedure.find_by(procedure: self.procedure, instructeur:)&.delete if !instructeur.procedures.include?(self.procedure)
 
-      instructeur.follows
+      follows = instructeur.follows
         .joins(:dossier)
         .where(dossiers: { groupe_instructeur: self })
-        .update_all(unfollowed_at: Time.zone.now)
+
+      # Two requests following the same dossier at once leave two active
+      # follows: the unique index does not see them, unfollowed_at being
+      # NULL on both. Unfollowing both at the same instant would.
+      duplicates = follows.where.not(id: follows.group(:dossier_id).select('MIN(follows.id)'))
+      Follow.where(id: duplicates.select(:id)).delete_all
+
+      follows.update_all(unfollowed_at: Time.zone.now)
 
       DossierNotification.destroy_notifications_instructeur_of_groupe_instructeur(self, instructeur)
     end
