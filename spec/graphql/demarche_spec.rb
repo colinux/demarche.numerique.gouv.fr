@@ -28,6 +28,32 @@ RSpec.describe Types::DemarcheType, type: :graphql do
     end
   end
 
+  describe 'groupe instructeurs filtered on closed' do
+    let(:procedure) { create(:procedure, administrateurs: [admin]) }
+    let!(:closed_groupe) { create(:groupe_instructeur, procedure:, closed: true) }
+    let(:query) { DEMARCHE_GROUPE_INSTRUCTEURS_QUERY }
+    let(:variables) { { number: procedure.id, closed: } }
+    let(:labels) { data[:demarche][:groupeInstructeurs].map { it[:label] } }
+
+    context 'without the argument' do
+      let(:closed) { nil }
+
+      it { expect(labels).to match_array([procedure.defaut_groupe_instructeur.label, closed_groupe.label]) }
+    end
+
+    context 'closed: true' do
+      let(:closed) { true }
+
+      it { expect(labels).to eq([closed_groupe.label]) }
+    end
+
+    context 'closed: false' do
+      let(:closed) { false }
+
+      it { expect(labels).to eq([procedure.defaut_groupe_instructeur.label]) }
+    end
+  end
+
   describe 'demarche with clone' do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :yes_no }], administrateurs: [admin]) }
     let(:procedure_clone) { procedure.clone(admin:) }
@@ -286,6 +312,16 @@ RSpec.describe Types::DemarcheType, type: :graphql do
   query($number: Int!) {
     demarche(number: $number) {
       number
+    }
+  }
+  GRAPHQL
+
+  DEMARCHE_GROUPE_INSTRUCTEURS_QUERY = <<-GRAPHQL
+  query($number: Int!, $closed: Boolean) {
+    demarche(number: $number) {
+      groupeInstructeurs(closed: $closed) {
+        label
+      }
     }
   }
   GRAPHQL

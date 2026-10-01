@@ -34,7 +34,7 @@ module Types
     field :date_fermeture, GraphQL::Types::ISO8601DateTime, "Date de la fermeture.", null: true, method: :closed_at
 
     field :groupe_instructeurs, [Types::GroupeInstructeurType], null: false do
-      argument :closed, Boolean, required: false
+      argument :closed, Boolean, required: false, description: "Seulement les groupes instructeurs fermés (`true`) ou actifs (`false`)."
     end
     field :service, Types::ServiceType, null: true
 
@@ -76,10 +76,10 @@ module Types
     def groupe_instructeurs(closed: nil)
       if closed.nil?
         dataloader.with(Sources::Association, groupe_instructeurs: { procedure: [:administrateurs] }).load(object)
-      elsif closed.true?
-        dataloader.with(Sources::Association, active_groupe_instructeurs: { procedure: [:administrateurs] }).load(object)
-      else
+      elsif closed
         dataloader.with(Sources::Association, closed_groupe_instructeurs: { procedure: [:administrateurs] }).load(object)
+      else
+        dataloader.with(Sources::Association, active_groupe_instructeurs: { procedure: [:administrateurs] }).load(object)
       end
     end
 
