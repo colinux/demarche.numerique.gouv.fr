@@ -334,22 +334,6 @@ ul.dropdown-items {
       margin-top: -2px;
     }
 
-    &.danger {
-      &:hover {
-        background-color: $medium-red;
-
-        &,
-        a,
-        .dropdown-items-link {
-          color: $white;
-        }
-
-        .icon {
-          filter: contrast(0) brightness(100);
-        }
-      }
-    }
-
     &:last-child {
       border-bottom: none;
     }

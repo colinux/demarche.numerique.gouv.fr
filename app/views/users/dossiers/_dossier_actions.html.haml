@@ -60,7 +60,7 @@
                 = number_with_html_delimiter(dossier.id)
 
       - if has_delete_action
-        - menu.with_item(class: 'danger') do
+        - menu.with_item do
           - confirm = dossier.transfer.present? ? t("views.users.dossiers.dossier_action.delete_dossier_with_transfer_confirm", email: dossier.transfer.email) : t("views.users.dossiers.dossier_action.delete_dossier_confirm")
           = button_to(dossier_path(dossier), role: 'menuitem', method: :delete, class: 'dropdown-items-link', form: { role: 'none', data: { turbo: true } }, data: { turbo_confirm: confirm }) do
             = dsfr_icon('fr-icon-delete-fill', :sm)
