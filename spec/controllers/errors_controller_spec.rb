@@ -3,6 +3,23 @@
 RSpec.describe ErrorsController, type: :controller do
   render_views
 
+  describe 'GET #internal_server_error' do
+    context 'when the database is unreachable' do
+      before do
+        allow(Banner).to receive(:find_by).and_raise(ActiveRecord::DatabaseConnectionError.hostname_error('db'))
+        allow(Sentry).to receive(:capture_exception)
+      end
+
+      it 'still renders the error page' do
+        get :internal_server_error
+
+        expect(response).to have_http_status(:internal_server_error)
+        expect(response).to render_template(:internal_server_error)
+        expect(Sentry).not_to have_received(:capture_exception)
+      end
+    end
+  end
+
   describe 'GET #show' do
     # rspec can't easily manage the exceptions_app for a real route,
     # just verify the action renders correctly

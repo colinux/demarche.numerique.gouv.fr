@@ -35,11 +35,13 @@ class Banner < ApplicationRecord
     content.present?
   end
 
+  # Rendered by the layout of the error pages too: without a database
+  # (connection lost, not only a failed statement) the page shows no banner.
   def self.cached_for(target)
     Rails.cache.fetch("banner/#{target}", expires_in: 1.minute) do
       find_by(target: target)
     end
-  rescue ActiveRecord::StatementInvalid
+  rescue ActiveRecord::ActiveRecordError
     nil
   end
 
