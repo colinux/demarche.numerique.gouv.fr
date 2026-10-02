@@ -1432,7 +1432,12 @@ type Demarche {
     updatedSince: ISO8601DateTime
   ): DossierConnection!
   draftRevision: Revision!
-  groupeInstructeurs(closed: Boolean): [GroupeInstructeur!]!
+  groupeInstructeurs(
+    """
+    Seulement les groupes instructeurs fermés (`true`) ou actifs (`false`).
+    """
+    closed: Boolean
+  ): [GroupeInstructeur!]!
   id: ID!
 
   """
