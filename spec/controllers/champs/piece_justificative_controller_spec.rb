@@ -203,6 +203,28 @@ describe Champs::PieceJustificativeController, type: :controller do
         subject
         expect(response).to redirect_to(rails_blob_url(champ.type_de_champ.piece_justificative_template.blob, disposition: 'attachment'))
       end
+
+      context 'when the template is no longer attached to the dossier revision' do
+        before do
+          champ.type_de_champ.piece_justificative_template.purge
+          request.env['HTTP_REFERER'] = brouillon_dossier_url(dossier)
+        end
+
+        it 'redirects back with an alert' do
+          subject
+          expect(response).to redirect_to(brouillon_dossier_url(dossier))
+          expect(flash.alert).to eq("Le modèle de pièce justificative n’est plus disponible.")
+        end
+
+        context 'when the link is opened without a referer' do
+          before { request.env.delete('HTTP_REFERER') }
+
+          it 'redirects to the root url' do
+            subject
+            expect(response).to redirect_to(root_url)
+          end
+        end
+      end
     end
 
     context "another user signed in" do

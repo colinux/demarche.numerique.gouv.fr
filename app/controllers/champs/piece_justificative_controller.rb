@@ -17,7 +17,13 @@ class Champs::PieceJustificativeController < Champs::ChampController
   end
 
   def template
-    redirect_to rails_blob_url(@champ.type_de_champ.piece_justificative_template.blob, disposition: 'attachment')
+    template = @champ.type_de_champ.piece_justificative_template
+
+    # The link may be stale: the template can be gone from the dossier revision
+    # since the page was rendered (rebase, template removed).
+    return redirect_back_or_to(root_url, alert: t('.not_available')) if !template.attached?
+
+    redirect_to rails_blob_url(template.blob, disposition: 'attachment')
   end
 
   private

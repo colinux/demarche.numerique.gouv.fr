@@ -1005,6 +1005,10 @@ fr:
     procedures:
       one: Démarche
       other: Démarches
+  champs:
+    piece_justificative:
+      template:
+        not_available: "Le modèle de pièce justificative n’est plus disponible."
   users:
     dossiers:
       test_procedure: "Ce dossier est déposé sur une démarche en test. Toute modification de la démarche par l’administrateur (ajout d’un champ, publication de la démarche...) entraînera sa suppression."
