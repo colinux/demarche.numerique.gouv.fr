@@ -1110,6 +1110,8 @@ fr:
         title: "Personnaliser les critères de recherche / filtres"
         cancel: "Annuler"
         validate: "Valider"
+      reset_to_admin_default:
+        notice: "Les colonnes définies par l’administrateur sont affichées."
   administrateurs:
     procedures_menu: "Mes démarches"
     preview_menu: "Démarche « %{libelle} »"

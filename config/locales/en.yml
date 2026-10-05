@@ -1108,6 +1108,8 @@ en:
         title: "Customize search criteria / filters"
         cancel: "Cancel"
         validate: "Validate"
+      reset_to_admin_default:
+        notice: "The columns set by the administrator are displayed."
   france_connect:
     choose_email:
       intro_html: "Your FranceConnect account uses <span class='fr-badge fr-badge--info fr-badge--no-icon fr-badge--lowercase'>%{email}</span> as the contact email."

@@ -7,7 +7,7 @@
     .fr-mb-2w
       = render Dsfr::ToggleComponent.new(form: f,
         target: :admin_default_procedure_presentation_active_virtual,
-        title: 'Appliquer cette personnalisation pour tous les instructeurs',
+        title: t('.apply_to_all_instructeurs'),
         extra_class_names: '',
         disabled: toggle_disabled?,
         checked: toggle_checked?,
@@ -16,8 +16,7 @@
       - if another_admin_active_default_presentation?
         .fr-mt-1w
           = dsfr_icon('fr-icon-lock-fill', :sm)
-          %span.fr-text--sm
-            Personnalisation déjà appliquée par #{default_admin&.email}
+          %span.fr-text--sm= t('.already_applied_by', email: default_admin&.email)
 
   = submit_tag t('.save'), id: dom_id(@procedure_presentation, "submit"), class: 'fr-btn fr-btn--secondary fr-ml-0'
 
