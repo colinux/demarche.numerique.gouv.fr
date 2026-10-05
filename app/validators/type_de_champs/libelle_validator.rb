@@ -12,12 +12,13 @@ class TypeDeChamps::LibelleValidator < ActiveModel::EachValidator
   def validate_libelle(procedure, attribute, tdc)
     return if tdc.libelle.present?
 
-    parent = procedure.draft_revision.parent_of(tdc)
+    draft = procedure.draft_revision
+    parent = draft.parent_of(tdc)
 
     message_key, options = if parent
-      [:missing_libelle_in_repetition, { position: position_of(tdc), parent_position: position_of(parent) }]
+      [:missing_libelle_in_repetition, { position: position_of(draft, tdc), parent_position: position_of(draft, parent) }]
     else
-      [:missing_libelle, { position: position_of(tdc) }]
+      [:missing_libelle, { position: position_of(draft, tdc) }]
     end
 
     procedure.errors.add(
@@ -27,5 +28,6 @@ class TypeDeChamps::LibelleValidator < ActiveModel::EachValidator
     )
   end
 
-  def position_of(tdc) = tdc.revision_type_de_champs.last.position + 1
+  # read off the loaded draft: another request may have removed the coordinate since
+  def position_of(draft, tdc) = draft.coordinate_for(tdc).position + 1
 end
