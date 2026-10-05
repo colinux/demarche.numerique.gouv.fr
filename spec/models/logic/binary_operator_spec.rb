@@ -23,6 +23,17 @@ describe Logic::BinaryOperator do
     it { expect(greater_than(constant(1), constant(true)).errors).to eq([{ operator_name: "Logic::GreaterThan", type: :required_number }]) }
   end
 
+  describe '#compute' do
+    # an incomplete condition, left as is on a draft revision, is not met
+    it 'is false when an operand is empty', :aggregate_failures do
+      expect(greater_than(constant(2), empty).compute).to be(false)
+      expect(less_than(empty, constant(2)).compute).to be(false)
+      expect(ds_eq(constant(2), empty).compute).to be(false)
+      expect(ds_not_eq(constant(2), empty).compute).to be(false)
+      expect(ds_exclude(constant(['val1']), empty).compute).to be(false)
+    end
+  end
+
   describe '#sources' do
     let(:champ) { Champs::IntegerNumberChamp.new(value: nil, stable_id: 1) }
     let(:champ2) { Champs::IntegerNumberChamp.new(value: nil, stable_id: 2) }
