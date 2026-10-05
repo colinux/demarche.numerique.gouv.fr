@@ -92,6 +92,25 @@ describe Instructeurs::ProceduresController, type: :controller do
           expect(assigns(:procedures)).to match_array([procedure_published])
         end
       end
+
+      context "with an unknown statut" do
+        subject { get :index, params: { statut: 'unknown' } }
+
+        let(:procedure_published) { procedures.individual }
+        let(:procedure_draft) { procedures.brouillon }
+
+        before do
+          instructeur.groupe_instructeurs << procedure_published.defaut_groupe_instructeur
+          instructeur.groupe_instructeurs << procedure_draft.defaut_groupe_instructeur
+          subject
+        end
+
+        it 'falls back to the en-cours tab' do
+          expect(response).to have_http_status(:ok)
+          expect(assigns(:statut)).to eq('en-cours')
+          expect(assigns(:procedures)).to match_array([procedure_published])
+        end
+      end
     end
   end
 
@@ -175,6 +194,28 @@ describe Instructeurs::ProceduresController, type: :controller do
           expect(assigns(:statut)).to eq('brouillons')
 
           expect(assigns(:procedures)).to match_array([procedure_draft])
+        end
+      end
+
+      context "with an unknown statut" do
+        subject { get :counters, params: { statut: 'unknown' }, format: :turbo_stream }
+
+        let(:procedure_draft) { create(:procedure) }
+        let(:procedure_published) { create(:procedure, :published) }
+
+        before do
+          [procedure_draft, procedure_published].each_with_index do |procedure, idx|
+            instructeur.groupe_instructeurs << procedure.defaut_groupe_instructeur
+            create(:instructeurs_procedure, instructeur:, procedure:, position: idx + 1)
+          end
+        end
+
+        it 'falls back to the en-cours statut' do
+          subject
+
+          expect(response).to have_http_status(:ok)
+          expect(assigns(:statut)).to eq('en-cours')
+          expect(assigns(:procedures)).to match_array([procedure_published])
         end
       end
     end
