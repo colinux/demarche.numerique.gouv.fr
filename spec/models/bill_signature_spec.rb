@@ -5,42 +5,28 @@ RSpec.describe BillSignature, type: :model do
     subject(:bill_signature) { build(:bill_signature) }
 
     describe 'check_bill_digest' do
+      let(:serialized) { '{"5678":"dcba","1234":"abcd"}' }
+
       before do
-        bill_signature.dossier_operation_logs = dossier_operation_logs
+        bill_signature.dossier_operation_logs = [
+          build(:dossier_operation_log, id: '1234', digest: 'abcd'),
+          build(:dossier_operation_log, id: '5678', digest: 'dcba'),
+        ]
+        bill_signature.serialized.attach(io: StringIO.new(serialized), filename: 'file')
         bill_signature.digest = digest
         bill_signature.valid?
       end
 
-      context 'when there are no operations' do
-        let(:dossier_operation_logs) { [] }
+      context 'when the digest is the one of the stored bill, whatever the order of its operations' do
+        let(:digest) { Digest::SHA256.hexdigest(serialized) }
 
-        context 'when the digest is correct' do
-          let(:digest) { Digest::SHA256.hexdigest('{}') }
-
-          it { expect(bill_signature.errors.details[:digest]).to be_empty }
-        end
-
-        context 'when the digest is incorrect' do
-          let(:digest) { 'baadf00d' }
-
-          it { expect(bill_signature.errors.details[:digest]).to eq [error: :invalid] }
-        end
+        it { expect(bill_signature.errors.details[:digest]).to be_empty }
       end
 
-      context 'when the signature has operations' do
-        let(:dossier_operation_logs) { [build(:dossier_operation_log, id: '1234', digest: 'abcd')] }
+      context 'when the digest is incorrect' do
+        let(:digest) { 'baadf00d' }
 
-        context 'when the digest is correct' do
-          let(:digest) { Digest::SHA256.hexdigest('{"1234":"abcd"}') }
-
-          it { expect(bill_signature.errors.details[:digest]).to be_empty }
-        end
-
-        context 'when the digest is incorrect' do
-          let(:digest) { 'baadf00d' }
-
-          it { expect(bill_signature.errors.details[:digest]).to eq [error: :invalid] }
-        end
+        it { expect(bill_signature.errors.details[:digest]).to eq [error: :invalid] }
       end
     end
 
@@ -63,6 +49,13 @@ RSpec.describe BillSignature, type: :model do
         let(:serialized) { '{"1234":"abcd"}' }
 
         it { expect(bill_signature.errors.details[:serialized]).to be_empty }
+      end
+
+      context 'when serialized doesn’t match the operations' do
+        let(:dossier_operation_logs) { [build(:dossier_operation_log, id: '1234', digest: 'abcd')] }
+        let(:serialized) { '{"1234":"zzzz"}' }
+
+        it { expect(bill_signature.errors.details[:serialized]).to eq [error: :invalid] }
       end
 
       context 'when serialized isn’t set' do
