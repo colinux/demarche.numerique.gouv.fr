@@ -15,6 +15,7 @@ class FranceConnectInformation < ApplicationRecord
         password: Devise.friendly_token[0, 20],
         confirmed_at: Time.zone.now
       )
+      user.after_confirmation
 
       update_attribute('user_id', user.id)
     rescue ActiveRecord::RecordNotUnique
