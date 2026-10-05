@@ -31,6 +31,15 @@ class Champs::EpciChamp < Champs::TextChamp
     code_departement.present?
   end
 
+  # The EPCI list only shows up once a departement is chosen.
+  def focusable_input_id(attribute = :value)
+    if attribute.to_sym == :value && !departement?
+      super(:code_departement)
+    else
+      super
+    end
+  end
+
   def html_label?
     false
   end
