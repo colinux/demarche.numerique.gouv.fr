@@ -117,6 +117,16 @@ describe Experts::AvisController, type: :controller do
         it { expect(assigns(:statut)).to eq('donnes') }
       end
 
+      context 'with an unknown statut' do
+        before { get :procedure, params: { statut: 'unknown', procedure_id: } }
+
+        it 'falls back to the a-donner tab' do
+          expect(response).to have_http_status(:success)
+          expect(assigns(:statut)).to eq('a-donner')
+          expect(assigns(:avis)).to contain_exactly(avis_without_answer)
+        end
+      end
+
       context 'with different procedure' do
         subject { get :procedure, params: { statut: 'donnes', procedure_id: } }
 
