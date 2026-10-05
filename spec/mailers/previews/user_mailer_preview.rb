@@ -56,6 +56,10 @@ class UserMailerPreview < ActionMailer::Preview
     UserMailer.account_reactivated(user)
   end
 
+  def password_changed
+    UserMailer.password_changed(user)
+  end
+
   private
 
   def user

@@ -140,6 +140,13 @@ class UserMailer < ApplicationMailer
     mail(to: user.email, subject: @subject)
   end
 
+  def password_changed(user)
+    @user = user
+    @subject = default_i18n_subject
+
+    mail(to: user.email, subject: @subject)
+  end
+
   def self.critical_email?(action_name)
     [
       'france_connect_merge_confirmation',
@@ -150,6 +157,7 @@ class UserMailer < ApplicationMailer
       "resend_confirmation_email",
       "custom_confirmation_instructions",
       "reset_password_via_pro_connect",
+      "password_changed",
     ].include?(action_name)
   end
 end
