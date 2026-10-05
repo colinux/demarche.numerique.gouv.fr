@@ -51,6 +51,18 @@ describe Instructeurs::ProcedurePresentationController, type: :controller do
       end
     end
 
+    context 'when the instructeur saves the columns without changing them' do
+      before { sign_in(instructeur.user) }
+
+      let(:presentation_params) { { displayed_columns: procedure_presentation.effective_displayed_columns.map(&:id) } }
+
+      it 'keeps following the administrator default' do
+        subject
+
+        expect(procedure_presentation.reload.customized).to eq(false)
+      end
+    end
+
     context 'with a wrong instructeur' do
       let(:another_instructeur) { create(:instructeur) }
       before { sign_in(another_instructeur.user) }

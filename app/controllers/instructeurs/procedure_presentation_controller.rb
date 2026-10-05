@@ -162,7 +162,7 @@ module Instructeurs
 
         # when instructeur update displayed_columns, `customized` becomes true
         # we consider he knows how to use the personnalization
-        h[:customized] = true
+        h[:customized] = true if h[:displayed_columns] != @procedure_presentation.effective_displayed_columns.map(&:id)
       end
 
       h
