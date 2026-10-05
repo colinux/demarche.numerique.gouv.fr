@@ -8,6 +8,8 @@ module Administrateurs
     skip_before_action :ensure_pro_connect_if_required!, only: :remove_procedure
     before_action :set_api_token, only: [:edit, :update, :destroy, :remove_procedure]
 
+    helper_method :targets
+
     def nom
       @name = name
     end
@@ -21,6 +23,10 @@ module Administrateurs
     end
 
     def create
+      if params[:target] == "custom" && allowed_procedure_ids.empty?
+        return redirect_to autorisations_admin_api_tokens_path(all_params.merge(noProcedure: true))
+      end
+
       if params[:networkFiltering] == "customNetworks" && invalid_network?
         return redirect_to securite_admin_api_tokens_path(all_params.merge(invalidNetwork: true))
       end
@@ -166,6 +172,11 @@ module Administrateurs
       params[:procedure_to_add]&.to_i
     end
 
+    # Permitting an array drops a forged string or hash value.
+    def targets
+      params.permit(targets: []).fetch(:targets, [])
+    end
+
     def write_access
       params[:access] == "read_write"
     end
@@ -174,7 +185,7 @@ module Administrateurs
       if params[:target] == "custom"
         current_administrateur
           .procedure_ids
-          .intersection(params[:targets].map(&:to_i))
+          .intersection(targets.map(&:to_i))
       else
         nil
       end

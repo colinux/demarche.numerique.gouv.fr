@@ -14,12 +14,11 @@ describe 'As an administrateur I create an API token', js: true do
     xss_payload = '<img src=x onerror=alert(1)>'
     procedure.update_column(:libelle, xss_payload)
 
-    visit profil_path
-    click_on 'Créer un nouveau jeton'
-    fill_in 'Nom du jeton', with: 'test-xss'
-    click_on 'Continuer'
+    # Reached when a custom target was submitted without any procedure.
+    visit autorisations_admin_api_tokens_path(name: 'test-xss', target: 'custom', noProcedure: true)
+    expect(page).to have_text('Sélectionnez au moins une démarche')
+    expect(page).to have_select('procedureSelect', visible: true)
 
-    custom_check "target_custom"
     select "#{procedure.id} - #{xss_payload}", from: 'procedureSelect'
     click_on 'Ajouter'
 
@@ -50,6 +49,7 @@ describe 'As an administrateur I create an API token', js: true do
     token = APIToken.last
     expect(token.requires_ip_filtering).to be true
     expect(token.authorized_networks).to be_empty
+    expect(token.allowed_procedure_ids).to eq([procedure.id])
   end
 
   scenario 'token creation with manual IP' do

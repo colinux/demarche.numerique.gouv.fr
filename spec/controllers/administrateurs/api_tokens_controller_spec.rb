@@ -138,10 +138,70 @@ describe Administrateurs::APITokensController, type: :controller do
       let(:another_procedure) { create(:procedure, :new_administrateur) }
       let(:params) { default_params.merge(target: 'custom', targets: [another_procedure.id]) }
 
-      it do
-        expect(token.allowed_procedure_ids).to eq([])
-        expect(token.full_access?).to be false
+      it 'does not create a token without access and sends the admin back to the autorisations step' do
+        expect(token).to be_nil
+        expect(response.location).to include(autorisations_admin_api_tokens_path)
+        expect(response.location).to include('noProcedure=true')
       end
+    end
+
+    context 'with procedure filtering on a forged targets string' do
+      let(:params) { default_params.merge(target: 'custom', targets: procedure.id.to_s) }
+
+      it do
+        expect(token).to be_nil
+        expect(response.location).to include('noProcedure=true')
+      end
+    end
+
+    context 'with procedure filtering and a bad network' do
+      let(:params) { default_params.merge(target: 'custom', targets: [procedure.id], networkFiltering: 'customNetworks', networks: 'bad') }
+
+      it 'keeps the targeted procedures when sending the admin back to the security step' do
+        expect(token).to be_nil
+        expect(Rack::Utils.parse_nested_query(URI(response.location).query)['targets']).to eq([procedure.id.to_s])
+      end
+    end
+
+    context 'with procedure filtering but no procedure' do
+      let(:params) { default_params.merge(target: 'custom') }
+
+      it 'does not create a token and sends the admin back to the autorisations step' do
+        expect(token).to be_nil
+        expect(response.location).to include(autorisations_admin_api_tokens_path)
+        expect(response.location).to include('noProcedure=true')
+      end
+    end
+  end
+
+  describe 'securite' do
+    render_views
+
+    it 'carries the targeted procedures over to the creation form and the back link' do
+      get :securite, params: { name: 'Test', access: 'read', target: 'custom', targets: [procedure.id], invalidNetwork: true }
+
+      form = response.parsed_body
+      expect(form.css("input[type=hidden][name='targets[]']").map { it['value'] }).to eq([procedure.id.to_s])
+      back_link = form.at_css("a[href^='#{autorisations_admin_api_tokens_path}']")['href']
+      expect(Rack::Utils.parse_nested_query(URI(back_link).query)['targets']).to eq([procedure.id.to_s])
+    end
+
+    it 'ignores a forged targets hash' do
+      get :securite, params: { name: 'Test', target: 'custom', targets: { a: procedure.id } }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.css("input[name='targets[]']")).to be_empty
+    end
+  end
+
+  describe 'autorisations' do
+    render_views
+
+    it 'tells the admin to pick a procedure' do
+      get :autorisations, params: { name: 'Test', target: 'custom', noProcedure: true }
+
+      error = response.parsed_body.at_css('fieldset.fr-fieldset--error .fr-messages-group .fr-message--error')
+      expect(error.text.strip).to eq(I18n.t('administrateurs.api_tokens.autorisations.no_procedure'))
     end
   end
 
