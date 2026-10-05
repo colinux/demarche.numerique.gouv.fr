@@ -42,6 +42,10 @@ class BillSignature < ApplicationRecord
     Digest::SHA256.hexdigest(operations_bill_json)
   end
 
+  def serialized_bill_digest
+    Digest::SHA256.hexdigest(read_serialized)
+  end
+
   def set_signature(signature, day)
     self.signature.attach(
       io: StringIO.new(signature),
@@ -54,7 +58,8 @@ class BillSignature < ApplicationRecord
 
   # Validations
   def check_bill_digest
-    if digest != operations_bill_digest
+    # not operations_bill_digest: dossier_operation_logs comes back in no particular order
+    if serialized.attached? && digest != serialized_bill_digest
       errors.add(:digest)
     end
   end
