@@ -521,11 +521,15 @@
 }
 
 input::placeholder,
-textarea::placeholder,
-.fr-select::placeholder {
+textarea::placeholder {
   opacity: 1;
   font-style: italic;
   color: var(--text-mention-grey);
+}
+
+.fr-select::placeholder {
+  font-style: normal;
+  color: var(--text-default-grey);
 }
 
 .mandatory {
