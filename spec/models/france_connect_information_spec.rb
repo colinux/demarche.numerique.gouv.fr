@@ -33,6 +33,14 @@ describe FranceConnectInformation, type: :model do
         subject
         expect(fci.reload.user.email).to eq(email.downcase)
       end
+
+      it 'links the invites sent to this email' do
+        invite = create(:invite, email: email.downcase, user: nil, dossier: dossiers.en_construction)
+
+        subject
+
+        expect(invite.reload.user).to eq(fci.reload.user)
+      end
     end
 
     context 'when a user with the same email already exists due to race condition' do
