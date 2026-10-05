@@ -48,7 +48,13 @@ class EditableChamp::EditableChampBaseComponent < ApplicationComponent
   private
 
   def select_options(selected:, label: t('views.components.select_list'))
-    { selected: }.merge(@champ.mandatory? ? { prompt: label } : { include_blank: label })
+    if selected.blank?
+      { prompt: label, selected: '' }
+    elsif @champ.mandatory?
+      { prompt: label, selected: }
+    else
+      { include_blank: label, selected: }
+    end
   end
 
   def labelledby_id(label_id = nil)
