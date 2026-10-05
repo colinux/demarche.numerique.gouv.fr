@@ -2,7 +2,6 @@
 
 module Instructeurs
   class AvisController < InstructeurController
-    before_action :authenticate_instructeur!
     A_DONNER_STATUS = 'a-donner'
     DONNES_STATUS   = 'donnes'
 
