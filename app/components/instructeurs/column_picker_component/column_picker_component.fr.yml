@@ -1,3 +1,7 @@
 ---
 fr:
   save: 'Enregistrer'
+  apply_to_all_instructeurs: 'Appliquer cette personnalisation pour tous les instructeurs'
+  already_applied_by: 'Personnalisation déjà appliquée par %{email}'
+  customized_hint: 'Vous affichez actuellement vos colonnes à la place de celles définies par l’administrateur %{email}'
+  reset_to_admin_default: 'Remplacer mes colonnes par celles de l’administrateur'
