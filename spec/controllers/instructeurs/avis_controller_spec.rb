@@ -66,4 +66,12 @@ describe Instructeurs::AvisController, type: :controller do
       end
     end
   end
+
+  context 'without a signed in user' do
+    it 'redirects to the sign in page' do
+      patch :revoquer, params: { procedure_id: procedures.individual.id, id: avis.pending.id, statut: 'a-suivre' }
+
+      expect(response).to redirect_to(new_user_session_path)
+    end
+  end
 end
