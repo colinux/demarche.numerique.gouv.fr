@@ -9,6 +9,7 @@ module Instructeurs
     after_action :mark_latest_revision_as_seen, only: [:history]
 
     ITEMS_PER_PAGE = 100
+    PROCEDURES_STATUTS = ['en-cours', 'brouillons', 'archivees'].freeze
 
     def index
       all_procedures = current_instructeur
@@ -34,7 +35,7 @@ module Instructeurs
       @procedures_draft_count = all_procedures_for_listing.brouillons.count
       @procedures_closes_count = closes_with_no_dossier_en_cours.count
 
-      @statut = params[:statut].presence || 'en-cours'
+      @statut = procedures_statut
       @procedures = collection_scope_for_statut(
         @statut,
         publiees_or_closes_with_dossiers_en_cours,
@@ -57,7 +58,7 @@ module Instructeurs
         .pluck(ProcedureRevision.arel_table[:procedure_id])
         .uniq
 
-      @statut = params[:statut].presence || 'en-cours'
+      @statut = procedures_statut
       publiees_or_closes_with_dossiers_en_cours = all_procedures.publiees.or(all_procedures.closes.where(id: procedures_dossiers_en_cours))
       closes_with_no_dossier_en_cours = all_procedures.closes.excluding(all_procedures.closes.where(id: procedures_dossiers_en_cours))
 
@@ -564,6 +565,10 @@ module Instructeurs
       cache = Cache::ProcedureDossierPagination.new(procedure_presentation:, statut:)
 
       cache.save_context(ids: @filtered_sorted_paginated_ids, incoming_page: params[:page])
+    end
+
+    def procedures_statut
+      params[:statut].presence_in(PROCEDURES_STATUTS) || 'en-cours'
     end
 
     def collection_scope_for_statut(statut, publiees_or_closes_with_dossiers_en_cours, procedures_draft, closes_with_no_dossier_en_cours)
