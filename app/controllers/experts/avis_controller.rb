@@ -15,6 +15,7 @@ module Experts
 
     A_DONNER_STATUS = 'a-donner'
     DONNES_STATUS   = 'donnes'
+    AVIS_STATUTS = [A_DONNER_STATUS, DONNES_STATUS].freeze
 
     def index
       avis = current_expert.avis
@@ -46,7 +47,7 @@ module Experts
       @avis_a_donner = expert_avis.not_termine.without_answer
       @avis_donnes = expert_avis.with_answer
 
-      @statut = params[:statut].presence || A_DONNER_STATUS
+      @statut = avis_statut
 
       @avis = case @statut
       when A_DONNER_STATUS
@@ -233,6 +234,10 @@ module Experts
     end
 
     private
+
+    def avis_statut
+      params[:statut].presence_in(AVIS_STATUTS) || A_DONNER_STATUS
+    end
 
     def expert_procedure_params
       params.require(:experts_procedure)
