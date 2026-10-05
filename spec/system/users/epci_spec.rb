@@ -17,4 +17,17 @@ describe 'EPCI champ', js: true do
     click_on 'Déposer le dossier'
     expect(page).to have_link('Intercommunalité', href: "##{find_field('EPCI', exact: true)[:id]}")
   end
+
+  scenario 'changing the departement puts the EPCI list back on its placeholder' do
+    login_as users.usager, scope: :user
+    visit brouillon_dossier_path(dossier)
+
+    select '01 – Ain', from: 'Le département de l’EPCI'
+    select '200042935 – CA Haut-Bugey Agglomération', from: 'EPCI', exact: true
+    expect(page).to have_css("option[value='200042935'][selected]")
+
+    select '02 – Aisne', from: 'Le département de l’EPCI'
+    expect(page).to have_css("option[value='02'][selected]")
+    expect(page).to have_select('EPCI', exact: true, selected: 'Sélectionnez')
+  end
 end

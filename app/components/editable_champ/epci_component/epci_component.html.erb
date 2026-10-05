@@ -13,7 +13,7 @@
         <%= t(".epci_label") %>
       <% end %>
 
-      <%= @form.select :value, epci_options, select_options(selected: @champ.code), required: @champ.required?, id: @champ.focusable_input_id, class: "width-33-desktop width-100-mobile fr-select", aria: labelledby_id_attr(input_label_id(@champ, :value)) %>
+      <%= @form.select :value, epci_options, select_options(selected: selected_epci_code), required: @champ.required?, id: @champ.focusable_input_id, class: "width-33-desktop width-100-mobile fr-select", aria: labelledby_id_attr(input_label_id(@champ, :value)), data: { turbo_force: :server } %>
     </div>
   </div>
 <% end %>

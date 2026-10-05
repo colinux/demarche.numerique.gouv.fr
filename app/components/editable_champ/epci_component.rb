@@ -21,6 +21,12 @@ class EditableChamp::EpciComponent < EditableChamp::EditableChampBaseComponent
     end
   end
 
+  # An EPCI picked from the old list while the new departement is being saved
+  # is not in the new list: show « Sélectionnez » instead.
+  def selected_epci_code
+    @champ.code if epci_options.any? { |_label, code| code == @champ.code }
+  end
+
   def departement_with_epci?(departement)
     code = departement[:code]
     !code.start_with?('98') && !code.in?(['99', '975', '977', '978'])
