@@ -118,7 +118,10 @@ module Dsfr
                                        hidden_at: l(deleted_dossier.deleted_at.to_date)),
           }
         elsif dossier.present?
-          if dossier.hidden_by_expired_at.present?
+          # Never submitted, so no depose_at for the hidden/expired messages
+          if dossier.brouillon?
+            { state: :info, text: dossier.text_summary }
+          elsif dossier.hidden_by_expired_at.present?
             {
               state: :info, text: t('shared.champs.dossier_link.expired',
                                          depose_at: l(dossier.depose_at.to_date),
@@ -132,10 +135,8 @@ module Dsfr
                                          procedure_libelle: dossier.procedure.libelle,
                                          hidden_at: l(dossier.hidden_by_user_at.to_date)),
             }
-          elsif !dossier.brouillon?
-            { state: :info, text: helpers.dossier_link_summary(dossier, @champ.dossier.user) }
           else
-            { state: :info, text: dossier.text_summary }
+            { state: :info, text: helpers.dossier_link_summary(dossier, @champ.dossier.user) }
           end
         end
       when TypeDeChamp.type_champs[:referentiel]

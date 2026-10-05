@@ -126,6 +126,24 @@ RSpec.describe Dsfr::InputStatusMessageComponent, type: :component do
           expect { subject }.not_to raise_error
           expect(subject).to have_css(".fr-message--info", text: /Dossier en brouillon/)
         end
+
+        context "and has been hidden by the user" do
+          let(:linked_dossier) { create(:dossier, :brouillon, hidden_by_user_at: Time.zone.local(2026, 3, 15)) }
+
+          it "renders the brouillon summary without disclosing the deletion" do
+            expect(subject).to have_css(".fr-message--info", text: /Dossier en brouillon/)
+            expect(subject).not_to have_text("supprimé")
+          end
+        end
+
+        context "and has expired" do
+          let(:linked_dossier) { create(:dossier, :brouillon, hidden_by_expired_at: Time.zone.local(2026, 3, 15)) }
+
+          it "renders the brouillon summary without disclosing the expiration" do
+            expect(subject).to have_css(".fr-message--info", text: /Dossier en brouillon/)
+            expect(subject).not_to have_text("expiré")
+          end
+        end
       end
     end
 
