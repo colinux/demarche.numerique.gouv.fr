@@ -12,8 +12,4 @@ class EditableChamp::DepartementsComponent < EditableChamp::EditableChampBaseCom
   def options
     @champ.options_for_select
   end
-
-  def select_options
-    { selected: @champ.selected }.merge(@champ.mandatory? ? { prompt: t('views.components.select_list') } : { include_blank: t('views.components.select_list') })
-  end
 end
