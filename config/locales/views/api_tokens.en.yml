@@ -19,6 +19,7 @@ en:
         select_procedures: Select authorized procedures
         add_procedure: Add
         no_procedure_selected: no procedure selected
+        no_procedure: Select at least one procedure
         token_permission: This token allows
         read_only: read only
         read_only_hint: retrieve dossiers, attachments
