@@ -115,24 +115,11 @@ class ProcedureRevision < ApplicationRecord
   end
 
   def move_type_de_champ(stable_id, position)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
-      siblings = coordinate.siblings
-
-      if position > coordinate.position
-        ProcedureRevisionTypeDeChamp.where(id: siblings, position: coordinate.position..position).unscope(:eager_load).update_all("position = position - 1")
-      else
-        ProcedureRevisionTypeDeChamp.where(id: siblings, position: position..coordinate.position).unscope(:eager_load).update_all("position = position + 1")
-      end
-      coordinate.update_column(:position, position)
-
-      coordinate.reload
-    end
+    edit_coordinate(stable_id) { move_coordinate(it, position) }
   end
 
   def move_type_de_champ_after(stable_id, position)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
+    edit_coordinate(stable_id) do |coordinate|
       siblings = coordinate.siblings
 
       if position > coordinate.position
@@ -151,9 +138,7 @@ class ProcedureRevision < ApplicationRecord
   # (or reset) of the procedure, which purges the types de champ no revision
   # lays out any more (ProcedurePublishConcern).
   def remove_type_de_champ(stable_id)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
-
+    edit_coordinate(stable_id) do |coordinate|
       # in case of replay
       next if coordinate.nil?
 
@@ -395,6 +380,28 @@ class ProcedureRevision < ApplicationRecord
   end
 
   private
+
+  # Under the lock, on the coordinate as committed by the previous edits.
+  def edit_coordinate(stable_id)
+    edit_type_de_champs do
+      coordinate, _ = coordinate_and_tdc(stable_id)
+
+      yield coordinate
+    end
+  end
+
+  def move_coordinate(coordinate, position)
+    siblings = coordinate.siblings
+
+    if position > coordinate.position
+      ProcedureRevisionTypeDeChamp.where(id: siblings, position: coordinate.position..position).unscope(:eager_load).update_all("position = position - 1")
+    else
+      ProcedureRevisionTypeDeChamp.where(id: siblings, position: position..coordinate.position).unscope(:eager_load).update_all("position = position + 1")
+    end
+    coordinate.update_column(:position, position)
+
+    coordinate.reload
+  end
 
   # cascades to the children coordinates of a repetition
   def remove_coordinate(coordinate)
