@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-describe Logic::Constant do
+describe Logic::Empty do
   include Logic
 
   describe '#type' do
@@ -24,5 +24,9 @@ describe Logic::Constant do
 
   describe '#sources' do
     it { expect(empty.sources).to eq([]) }
+  end
+
+  describe '#compute' do
+    it { expect(empty.compute).to be_nil }
   end
 end

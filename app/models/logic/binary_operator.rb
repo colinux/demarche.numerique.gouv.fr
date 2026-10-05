@@ -43,7 +43,9 @@ class Logic::BinaryOperator < Logic::Term
 
     l = l[:value] if l.is_a?(Hash)
 
-    l&.send(operation, r) || false
+    return false if l.nil? || r.nil?
+
+    l.send(operation, r) || false
   end
 
   def to_s(type_de_champs) = "(#{@left.to_s(type_de_champs)} #{operation} #{@right.to_s(type_de_champs)})"

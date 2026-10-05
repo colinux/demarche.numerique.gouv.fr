@@ -11,6 +11,8 @@ class Logic::Empty < Logic::Term
 
   def errors(_type_de_champs = []) = ['empty']
 
+  def compute(_champs = []) = nil
+
   def to_h
     {
       "term" => self.class.name,
