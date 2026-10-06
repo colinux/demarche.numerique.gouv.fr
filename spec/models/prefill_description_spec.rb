@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "open3"
+
 RSpec.describe PrefillDescription, type: :model do
   include Rails.application.routes.url_helpers
 
@@ -188,6 +190,24 @@ RSpec.describe PrefillDescription, type: :model do
 
     it "builds the query to create a new prefilled dossier" do
       expect(prefill_description.prefill_query).to eq(expected_query)
+    end
+  end
+
+  describe '#prefill_query when an example value contains shell metacharacters' do
+    let(:value) { "d'une commune \"$HOME\" \\ `id`" }
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :drop_down_list, options: [value] }]) }
+    let(:prefill_description) { described_class.new(procedure) }
+    let(:type_de_champ) { procedure.active_revision.public_root_type_de_champs.first }
+
+    before { prefill_description.update(selected_type_de_champ_ids: type_de_champ.id.to_s) }
+
+    it "builds a shell command that hands the value untouched to curl" do
+      stubbed_curl = "curl() { printf '%s\\0' \"$@\"; }\n"
+      output, status = Open3.capture2("bash", stdin_data: stubbed_curl + prefill_description.prefill_query)
+      expect(status).to be_success
+
+      args = output.split("\0")
+      expect(JSON.parse(args[args.index("--data") + 1])).to eq("champ_#{type_de_champ.to_typed_id_for_query}" => value)
     end
   end
 end
