@@ -356,29 +356,28 @@ input[type='radio'] {
   margin-right: 0.5rem;
 }
 
-// On veut que pouvoir styler un bouton comme un lien dsfr. Sauf que le style des liens est callé sur href, pas valide niveau html de mettre ca sur un bouton
-// alors on duplique.
-[data-href] {
-  background-image: var(--underline-img), var(--underline-img);
-  background-position:
-    var(--underline-x) 100%,
-    var(--underline-x) calc(100% - var(--underline-thickness));
-  background-repeat: no-repeat, no-repeat;
-  background-size:
-    var(--underline-hover-width) calc(var(--underline-thickness) * 2),
-    var(--underline-idle-width) var(--underline-thickness);
-  transition: background-size;
+// A <button> styled as a DSFR link, which DSFR only underlines on [href].
+// Its underline is a background image over the whole box: on an inline-block
+// <button> whose label wraps, it would span the full width, so underline the
+// text instead.
+[data-href],
+button.fr-notice__link {
+  background-image: none;
+  text-decoration: underline;
+  text-decoration-thickness: var(--underline-thickness);
+  text-underline-offset: 2px;
 
-  // pas de fond au survol/actif, comme sur un vrai lien DSFR : seul le
-  // soulignement doit apparaître
+  // no background on hover/active, as on a real DSFR link
   --hover-tint: var(--idle);
   --active-tint: var(--idle);
 }
 
 @media (hover: hover) and (pointer: fine) {
   [data-href]:hover,
-  [data-href]:active {
-    --underline-hover-width: var(--underline-max-width);
+  [data-href]:active,
+  button.fr-notice__link:hover,
+  button.fr-notice__link:active {
+    text-decoration-thickness: calc(var(--underline-thickness) * 2);
   }
 }
 

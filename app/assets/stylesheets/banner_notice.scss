@@ -25,17 +25,8 @@
   }
 }
 
-// A <button> is an inline-block box: DSFR's background underline would span
-// its full width once the label wraps, so underline the text instead.
+// A notice link rendered as a <button>, underlined in dsfr.scss: keep the
+// weight of the <a> it replaces.
 button.fr-notice__link {
   font-weight: inherit;
-  background-image: none;
-  text-decoration: underline;
-  text-decoration-thickness: var(--underline-thickness);
-  text-underline-offset: 0.2em;
-
-  &:hover,
-  &:active {
-    text-decoration-thickness: calc(var(--underline-thickness) * 2);
-  }
 }

@@ -88,6 +88,20 @@ describe 'As an administrateur I can edit types de champ', js: true do
     end
   end
 
+  context "with a communes champ" do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :communes }]) }
+
+    # A background underline spans the whole <button> box once its label wraps (#14216).
+    scenario "the info button is underlined like a link, line by line" do
+      button = find_button('Comment fonctionne ce champ ?')
+      style = page.evaluate_script(<<~JS, button)
+        ((el) => { const s = getComputedStyle(el); return [s.textDecorationLine, s.backgroundImage] })(arguments[0])
+      JS
+
+      expect(style).to eq(['underline', 'none'])
+    end
+  end
+
   context "with a drop_down_list champ" do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :drop_down_list, libelle: 'Choix de dessert' }]) }
 
