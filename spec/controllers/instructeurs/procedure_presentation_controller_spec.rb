@@ -51,6 +51,18 @@ describe Instructeurs::ProcedurePresentationController, type: :controller do
       end
     end
 
+    context 'when the instructeur saves the columns without changing them' do
+      before { sign_in(instructeur.user) }
+
+      let(:presentation_params) { { displayed_columns: procedure_presentation.effective_displayed_columns.map(&:id) } }
+
+      it 'keeps following the administrator default' do
+        subject
+
+        expect(procedure_presentation.reload.customized).to eq(false)
+      end
+    end
+
     context 'with a wrong instructeur' do
       let(:another_instructeur) { create(:instructeur) }
       before { sign_in(another_instructeur.user) }
@@ -320,17 +332,41 @@ describe Instructeurs::ProcedurePresentationController, type: :controller do
   describe '#reset_to_admin_default' do
     subject { post :reset_to_admin_default, params: { id: procedure_presentation.id } }
 
-    before { procedure_presentation.update!(customized: true) }
+    let(:admin_columns) { procedure.default_displayed_columns + [procedure.find_column(label: 'Date de création')] }
+
+    before do
+      admin_assign_to = create(:assign_to, instructeur: create(:instructeur), groupe_instructeur: procedure.defaut_groupe_instructeur)
+      admin_presentation = admin_assign_to.procedure_presentation_or_default_and_errors.first
+      admin_presentation.update!(displayed_columns: admin_columns)
+      procedure.update!(admin_default_procedure_presentation_active: true, admin_default_procedure_presentation_id: admin_presentation.id)
+      procedure_presentation.update!(customized: true)
+    end
 
     context 'nominal case' do
       before { sign_in(instructeur.user) }
 
-      it 'stops customizing the displayed columns' do
+      it 'replaces the displayed columns with the ones set by the administrator' do
         subject
 
-        expect(procedure_presentation.reload.customized).to be false
+        procedure_presentation.reload
+        expect(procedure_presentation.customized).to be false
+        expect(procedure_presentation.displayed_columns).to eq(admin_columns)
         expect(response).to redirect_to(instructeur_procedure_path(procedure))
         expect(flash.notice).to eq("Les colonnes définies par l’administrateur sont affichées.")
+      end
+    end
+
+    context 'when the administrator default is no longer set' do
+      before do
+        procedure.update!(admin_default_procedure_presentation_active: false, admin_default_procedure_presentation_id: nil)
+        sign_in(instructeur.user)
+      end
+
+      it 'keeps the instructeur columns' do
+        subject
+
+        expect(procedure_presentation.reload.customized).to be true
+        expect(response).to redirect_to(instructeur_procedure_path(procedure))
       end
     end
 

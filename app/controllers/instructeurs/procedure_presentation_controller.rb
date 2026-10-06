@@ -69,9 +69,14 @@ module Instructeurs
     end
 
     def reset_to_admin_default
-      @procedure_presentation.update!(customized: false)
+      admin_presentation = ProcedurePresentation.find_by(id: procedure.admin_default_procedure_presentation_id)
 
-      redirect_back_or_to([:instructeur, procedure], notice: t('.notice'))
+      if admin_presentation
+        @procedure_presentation.update!(customized: false, displayed_columns: admin_presentation.displayed_columns)
+        flash.notice = t('.notice')
+      end
+
+      redirect_back_or_to([:instructeur, procedure])
     end
 
     private
@@ -157,7 +162,7 @@ module Instructeurs
 
         # when instructeur update displayed_columns, `customized` becomes true
         # we consider he knows how to use the personnalization
-        h[:customized] = true
+        h[:customized] = true if h[:displayed_columns] != @procedure_presentation.effective_displayed_columns.map(&:id)
       end
 
       h
