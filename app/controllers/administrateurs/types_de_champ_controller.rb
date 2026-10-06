@@ -112,6 +112,9 @@ module Administrateurs
 
     def move_up
       @coordinate = draft.move_up_type_de_champ(params[:stable_id])
+      # nil in case of replay (champ removed in another tab)
+      return if @coordinate.nil?
+
       reload_procedure_with_includes
       @coordinate = draft.revision_type_de_champs.find { _1.id == @coordinate.id }
       @destroyed = @coordinate
@@ -122,6 +125,9 @@ module Administrateurs
 
     def move_down
       @coordinate = draft.move_down_type_de_champ(params[:stable_id])
+      # nil in case of replay (champ removed in another tab)
+      return if @coordinate.nil?
+
       reload_procedure_with_includes
       @coordinate = draft.revision_type_de_champs.find { _1.id == @coordinate.id }
       @destroyed = @coordinate

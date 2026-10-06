@@ -424,6 +424,25 @@ describe Administrateurs::TypesDeChampController, type: :controller do
     end
   end
 
+  describe 'moving a champ already removed (replayed click)' do
+    render_views
+
+    let(:removed_stable_id) { second_coordinate.stable_id }
+    let(:params) { { procedure_id: procedure.id, stable_id: removed_stable_id } }
+
+    before { procedure.draft_revision.remove_type_de_champ(removed_stable_id) }
+
+    [:move_up, :move_down].each do |action|
+      it "#{action} is a no-op instead of failing (RAILS-MPV, RAILS-MQH)" do
+        patch action, params:, format: :turbo_stream
+
+        expect(response).to have_http_status(:ok)
+        expect(assigns(:coordinate)).to be_nil
+        expect(procedure.draft_revision.reload.public_revision_type_de_champs.map(&:libelle)).to eq(['l1', 'l3'])
+      end
+    end
+  end
+
   describe '#move_and_morph' do
     # l1, l2, l3 => l2, l3, l1
     context 'move and morph down' do

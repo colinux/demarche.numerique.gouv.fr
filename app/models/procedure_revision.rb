@@ -115,24 +115,11 @@ class ProcedureRevision < ApplicationRecord
   end
 
   def move_type_de_champ(stable_id, position)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
-      siblings = coordinate.siblings
-
-      if position > coordinate.position
-        ProcedureRevisionTypeDeChamp.where(id: siblings, position: coordinate.position..position).unscope(:eager_load).update_all("position = position - 1")
-      else
-        ProcedureRevisionTypeDeChamp.where(id: siblings, position: position..coordinate.position).unscope(:eager_load).update_all("position = position + 1")
-      end
-      coordinate.update_column(:position, position)
-
-      coordinate.reload
-    end
+    edit_coordinate(stable_id) { move_coordinate(it, position) }
   end
 
   def move_type_de_champ_after(stable_id, position)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
+    edit_coordinate(stable_id) do |coordinate|
       siblings = coordinate.siblings
 
       if position > coordinate.position
@@ -151,14 +138,7 @@ class ProcedureRevision < ApplicationRecord
   # (or reset) of the procedure, which purges the types de champ no revision
   # lays out any more (ProcedurePublishConcern).
   def remove_type_de_champ(stable_id)
-    edit_type_de_champs do
-      coordinate, _ = coordinate_and_tdc(stable_id)
-
-      # in case of replay
-      next if coordinate.nil?
-
-      remove_coordinate(coordinate)
-    end
+    edit_coordinate(stable_id) { remove_coordinate(it) }
   end
 
   # The coordinates the tree leaves out (TypeDeChampTree.from_coordinates): the
@@ -179,19 +159,13 @@ class ProcedureRevision < ApplicationRecord
   end
 
   def move_up_type_de_champ(stable_id)
-    coordinate, _ = coordinate_and_tdc(stable_id)
-
-    if coordinate.position > 0
-      move_type_de_champ(stable_id, coordinate.position - 1)
-    else
-      coordinate
+    edit_coordinate(stable_id) do |coordinate|
+      coordinate.position > 0 ? move_coordinate(coordinate, coordinate.position - 1) : coordinate
     end
   end
 
   def move_down_type_de_champ(stable_id)
-    coordinate, _ = coordinate_and_tdc(stable_id)
-
-    move_type_de_champ(stable_id, coordinate.position + 1)
+    edit_coordinate(stable_id) { move_coordinate(it, it.position + 1) }
   end
 
   def draft?
@@ -395,6 +369,31 @@ class ProcedureRevision < ApplicationRecord
   end
 
   private
+
+  # Under the lock, on the coordinate as committed by the previous edits. nil
+  # when the type de champ is no longer in the revision: a replayed request
+  # (double click, removed in another tab).
+  def edit_coordinate(stable_id)
+    edit_type_de_champs do
+      coordinate, _ = coordinate_and_tdc(stable_id)
+      next if coordinate.nil?
+
+      yield coordinate
+    end
+  end
+
+  def move_coordinate(coordinate, position)
+    siblings = coordinate.siblings
+
+    if position > coordinate.position
+      ProcedureRevisionTypeDeChamp.where(id: siblings, position: coordinate.position..position).unscope(:eager_load).update_all("position = position - 1")
+    else
+      ProcedureRevisionTypeDeChamp.where(id: siblings, position: position..coordinate.position).unscope(:eager_load).update_all("position = position + 1")
+    end
+    coordinate.update_column(:position, position)
+
+    coordinate.reload
+  end
 
   # cascades to the children coordinates of a repetition
   def remove_coordinate(coordinate)

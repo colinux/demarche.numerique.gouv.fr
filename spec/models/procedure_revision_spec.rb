@@ -346,6 +346,21 @@ describe ProcedureRevision do
       expect(libelles_and_positions).to eq([['c', 0], ['b', 1]])
     end
 
+    it 'moves nothing when the type de champ was removed in the meantime' do
+      a, b, _ = draft.public_root_type_de_champs
+      before_the_lock { other_request.remove_type_de_champ(a.stable_id) }
+
+      expect(draft.move_type_de_champ(a.stable_id, 1)).to be_nil
+      expect(draft.move_type_de_champ_after(a.stable_id, 1)).to be_nil
+      expect(libelles_and_positions).to eq([['b', 0], ['c', 1]])
+
+      other_request.remove_type_de_champ(b.stable_id)
+
+      expect(draft.move_up_type_de_champ(b.stable_id)).to be_nil
+      expect(draft.move_down_type_de_champ(b.stable_id)).to be_nil
+      expect(libelles_and_positions).to eq([['c', 0]])
+    end
+
     context 'on a published procedure' do
       let(:procedure) { create(:procedure, :published, public_type_de_champs: [{ type: :text, libelle: 'a' }]) }
 

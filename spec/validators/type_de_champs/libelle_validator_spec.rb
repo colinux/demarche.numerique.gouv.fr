@@ -57,6 +57,23 @@ RSpec.describe TypeDeChamps::LibelleValidator do
     end
   end
 
+  context 'when the type de champ without libelle was removed by another request in the meantime' do
+    let(:types) { [{ type: :text, libelle: 'a' }, { type: :text, libelle: 'b' }] }
+
+    before do
+      removed = procedure.draft_revision.public_root_type_de_champs.second
+      removed.update(libelle: '')
+      ProcedureRevision.find(procedure.draft_revision_id).remove_type_de_champ(removed.stable_id)
+    end
+
+    it 'reports the position the loaded draft lays it at (RAILS-MMV)' do
+      subject
+
+      expect(procedure.errors.messages_for(:public_draft_type_de_champs))
+        .to include(I18n.t('activerecord.errors.models.procedure.attributes.public_draft_type_de_champs.missing_libelle', position: 2))
+    end
+  end
+
   context 'with linked drop down list type de champ' do
     let(:types) { [type: :linked_drop_down_list] }
     context 'when libelle is filled' do
