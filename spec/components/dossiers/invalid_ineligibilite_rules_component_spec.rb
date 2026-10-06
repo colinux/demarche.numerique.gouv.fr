@@ -33,6 +33,20 @@ RSpec.describe Dossiers::InvalidIneligibiliteRulesComponent, type: :component do
     end
   end
 
+  context 'when the message holds line breaks, bold text and a link' do
+    before do
+      procedure.published_revision.update!(ineligibilite_message: "Première ligne\nSeconde **ligne**\n[aide](https://example.org/aide)")
+    end
+
+    it 'renders them in the description of the dialog' do
+      description = render_inline(component).css('#modal-eligibilite-rules-description')
+
+      expect(description.css('p').size).to eq(3)
+      expect(description.css('strong').text).to eq('ligne')
+      expect(description.css('a').attr('href').value).to eq('https://example.org/aide')
+    end
+  end
+
   context 'after the edit of a champ the rules do not read' do
     let(:updated_champ) { texte }
 
