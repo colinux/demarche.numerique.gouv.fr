@@ -426,6 +426,18 @@ describe ProcedureCloneConcern, type: :model do
       it { expect(subject.lien_notice).to be_nil }
     end
 
+    describe 'links that no longer pass validation' do
+      before do
+        procedure.update_columns(lien_dpo: 'https://intranet/dpo', web_hook_url: 'http://192.168.1.1/hook')
+      end
+
+      it 'drops them instead of failing the clone' do
+        expect(subject).to be_persisted
+        expect(subject.lien_dpo).to be_nil
+        expect(subject.web_hook_url).to be_nil
+      end
+    end
+
     describe 'when a new attribute is added to Procedure' do
       it 'the developer should choose what to do with it when cloning' do
         # If this test fails, it is probably because you added an attribute to Procedure model.
