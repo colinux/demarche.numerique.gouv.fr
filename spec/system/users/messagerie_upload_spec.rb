@@ -43,6 +43,36 @@ describe 'Messagerie upload PJ', js: true do
     end
   end
 
+  describe 'usager adding files in several picks' do
+    let(:dossier) { dossiers.en_construction }
+
+    before { login_as users.usager, scope: :user }
+
+    scenario 'keeps the files already selected and lets remove them one by one' do
+      visit messagerie_dossier_path(dossier)
+      open_messagerie_form
+
+      fill_in 'commentaire_body', with: 'Mes justificatifs'
+      attach_file('Pièce jointe', Rails.root + 'spec/fixtures/files/piece_justificative_0.pdf')
+      attach_file('Pièce jointe', [Rails.root + 'spec/fixtures/files/RIB.pdf', Rails.root + 'spec/fixtures/files/Contrat.pdf'])
+
+      within('[data-file-input-reset-target="fileList"]') do
+        expect(page).to have_text('piece_justificative_0.pdf')
+        expect(page).to have_text('RIB.pdf')
+        expect(page).to have_text('Contrat.pdf')
+
+        find('li', text: 'RIB.pdf').click_on('Supprimer le fichier')
+        expect(page).not_to have_text('RIB.pdf')
+        expect(find('li', text: 'Contrat.pdf')).to have_button('Supprimer le fichier', focused: true)
+      end
+
+      click_on 'Envoyer le message'
+
+      expect(page).to have_text('Mes justificatifs')
+      expect(dossier.commentaires.last.piece_jointe.map { it.filename.to_s }).to contain_exactly('piece_justificative_0.pdf', 'Contrat.pdf')
+    end
+  end
+
   describe 'instructeur' do
     let(:instructeur) { create(:instructeur, password: SECURE_PASSWORD) }
     let(:dossier) { create(:dossier, :en_construction, :with_individual, procedure:) }

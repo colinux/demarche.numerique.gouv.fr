@@ -4,22 +4,40 @@ export class FileInputResetController extends ApplicationController {
   static targets = ['fileList'];
   declare fileListTarget: HTMLElement;
 
+  // A native picker replaces the input's files: keep the previous picks here.
+  private files: File[] = [];
+
   connect() {
     super.connect();
+    this.files = Array.from(this.fileInput?.files ?? []);
     this.updateFileList();
     this.element.addEventListener('change', (event) => {
       if (
         event.target instanceof HTMLInputElement &&
         event.target.type === 'file'
       ) {
-        this.updateFileList();
+        this.appendFiles(Array.from(event.target.files ?? []));
       }
     });
   }
 
+  appendFiles(picked: File[]) {
+    const isNew = (file: File) =>
+      !this.files.some(
+        (kept) =>
+          kept.name === file.name &&
+          kept.size === file.size &&
+          kept.lastModified === file.lastModified
+      );
+
+    this.files = [...this.files, ...picked.filter(isNew)];
+    this.syncInput();
+    this.updateFileList();
+  }
+
   updateFileList() {
     const fileInput = this.fileInput;
-    const files = fileInput?.files ?? [];
+    const files = this.files;
     this.fileListTarget.innerHTML = '';
 
     const deleteLabel =
@@ -84,18 +102,26 @@ export class FileInputResetController extends ApplicationController {
   }
 
   removeFile(index: number) {
-    const files = this.fileInput?.files;
-    if (!files) return;
+    this.files = this.files.filter((_, i) => i !== index);
+    this.syncInput();
+    this.updateFileList();
+    this.focusAfterRemoval(index);
+  }
+
+  // The focused button is gone: move focus to the next row, or the input.
+  private focusAfterRemoval(index: number) {
+    const buttons = this.fileListTarget.querySelectorAll('button');
+    const next = buttons[Math.min(index, buttons.length - 1)];
+    (next ?? this.fileInput)?.focus();
+  }
+
+  private syncInput() {
+    const fileInput = this.fileInput;
+    if (!fileInput) return;
 
     const dataTransfer = new DataTransfer();
-    Array.from(files).forEach((file, i) => {
-      if (index !== i) {
-        dataTransfer.items.add(file);
-      }
-    });
-
-    if (this.fileInput) this.fileInput.files = dataTransfer.files;
-    this.updateFileList();
+    this.files.forEach((file) => dataTransfer.items.add(file));
+    fileInput.files = dataTransfer.files;
   }
 
   private get fileInput(): HTMLInputElement | null {

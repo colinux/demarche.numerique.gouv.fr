@@ -100,6 +100,21 @@ suite('FileInputResetController', () => {
     expect(element.querySelector('.fr-error-text')).toBeNull();
   });
 
+  test('appends a new pick to the files already selected', async () => {
+    const first = file('premier.pdf', 512);
+    await select([first]);
+    await select([first, file('second.pdf', 512)]);
+
+    expect(rows().map((row) => row.textContent)).toEqual([
+      expect.stringContaining('premier.pdf'),
+      expect.stringContaining('second.pdf')
+    ]);
+    expect(Array.from(input().files ?? []).map((f) => f.name)).toEqual([
+      'premier.pdf',
+      'second.pdf'
+    ]);
+  });
+
   test('does not flag anything when no max size is declared', async () => {
     input().removeAttribute('data-max-file-size');
 
