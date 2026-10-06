@@ -334,7 +334,7 @@ class ChampData < ApplicationRecord
   end
 
   def clear
-    update_columns(value: nil, value_json: nil, external_id: nil, data: nil)
+    update_columns(value: nil, value_json: nil, external_id: nil, data: nil, external_state: nil, fetch_external_data_exceptions: [])
     ChampData.no_touching do
       etablissement&.destroy
       geo_areas.destroy_all
