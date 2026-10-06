@@ -40,8 +40,14 @@ module DossierEditConcern
     if scope == :public
       Dossier.no_touching { champ.save }
     else
-      champ_changed && champ.save
+      champ_changed && valid_annotation_value?(champ) && champ.save
     end
+  end
+
+  # An annotation is written straight to the main stream, so its value is checked
+  # first. Async champs are skipped: they are validated on data fetched after the save.
+  def valid_annotation_value?(champ)
+    champ.has_async_external_data? || champ.validate(:champ_value)
   end
 
   def after_public_champ_saved(champ)
