@@ -43,7 +43,7 @@ class Instructeurs::OCRViewerComponent < ApplicationComponent
 
   def processing_error_message
     content_tag(:span, class: "fr-hint-text fr-text-default--warning font-weight-normal") do
-      concat dsfr_icon('fr-icon-file-text-fill', :sm, :mr)
+      concat dsfr_icon('fr-icon-alert-line', :sm, :mr)
       concat t('.processing_error')
     end
   end
