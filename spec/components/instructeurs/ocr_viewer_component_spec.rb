@@ -57,6 +57,7 @@ RSpec.describe Instructeurs::OCRViewerComponent, type: :component do
 
       it 'shows processing error for missing data' do
         expect(subject).to have_text("Cette donnée n’a pas pu être récupérée")
+        expect(subject).to have_css('.fr-icon-alert-line[aria-hidden="true"]', count: 1)
         expect(subject).to have_css('.champ-content', text: 'FR7612345678901234567890123')
       end
     end
