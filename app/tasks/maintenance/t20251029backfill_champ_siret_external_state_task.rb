@@ -4,7 +4,7 @@ module Maintenance
   class T20251029backfillChampSiretExternalStateTask < MaintenanceTasks::Task
     # Documentation: cette tâche modifie les champs siret pour re-aligner la donnée external_state/external_id
     # des champs siret qui ont déjà un établissement rattaché mais qui ont été remplis via l’ancien contrôleur Siret
-    # (avant la refonte via ChampExternalDataConcern)
+    # (avant la refonte via ExternalDataConcern)
 
     include RunnableOnDeployConcern
     include StatementsHelpersConcern

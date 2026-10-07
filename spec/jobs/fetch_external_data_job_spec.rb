@@ -2,8 +2,12 @@
 
 require 'rails_helper'
 
-RSpec.describe ChampFetchExternalDataJob, type: :job do
+RSpec.describe FetchExternalDataJob, type: :job do
   include Dry::Monads[:result]
+
+  it 'still runs the jobs enqueued under the former name' do
+    expect(ChampFetchExternalDataJob).to eq(FetchExternalDataJob)
+  end
 
   let(:procedure) { create(:procedure, :published, public_type_de_champs: [{ type: :rnf }]) }
   let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }
@@ -61,7 +65,7 @@ RSpec.describe ChampFetchExternalDataJob, type: :job do
         # enqueues the next attempt without executing it inline, avoiding
         # the cascade that causes hangs with Rails 7.2.3+.
         3.times do
-          perform_enqueued_jobs(only: ChampFetchExternalDataJob)
+          perform_enqueued_jobs(only: FetchExternalDataJob)
         rescue StandardError
           # After 3 RetryableFetchError retries, the exhaust block reports the error
         end

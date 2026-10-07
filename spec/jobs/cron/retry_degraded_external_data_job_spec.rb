@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Cron::RetryDegradedChampJob, type: :job do
+RSpec.describe Cron::RetryDegradedExternalDataJob, type: :job do
   describe '.schedulable?' do
     it 'keeps the abstract base out of the scheduler' do
       expect(described_class).not_to be_schedulable
@@ -36,7 +36,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
 
       it 'schedules the fetch, spread over the window instead of all at once' do
         expect { Cron::RetryDegradedSiretChampJob.perform_now }
-          .to have_enqueued_job(ChampFetchExternalDataJob).with(champ, '30613890001294')
+          .to have_enqueued_job(FetchExternalDataJob).with(champ, '30613890001294')
       end
 
       context 'while INSEE is still down' do
@@ -56,7 +56,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
       let(:external_state) { 'waiting_for_fix' }
 
       it 'does not enqueue it twice' do
-        expect { Cron::RetryDegradedSiretChampJob.perform_now }.not_to have_enqueued_job(ChampFetchExternalDataJob)
+        expect { Cron::RetryDegradedSiretChampJob.perform_now }.not_to have_enqueued_job(FetchExternalDataJob)
       end
     end
 
@@ -169,7 +169,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
         Cron::RetryDegradedSiretChampJob.batch_size = 1
       end
 
-      after { Cron::RetryDegradedSiretChampJob.batch_size = Cron::RetryDegradedChampJob::BATCH_SIZE }
+      after { Cron::RetryDegradedSiretChampJob.batch_size = Cron::RetryDegradedExternalDataJob::BATCH_SIZE }
 
       it 'spends the batch on a champ it can actually replay' do
         expect { Cron::RetryDegradedSiretChampJob.perform_now }

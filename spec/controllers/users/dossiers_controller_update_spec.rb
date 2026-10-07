@@ -437,7 +437,7 @@ describe Users::DossiersController, type: :controller do
       end
 
       it 'includes enqueues job' do
-        expect { subject }.to have_enqueued_job(ChampFetchExternalDataJob)
+        expect { subject }.to have_enqueued_job(FetchExternalDataJob)
       end
     end
 

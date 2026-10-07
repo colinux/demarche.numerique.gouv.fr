@@ -204,7 +204,7 @@ RSpec.describe DossierPrefillableConcern do
       let(:champ_1) { find_champ_by_stable_id(dossier, type_de_champ_1.stable_id) }
 
       it "updates the champs with the new values and mark them as prefilled" do
-        expect { fill }.to have_enqueued_job(ChampFetchExternalDataJob).once
+        expect { fill }.to have_enqueued_job(FetchExternalDataJob).once
       end
     end
 

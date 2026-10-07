@@ -403,7 +403,7 @@ describe Champs::ReferentielChamp, type: :model do
             .to change { dossier.reload.champs.find(&:siret?).external_id }.from(nil).to('13002526500013')
         end
         it 'enqueue job' do
-          expect { subject }.to have_enqueued_job(ChampFetchExternalDataJob).with(dossier.reload.champs.find(&:siret?), '13002526500013')
+          expect { subject }.to have_enqueued_job(FetchExternalDataJob).with(dossier.reload.champs.find(&:siret?), '13002526500013')
         end
       end
 
@@ -416,7 +416,7 @@ describe Champs::ReferentielChamp, type: :model do
             .to change { dossier.reload.champs.reverse.find(&:referentiel?).external_id }.from(nil).to('champdapi')
         end
         it 'enqueue job' do
-          expect { subject }.to have_enqueued_job(ChampFetchExternalDataJob).with(dossier.reload.champs.reverse.find(&:referentiel?), 'champdapi')
+          expect { subject }.to have_enqueued_job(FetchExternalDataJob).with(dossier.reload.champs.reverse.find(&:referentiel?), 'champdapi')
         end
       end
 

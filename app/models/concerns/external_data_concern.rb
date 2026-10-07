@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ChampExternalDataConcern
+module ExternalDataConcern
   extend ActiveSupport::Concern
 
   include Dry::Monads[:result]
@@ -8,7 +8,7 @@ module ChampExternalDataConcern
   # A champ is updated, a reset and fetch later event is triggered
   # from the controller
   # idle -> waiting_for_job
-  # A ChampFetchExternalDataJob is processed, the fetch event is triggered
+  # A FetchExternalDataJob is processed, the fetch event is triggered
   # waiting_for_job -> fetching
   # if an retryable error occurs, the retry event is triggered and the job is re-enqueued
   # fetching -> waiting_for_job
@@ -98,6 +98,8 @@ module ChampExternalDataConcern
 
   def has_async_external_data? = false
 
+  def external_data_sentry_tags = { champ: id }
+
   def external_data_needed_for_validation? = has_async_external_data?
 
   private
@@ -109,7 +111,7 @@ module ChampExternalDataConcern
   def ready_for_external_retry? = true
 
   def fetch_external_data_later(wait: nil)
-    ChampFetchExternalDataJob.set(wait:).perform_later(self, external_id)
+    FetchExternalDataJob.set(wait:).perform_later(self, external_id)
   end
 
   # it should only be called after fetch! event callback

@@ -28,7 +28,7 @@ module Maintenance
 
         it "relance le workflow async" do
           expect { process }.to change { champ.reload.external_state }.from('idle').to('waiting_for_job')
-            .and have_enqueued_job(ChampFetchExternalDataJob).with(champ, 'W173847273')
+            .and have_enqueued_job(FetchExternalDataJob).with(champ, 'W173847273')
         end
       end
 

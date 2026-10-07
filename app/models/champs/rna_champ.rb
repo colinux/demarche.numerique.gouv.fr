@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Champs::RNAChamp < ChampData
-  include APIEntrepriseChampConcern
+  include APIEntrepriseExternalDataConcern
 
   RNA_REGEXP = /\AW[0-9A-Z]{9}\z/
 
