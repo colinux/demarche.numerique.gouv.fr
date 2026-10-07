@@ -14,6 +14,75 @@ RSpec.describe DemandeurSiret do
       .and_return(["attestations_fiscales", "attestations_sociales", "bilans_entreprise_bdf"])
   end
 
+  describe '.submit!' do
+    subject(:submit) { DemandeurSiret.submit!(dossier, siret) }
+
+    context 'when the API answers' do
+      it 'attaches the etablissement and keeps no unverified SIRET' do
+        expect(submit).to eq(:verified)
+        expect(dossier.reload.etablissement.siret).to eq(siret)
+        expect(DemandeurSiret.where(dossier:)).to be_empty
+      end
+    end
+
+    context 'when the API does not answer' do
+      let(:api_etablissement_status) { 503 }
+
+      it 'keeps the SIRET unverified' do
+        expect(submit).to eq(:unverified)
+        expect(dossier.reload.demandeur_siret).to be_degraded
+        expect(dossier.etablissement).to be_nil
+      end
+
+      context 'with the etablissement of another SIRET' do
+        let!(:previous) { create(:etablissement, dossier:, siret: '41816609600051') }
+
+        it 'drops it: the usager chose another SIRET' do
+          expect(submit).to eq(:unverified)
+          expect(Etablissement.where(id: previous.id)).to be_empty
+        end
+      end
+    end
+
+    context 'when the SIRET is unknown' do
+      let(:api_etablissement_status) { 404 }
+
+      it 'returns the code and keeps no unverified SIRET' do
+        expect(submit).to eq(404)
+        expect(DemandeurSiret.where(dossier:)).to be_empty
+      end
+
+      context 'with a verified etablissement' do
+        let!(:previous) { create(:etablissement, dossier:, siret: '41816609600051') }
+
+        it 'keeps it' do
+          expect(submit).to eq(404)
+          expect(dossier.reload.etablissement).to eq(previous)
+        end
+      end
+    end
+
+    context 'with a previous SIRET still waiting for the API' do
+      before { DemandeurSiret.create!(dossier:, siret: '41816609600051', external_state: 'degraded') }
+
+      it 'replaces it' do
+        submit
+
+        expect(DemandeurSiret.where(dossier:).pluck(:siret)).to be_empty
+        expect(dossier.reload.etablissement.siret).to eq(siret)
+      end
+    end
+
+    context 'when the usager submits the SIRET already verified' do
+      before { create(:etablissement, dossier:, siret:) }
+
+      it 'does not call the API again' do
+        expect(submit).to eq(:verified)
+        expect(a_request(:get, /entreprise.api.gouv.fr/)).not_to have_been_made
+      end
+    end
+  end
+
   describe '#verify!' do
     subject(:verify) { demandeur_siret.verify! }
 
