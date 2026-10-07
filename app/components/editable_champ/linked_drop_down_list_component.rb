@@ -8,8 +8,4 @@ class EditableChamp::LinkedDropDownListComponent < EditableChamp::EditableChampB
   def render?
     @champ.drop_down_options.any?
   end
-
-  def select_options
-    @champ.mandatory? ? { prompt: t('views.components.select_list') } : { include_blank: t('views.components.select_list') }
-  end
 end

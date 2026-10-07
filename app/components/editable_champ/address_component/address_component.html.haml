@@ -22,7 +22,7 @@
                 = t('.country_label')
                 - if @champ.required?
                   = render EditableChamp::AsteriskMandatoryComponent.new
-            = @form.select :country_code, pays_options, @champ.mandatory? ? { prompt: '' } : { include_blank: '' }, required: @champ.required?, id: @champ.focusable_input_id(:country_code), class: "width-33-desktop fr-select small-margin", 'aria-labelledby': aria_labelledby(:country_code)
+            = @form.select :country_code, pays_options, select_options(selected: @champ.country_code, label: ''), required: @champ.required?, id: @champ.focusable_input_id(:country_code), class: "width-33-desktop fr-select small-margin", 'aria-labelledby': aria_labelledby(:country_code)
 
         .fr-fieldset__element
           = render Dsfr::InputComponent.new(form: @form, attribute: :street_address, required: @champ.required?, opts: { id: @champ.focusable_input_id(:street_address), class:"fr-input small-margin", "aria-labelledby": aria_labelledby(:street_address) }, label_opts: { id: input_label_id(@champ, :street_address) }) do |c|
