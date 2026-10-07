@@ -47,8 +47,7 @@ class APIEntreprise::Job < ApplicationJob
     'ServiceJob' => APIEntreprise::HealthChecker::PROVIDERS[:insee_sirene],
   }.freeze
 
-  # If by the time the job runs the Etablissement has been deleted
-  # (it can happen through EtablissementUpdateJob for instance), ignore the job
+  # If by the time the job runs the Etablissement has been deleted, ignore the job
   discard_on ActiveRecord::RecordNotFound
 
   # Skip job if provider is known to be down, then check rate limit.
