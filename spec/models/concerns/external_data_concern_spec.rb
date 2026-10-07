@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe ChampExternalDataConcern do
+RSpec.describe ExternalDataConcern do
   include Dry::Monads[:result]
 
   describe '#save_external_error' do

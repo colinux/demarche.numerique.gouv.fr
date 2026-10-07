@@ -4,7 +4,7 @@ class ChampData < ApplicationRecord
   include ChampConditionalConcern
   include ChampValidateConcern
   include ChampRevisionConcern
-  include ChampExternalDataConcern
+  include ExternalDataConcern
   include ChampStreamConcern
   include ChampPrefillTrackingConcern
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module ChampExternalDataConcern
+module ExternalDataConcern
   extend ActiveSupport::Concern
 
   include Dry::Monads[:result]
