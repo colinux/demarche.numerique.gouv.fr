@@ -105,6 +105,21 @@ RSpec.describe DossierCloneConcern do
       end
     end
 
+    context 'with a demandeur SIRET whose retry is under way' do
+      let(:dossier) { dossiers.entreprise_en_instruction }
+
+      before do
+        dossier.etablissement.destroy!
+        dossier.reload.create_demandeur_siret!(siret: '30613890001294', external_state: 'waiting_for_fix')
+        dossier.reload
+      end
+
+      it 'clones it as degraded, so the cron replays it' do
+        expect(new_dossier.demandeur_siret).to have_attributes(siret: '30613890001294', external_state: 'degraded')
+        expect(new_dossier.demandeur_siret.id).not_to eq(dossier.demandeur_siret.id)
+      end
+    end
+
     describe 'champs' do
       it { expect(new_dossier.id).not_to eq(dossier.id) }
 

@@ -10,7 +10,7 @@ module DossierCloneConcern
 
   def clone(user: nil)
     dossier_attributes = [:autorisation_donnees, :revision_id]
-    relationships = [:individual, :etablissement]
+    relationships = [:individual, :etablissement, :demandeur_siret]
 
     discarded_row_ids = champ_data_on_main_stream
       .filter { _1.row? && _1.discarded? }
@@ -32,6 +32,10 @@ module DossierCloneConcern
 
     cloned_dossier = deep_clone(only: dossier_attributes, include: relationships) do |original, kopy|
       ClonePiecesJustificativesService.clone_attachments(original, kopy)
+
+      if original.is_a?(DemandeurSiret) && (original.pending? || original.waiting_for_fix?)
+        kopy.external_state = 'degraded'
+      end
 
       if original.is_a?(Dossier)
         kopy.parent_dossier = original

@@ -20,6 +20,7 @@ module DossierSearchableConcern
       user&.email,
       *root_champs_public.flat_map(&:search_terms),
       *etablissement&.search_terms,
+      *(demandeur_siret&.siret if etablissement.nil?),
       individual&.nom,
       individual&.prenom,
       mandataire_first_name,
