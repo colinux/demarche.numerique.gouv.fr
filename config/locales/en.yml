@@ -428,6 +428,7 @@ en:
           individual_identity: "Your identity"
           form: "Form"
           edit_siret: "Edit SIRET"
+          unverified_siret: "SIRET %{siret} (data linked to the SIRET pending retrieval)"
           edit_identity: "Edit identity data"
           edit_identity_html: 'Edit identity <span aria-hidden="true"> data<span>'
           accuse_lecture: This procedure is subject to a reading receipt.

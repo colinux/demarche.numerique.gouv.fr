@@ -7,6 +7,7 @@ class Dossier < ApplicationRecord
 
   include DossierCloneConcern
   include DossierCorrectableConcern
+  include DossierDemandeurSiretConcern
   include DossierFranceConnectPrefillConcern
   include DossierMessagerieConcern
   include DossierPendingResponseConcern
@@ -462,7 +463,6 @@ class Dossier < ApplicationRecord
     DossierPreloader.load_one(self, pj_template: blob)
   end
 
-  delegate :siret, :siren, to: :etablissement, allow_nil: true
   delegate :france_connected_with_one_identity?, to: :user, allow_nil: true
 
   def identity_from_fc?
@@ -640,7 +640,7 @@ class Dossier < ApplicationRecord
   end
 
   def any_etablissement_as_degraded_mode?
-    return true if etablissement&.as_degraded_mode?
+    return true if etablissement&.as_degraded_mode? || demandeur_siret_awaiting_fix?
 
     champs_awaiting_verification.any?
   end
@@ -648,7 +648,7 @@ class Dossier < ApplicationRecord
   # What the instructeur waits for before a decision: « Numéro SIRET » et « Numéro RNA »
   def unverified_data_labels
     labels = champs_awaiting_verification.map { I18n.t('instructeurs.dossiers.unverified_champ', libelle: it.libelle) }
-    labels.unshift(I18n.t('instructeurs.dossiers.unverified_demandeur')) if etablissement&.as_degraded_mode?
+    labels.unshift(I18n.t('instructeurs.dossiers.unverified_demandeur')) if etablissement&.as_degraded_mode? || demandeur_siret_awaiting_fix?
     labels.to_sentence
   end
 
@@ -802,6 +802,8 @@ class Dossier < ApplicationRecord
       etablissement.entreprise_raison_sociale
     elsif individual.present?
       "#{individual.nom} #{individual.prenom}"
+    elsif demandeur_siret.present?
+      I18n.t('views.shared.dossiers.demande.unverified_siret', siret: ApplicationController.helpers.pretty_siret(demandeur_siret.siret))
     end
   end
 
