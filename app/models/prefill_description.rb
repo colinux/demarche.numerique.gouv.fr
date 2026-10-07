@@ -38,9 +38,9 @@ class PrefillDescription < SimpleDelegator
   def prefill_query
     @prefill_query ||=
       <<~TEXT
-        curl --request POST '#{api_public_v1_dossiers_url(self, host: Current.host || ENV["APP_HOST"])}' \\
+        curl --request POST #{shell_quote(api_public_v1_dossiers_url(self, host: Current.host || ENV["APP_HOST"]))} \\
              --header 'Content-Type: application/json' \\
-             --data '#{prefilled_identity_as_params.merge(prefilled_champs_as_body_params).to_json}'
+             --data #{shell_quote(prefilled_identity_as_params.merge(prefilled_champs_as_body_params).to_json)}
       TEXT
   end
 
@@ -49,6 +49,12 @@ class PrefillDescription < SimpleDelegator
   end
 
   private
+
+  # Single quotes keep the JSON readable, unlike Shellwords.escape; an
+  # apostrophe closes the quote, adds an escaped one and reopens it.
+  def shell_quote(value)
+    "'#{value.gsub("'") { "'\\''" }}'"
+  end
 
   def active_fillable_public_type_de_champs
     active_revision.public_root_type_de_champs.filter(&:fillable?)
