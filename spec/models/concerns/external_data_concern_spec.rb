@@ -356,4 +356,20 @@ RSpec.describe ExternalDataConcern do
       end
     end
   end
+
+  describe '#fetch_now!' do
+    let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :siret }]) }
+    let(:dossier) { create(:dossier, procedure:) }
+    let(:champ) { dossier.champ_data.first.tap { it.update_columns(external_id: '30613890001294', value: '30613890001294') } }
+
+    before do
+      allow(champ).to receive(:fetch_external_data)
+        .and_return(Failure(degraded: true, error: StandardError.new('API Entreprise: unavailable'), code: 503))
+    end
+
+    it 'fetches from idle in the current request, without enqueuing a job' do
+      expect { champ.fetch_now! }.not_to have_enqueued_job(FetchExternalDataJob)
+      expect(champ.reload).to be_degraded
+    end
+  end
 end
