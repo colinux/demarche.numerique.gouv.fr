@@ -39,17 +39,7 @@ class Champs::SiretChamp < ChampData
     Siret.new(siret:).valid?
   end
 
-  def fetch_external_data
-    return token_unusable_failure if !procedure.api_entreprise_token_usable?
-
-    case APIEntreprise::Sirene.fetch_etablissement(siret, procedure.id)
-    in Success(etablissement)
-      procedure.forget_api_entreprise_token_rejection!
-      Success(etablissement:)
-    in Failure => failure
-      api_entreprise_failure(failure)
-    end
-  end
+  def fetch_external_data = fetch_sirene_etablissement(siret)
 
   def search_terms
     etablissement.present? ? etablissement.search_terms : [value]
