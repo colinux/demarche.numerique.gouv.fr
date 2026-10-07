@@ -33,6 +33,26 @@ describe 'shared/dossiers/demande', type: :view do
     end
   end
 
+  context 'when the dossier only has an unverified SIRET' do
+    let(:procedure) { procedures.entreprise }
+    let(:dossier) { create(:dossier, :en_construction, procedure:) }
+
+    before { dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded') }
+
+    it 'shows the SIRET and lets the usager change it' do
+      expect(subject).to include('306 138 900 01294')
+      expect(subject).to include(siret_dossier_path(dossier))
+    end
+
+    context 'when the token of the procedure is rejected' do
+      before { dossier.procedure.update!(api_entreprise_token_rejected_at: Time.current) }
+
+      it 'does not promise the data within a few hours' do
+        expect(subject).to include('Les informations sur lʼentreprise nʼont pas pu être récupérées')
+      end
+    end
+  end
+
   context 'when dossier was created by an individual' do
     let(:individual) { build(:individual) }
 

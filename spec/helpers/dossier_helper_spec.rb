@@ -77,6 +77,14 @@ RSpec.describe DossierHelper, type: :helper do
 
         it { is_expected.to include("123 456 789 01234") }
       end
+
+      context "when only an unverified SIRET is known" do
+        let(:etablissement) { nil }
+
+        before { dossier.create_demandeur_siret!(siret: "30613890001294", external_state: 'degraded') }
+
+        it { is_expected.to eq "SIRET 306 138 900 01294" }
+      end
     end
   end
 

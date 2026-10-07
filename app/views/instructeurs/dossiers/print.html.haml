@@ -12,6 +12,8 @@
 
 - if @dossier.etablissement.present?
   = render partial: "shared/dossiers/identite_entreprise", locals: { etablissement: @dossier.etablissement, profile: 'instructeur' }
+- elsif @dossier.demandeur_siret.present?
+  = render Dossiers::DegradedIdentiteEntrepriseComponent.new(**@dossier.demandeur_siret_component_args('instructeur'))
 
 %h2 Formulaire
 

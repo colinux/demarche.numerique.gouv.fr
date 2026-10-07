@@ -286,4 +286,15 @@ describe 'instructeurs/dossiers/show', type: :view do
       end
     end
   end
+
+  context 'when the demandeur SIRET waits for the API' do
+    let(:dossier) { create(:dossier, :en_construction, procedure: procedures.entreprise) }
+
+    before { dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded') }
+
+    it 'warns that the company data are not verified and shows the SIRET' do
+      expect(subject).to have_text('Données de l’entreprise non vérifiées')
+      expect(subject).to have_text('306 138 900 01294')
+    end
+  end
 end
