@@ -462,19 +462,19 @@ describe Users::DossiersController, type: :controller do
         context 'when the SIRET is empty' do
           let(:external_id) { '' }
 
-          it { expect { subject }.not_to have_enqueued_job(ChampFetchExternalDataJob) }
+          it { expect { subject }.not_to have_enqueued_job(FetchExternalDataJob) }
         end
 
         context "when the SIRET is invalid because of it's length" do
           let(:external_id) { '1234' }
 
-          it { expect { subject }.not_to have_enqueued_job(ChampFetchExternalDataJob) }
+          it { expect { subject }.not_to have_enqueued_job(FetchExternalDataJob) }
         end
 
         context "when the SIRET is invalid because of it's checksum" do
           let(:external_id) { '82812345600023' }
 
-          it { expect { subject }.not_to have_enqueued_job(ChampFetchExternalDataJob) }
+          it { expect { subject }.not_to have_enqueued_job(FetchExternalDataJob) }
         end
       end
       context 'when the champ is an external champ in fetched state' do

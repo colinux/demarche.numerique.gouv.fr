@@ -1501,7 +1501,7 @@ describe Instructeurs::DossiersController, type: :controller do
               expect(champ_text.external_id).to eq('text')
               expect(response).to have_http_status(200)
               expect(dossier.last_champ_private_updated_at).to eq(now)
-              assert_enqueued_jobs(1, only: ChampFetchExternalDataJob)
+              assert_enqueued_jobs(1, only: FetchExternalDataJob)
             }
           end
         end

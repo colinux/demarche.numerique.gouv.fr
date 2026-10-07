@@ -36,7 +36,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
 
       it 'schedules the fetch, spread over the window instead of all at once' do
         expect { Cron::RetryDegradedSiretChampJob.perform_now }
-          .to have_enqueued_job(ChampFetchExternalDataJob).with(champ, '30613890001294')
+          .to have_enqueued_job(FetchExternalDataJob).with(champ, '30613890001294')
       end
 
       context 'while INSEE is still down' do
@@ -56,7 +56,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
       let(:external_state) { 'waiting_for_fix' }
 
       it 'does not enqueue it twice' do
-        expect { Cron::RetryDegradedSiretChampJob.perform_now }.not_to have_enqueued_job(ChampFetchExternalDataJob)
+        expect { Cron::RetryDegradedSiretChampJob.perform_now }.not_to have_enqueued_job(FetchExternalDataJob)
       end
     end
 
