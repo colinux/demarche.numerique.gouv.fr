@@ -1,0 +1,14 @@
+fr:
+  users:
+    dossiers:
+      etablissement:
+        title: "Informations sur l’établissement"
+        unverified_title: "Nous n’avons pas pu vérifier votre SIRET"
+        insee_down: "L’annuaire INSEE est indisponible, nous ne pouvons pas vérifier votre SIRET."
+        token_rejected: "Les informations sur l’entreprise n’ont pas pu être récupérées ; l’administration a été prévenue."
+        check_yourself_html: "Veuillez vérifier par vous-même que le numéro <strong>%{siret}</strong> correspond bien à votre entreprise :"
+        check_in_annuaire: "Vérifier dans l’annuaire des entreprises"
+        fetched_from_insee: "Nous avons récupéré auprès de l’INSEE et d’Infogreffe les informations suivantes concernant votre établissement."
+        attached: "Ces informations seront jointes à votre dossier."
+        other_siret: "Utiliser un autre numéro SIRET"
+        continue: "Continuer avec ces informations"

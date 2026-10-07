@@ -103,6 +103,24 @@ describe DossierSearchableConcern do
     end
   end
 
+  describe 'a dossier with an unverified demandeur SIRET' do
+    let(:dossier) { create(:dossier, procedure: procedures.entreprise) }
+
+    def matches?(column, query)
+      Dossier.connection.select_value(
+        Dossier.sanitize_sql_array(["SELECT #{column} @@ to_tsquery('french_unaccent', :query) FROM dossiers WHERE id = :id", query:, id: dossier.id])
+      )
+    end
+
+    before { dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded') }
+
+    it 'is found by that SIRET' do
+      dossier.reload.index_search_terms
+
+      expect(matches?('search_terms_tsvector', '30613890001294')).to be(true)
+    end
+  end
+
   describe '#index_search_terms_later' do
     let(:user) { create(:user) }
     let(:dossier) { create(:dossier, :brouillon, user: user) }

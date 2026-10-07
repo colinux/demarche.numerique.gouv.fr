@@ -219,15 +219,17 @@ module Users
         return render_siret_error(siret_model.errors.full_messages)
       end
 
-      case APIEntrepriseService.create_etablissement_with_fallback(@dossier, sanitized_siret, current_user.id)
-      in Success
+      case DemandeurSiret.submit!(@dossier, sanitized_siret)
+      in :verified | :unverified
         current_user.update!(siret: sanitized_siret)
         @dossier.update!(autorisation_donnees: true, last_champ_updated_at: Time.zone.now)
+        @dossier.index_search_terms_later
         redirect_to etablissement_dossier_path
-      in Failure(type: (:not_found | :unavailable_for_legal_reasons) => type, **)
-        render_siret_error(t("errors.messages.siret.#{type}"))
-      in Failure => failure
-        APIEntrepriseService.report_error(failure.failure, dossier: @dossier.id, siret: sanitized_siret)
+      in 404
+        render_siret_error(t('errors.messages.siret.not_found'))
+      in 451
+        render_siret_error(t('errors.messages.siret.unavailable_for_legal_reasons'))
+      else
         render_siret_error(t('errors.messages.siret.network_error'))
       end
     end
@@ -236,7 +238,7 @@ module Users
       @dossier = dossier
 
       # Redirect if the user attempts to access the page URL directly
-      if !@dossier.etablissement
+      if !@dossier.etablissement && !@dossier.demandeur_siret
         flash.alert = t('.no_establishment')
         return redirect_to siret_dossier_path(@dossier)
       end

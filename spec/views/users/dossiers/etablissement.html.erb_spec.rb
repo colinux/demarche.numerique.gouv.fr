@@ -40,4 +40,35 @@ describe 'users/dossiers/etablissement', type: :view do
       expect(rendered).to have_link("Vérifier dans l’annuaire des entreprises", href: "https://annuaire-entreprises\.data\.gouv\.fr/rechercher?terme=#{etablissement.siret}")
     end
   end
+
+  context 'with an unverified SIRET and no etablissement' do
+    let(:dossier) { create(:dossier, procedure: procedures.entreprise) }
+
+    subject! do
+      dossier.procedure.update!(api_entreprise_token: JWT.encode({ exp: 2.months.from_now.to_i }, nil, 'none'))
+      dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+      render
+    end
+
+    it 'explains the SIRET could not be checked and lets the usager go on' do
+      expect(rendered).to have_text('Nous n’avons pas pu vérifier votre SIRET')
+      expect(rendered).to have_text('306 138 900 01294')
+      expect(rendered).to have_text('L’annuaire INSEE est indisponible')
+      expect(rendered).to have_link('Vérifier dans l’annuaire des entreprises', href: 'https://annuaire-entreprises.data.gouv.fr/rechercher?terme=30613890001294')
+      expect(rendered).to have_link('Continuer avec ces informations')
+    end
+
+    context 'when the token of the procedure is rejected' do
+      subject! do
+        dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+        dossier.procedure.update!(api_entreprise_token_rejected_at: Time.current)
+        render
+      end
+
+      it 'does not blame the INSEE' do
+        expect(rendered).not_to have_text('L’annuaire INSEE est indisponible')
+        expect(rendered).to have_text('Les informations sur l’entreprise n’ont pas pu être récupérées')
+      end
+    end
+  end
 end
