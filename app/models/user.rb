@@ -91,7 +91,7 @@ class User < ApplicationRecord
   end
 
   def dossier_transfers_received_pending
-    Dossier.includes(:procedure, :user, :individual, :etablissement, transfer: { dossiers: :user })
+    Dossier.includes(:procedure, :user, :individual, :etablissement, :demandeur_siret, transfer: { dossiers: :user })
       .where(dossier_transfer_id: DossierTransfer.for_email(email).pending)
       .order(updated_at: :desc)
   end

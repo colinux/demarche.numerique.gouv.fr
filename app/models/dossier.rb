@@ -406,7 +406,7 @@ class Dossier < ApplicationRecord
   scope :with_revision, -> { includes(revision: :revision_type_de_champs) }
   scope :for_api_v2, -> {
     with_revision
-      .includes(:attestation_acceptation_template, :attestation_refus_template, :etablissement, :individual, :traitement, procedure: [:administrateurs], user: [:france_connect_informations])
+      .includes(:attestation_acceptation_template, :attestation_refus_template, :etablissement, :demandeur_siret, :individual, :traitement, procedure: [:administrateurs], user: [:france_connect_informations])
   }
 
   scope :with_notifications, -> (instructeur) {

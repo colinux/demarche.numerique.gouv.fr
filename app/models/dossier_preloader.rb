@@ -13,13 +13,13 @@ class DossierPreloader
   # Associations préchargées pour l'export tableur (feuilles Dossiers/Etablissements/Avis).
   SHEET_EXPORT_INCLUDES = [
     :user, :individual, :followers_instructeurs, :traitement, :groupe_instructeur,
-    :etablissement, :pending_corrections,
+    :etablissement, :demandeur_siret, :pending_corrections,
     { procedure: [:groupe_instructeurs], avis: [:claimant, :expert] },
   ].freeze
 
   # Associations préchargées pour l'export PDF/zip (PiecesJustificativesService).
   PJ_EXPORT_INCLUDES = [
-    :individual, :traitement, :etablissement, :pending_corrections,
+    :individual, :traitement, :etablissement, :demandeur_siret, :pending_corrections,
     { user: :france_connect_informations, avis: :expert, commentaires: [:instructeur, :expert] },
   ].freeze
 
