@@ -54,6 +54,7 @@ class Dossier < ApplicationRecord
   has_secure_token :prefill_token
 
   has_one :etablissement, dependent: :destroy
+  has_one :demandeur_siret, dependent: :destroy
   has_one :individual, validate: false, dependent: :destroy
   has_one :attestation, dependent: :destroy
 
