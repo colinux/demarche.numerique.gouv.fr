@@ -490,6 +490,18 @@ describe Users::DossiersController, type: :controller do
       end
     end
 
+    shared_examples 'the SIRET is kept unverified' do
+      it 'lets the usager go on with their dossier' do
+        dossier.reload
+
+        expect(dossier.etablissement).to be_nil
+        expect(dossier.demandeur_siret).to be_degraded
+        expect(dossier.demandeur_siret.siret).to eq(siret)
+        expect(user.reload.siret).to eq(siret)
+        expect(response).to redirect_to(etablissement_dossier_path)
+      end
+    end
+
     shared_examples 'the request fails with an error' do |error|
       it 'doesn’t save an etablissement' do
         expect(dossier.reload.etablissement).to be_nil
@@ -517,17 +529,25 @@ describe Users::DossiersController, type: :controller do
       context 'When API-Entreprise is ponctually down' do
         let(:api_etablissement_status) { 502 }
 
-        it_behaves_like 'the request fails with an error', I18n.t('errors.messages.siret.network_error')
+        it_behaves_like 'the SIRET is kept unverified'
       end
 
       context 'When API-Entreprise is globally down' do
         let(:api_etablissement_status) { 502 }
         let(:provider_up) { false }
 
-        it "create an etablissement only with SIRET as degraded mode" do
-          dossier.reload
-          expect(dossier.etablissement.siret).to eq(siret)
-          expect(dossier.etablissement).to be_as_degraded_mode
+        it_behaves_like 'the SIRET is kept unverified'
+
+        it 'creates no etablissement stub' do
+          expect(Etablissement.where(dossier_id: dossier.id)).to be_empty
+        end
+
+        context 'when the usager submits the form twice' do
+          it 'keeps a single unverified SIRET' do
+            post :update_siret, params: { id: dossier.id, user: { siret: params_siret } }
+
+            expect(DemandeurSiret.where(dossier:).pluck(:siret)).to eq([siret])
+          end
         end
       end
 
@@ -541,11 +561,15 @@ describe Users::DossiersController, type: :controller do
         let(:api_etablissement_status) { 200 }
         let(:token_expired) { true }
 
-        it_behaves_like 'the request fails with an error', I18n.t('errors.messages.siret.network_error')
+        it_behaves_like 'the SIRET is kept unverified'
       end
 
       context 'when all API informations available' do
         it_behaves_like 'SIRET informations are successfully saved'
+
+        it 'keeps no unverified SIRET' do
+          expect(DemandeurSiret.where(dossier:)).to be_empty
+        end
 
         it 'saves the associated informations on the etablissement' do
           dossier.reload
