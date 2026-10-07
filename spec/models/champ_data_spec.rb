@@ -638,6 +638,49 @@ describe ChampData do
     end
   end
 
+  describe '#clear' do
+    include Logic
+
+    let(:procedure) do
+      create(:procedure, :published, public_type_de_champs: [
+        { type: :yes_no, stable_id: 1 },
+        { type: :siret, stable_id: 2, condition: ds_eq(champ_value(1), constant(true)) },
+      ])
+    end
+    let(:dossier) { create(:dossier, procedure:) }
+    let(:champ) { dossier.champ_data.find { it.stable_id == 2 } }
+
+    before do
+      champ.update_columns(external_id: '30613890001294', value: '30613890001294', external_state: 'degraded',
+        fetch_external_data_exceptions: [ExternalDataException.new(error: 'API Entreprise: unavailable', code: 503)])
+    end
+
+    it 'forgets the fetch of the value it wipes' do
+      champ.clear
+      champ.reload
+
+      expect(champ.external_id).to be_nil
+      expect(champ).to be_idle
+      expect(champ.fetch_external_data_exceptions).to be_empty
+    end
+
+    context 'on a degraded champ hidden by a condition when the dossier is submitted' do
+      before do
+        dossier.champ_data.find { it.stable_id == 1 }.update_columns(value: 'false')
+        dossier.reload.clean_champs_after_submit!
+        dossier.reload
+      end
+
+      it 'no longer blocks the decision of the instructeur' do
+        expect(dossier.any_etablissement_as_degraded_mode?).to be false
+      end
+
+      it 'is left out of the cron replay' do
+        expect(Champs::SiretChamp.degraded.where(id: champ.id)).to be_empty
+      end
+    end
+  end
+
   describe "#parent" do
     let(:procedure) { create(:procedure, public_type_de_champs: [{ type: :repetition, mandatory: false, children: [{ type: :text }] }]) }
     let(:dossier) { create(:dossier, :with_populated_champs, procedure:) }
