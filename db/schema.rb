@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_buffercache"
   enable_extension "pg_catalog.plpgsql"
@@ -384,6 +384,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_120001) do
     t.index ["dossier_id"], name: "index_deleted_dossiers_on_dossier_id", unique: true
     t.index ["procedure_id"], name: "index_deleted_dossiers_on_procedure_id"
     t.index ["user_id"], name: "index_deleted_dossiers_on_user_id"
+  end
+
+  create_table "demandeur_sirets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "dossier_id", null: false
+    t.string "external_state"
+    t.string "fetch_external_data_exceptions", array: true
+    t.string "siret", null: false
+    t.datetime "updated_at", null: false
+    t.index ["dossier_id"], name: "index_demandeur_sirets_on_dossier_id", unique: true
+    t.index ["id"], name: "index_demandeur_sirets_on_degraded_external_state", where: "((external_state)::text = 'degraded'::text)"
   end
 
   create_table "dossier_assignments", force: :cascade do |t|
@@ -1532,6 +1543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_120001) do
   add_foreign_key "commentaires", "instructeurs"
   add_foreign_key "contact_forms", "users"
   add_foreign_key "contact_informations", "groupe_instructeurs"
+  add_foreign_key "demandeur_sirets", "dossiers"
   add_foreign_key "dossier_assignments", "dossiers"
   add_foreign_key "dossier_batch_operations", "batch_operations"
   add_foreign_key "dossier_batch_operations", "dossiers"

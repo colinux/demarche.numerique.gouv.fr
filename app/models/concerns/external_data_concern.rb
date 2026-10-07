@@ -51,6 +51,10 @@ module ExternalDataConcern
         transitions from: :idle, to: :waiting_for_job, guard: :ready_for_external_call?
       end
 
+      event :fetch_now, after_commit: :fetch_and_handle_result do
+        transitions from: :idle, to: :fetching, guard: :ready_for_external_call?
+      end
+
       event :fetch, after_commit: :fetch_and_handle_result do
         transitions from: [:waiting_for_job, :waiting_for_fix], to: :fetching
       end

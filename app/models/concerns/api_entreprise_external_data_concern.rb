@@ -11,6 +11,18 @@ module APIEntrepriseExternalDataConcern
 
   def ready_for_external_retry? = procedure.api_entreprise_token_usable?
 
+  def fetch_sirene_etablissement(siret)
+    return token_unusable_failure if !procedure.api_entreprise_token_usable?
+
+    case APIEntreprise::Sirene.fetch_etablissement(siret, procedure.id)
+    in Success(etablissement)
+      procedure.forget_api_entreprise_token_rejection!
+      Success(etablissement:)
+    in Failure => failure
+      api_entreprise_failure(failure)
+    end
+  end
+
   # No call goes out, so the credentials branch of api_entreprise_failure would
   # never alert: the reason is only readable from the token itself.
   def token_unusable_failure
