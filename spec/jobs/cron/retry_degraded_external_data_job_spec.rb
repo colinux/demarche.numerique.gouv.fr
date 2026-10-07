@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Cron::RetryDegradedChampJob, type: :job do
+RSpec.describe Cron::RetryDegradedExternalDataJob, type: :job do
   describe '.schedulable?' do
     it 'keeps the abstract base out of the scheduler' do
       expect(described_class).not_to be_schedulable
@@ -169,7 +169,7 @@ RSpec.describe Cron::RetryDegradedChampJob, type: :job do
         Cron::RetryDegradedSiretChampJob.batch_size = 1
       end
 
-      after { Cron::RetryDegradedSiretChampJob.batch_size = Cron::RetryDegradedChampJob::BATCH_SIZE }
+      after { Cron::RetryDegradedSiretChampJob.batch_size = Cron::RetryDegradedExternalDataJob::BATCH_SIZE }
 
       it 'spends the batch on a champ it can actually replay' do
         expect { Cron::RetryDegradedSiretChampJob.perform_now }

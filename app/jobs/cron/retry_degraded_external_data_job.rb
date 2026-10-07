@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Cron::RetryDegradedChampJob < Cron::CronJob
+class Cron::RetryDegradedExternalDataJob < Cron::CronJob
   # They all went degraded within the same outage: spread them out, the champ
   # queue has no rate limiter of its own.
   SPREAD_OVER = 20.minutes
@@ -23,20 +23,20 @@ class Cron::RetryDegradedChampJob < Cron::CronJob
     return if !APIEntreprise::HealthChecker.provider_up?(health_provider)
     return if APIEntreprise::RateLimiter.throttled?(APIEntreprise::API::DEFAULT_POOL)
 
-    retryable_batch.find_each do |champ|
-      champ.fix_degraded!(wait: rand(0..spread_over)) if champ.may_fix_degraded?
+    retryable_batch.find_each do |record|
+      record.fix_degraded!(wait: rand(0..spread_over)) if record.may_fix_degraded?
     end
   end
 
   private
 
   def retryable_batch
-    with_a_usable_token(degraded_champs)
+    with_a_usable_token(degraded_records)
       .limit(batch_size)
       .preload(dossier: :procedure)
   end
 
-  def degraded_champs
+  def degraded_records
     champ_class
       .degraded
       .joins(dossier: :procedure)
