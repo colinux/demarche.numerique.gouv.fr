@@ -13,6 +13,17 @@ describe 'dossiers/show.pdf', :external_deps, type: :view do
     `pdftotext -layout #{pdf_path} - 2>/dev/null`
   end
 
+  describe 'a demandeur SIRET waiting for the API' do
+    let(:procedure) { procedures.entreprise }
+    let(:dossier) { create(:dossier, :en_construction, procedure:) }
+
+    before { dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded') }
+
+    it 'prints the SIRET the usager typed', if: PDFTOTEXT_AVAILABLE do
+      expect(render_and_extract(dossier, procedure, 'unverified_siret')).to include('30613890001294')
+    end
+  end
+
   describe 'nested hierarchy (level 1/2/3)' do
     let(:procedure) do
       create(:procedure, public_type_de_champs: [
