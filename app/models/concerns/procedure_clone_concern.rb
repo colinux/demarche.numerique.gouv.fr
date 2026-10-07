@@ -92,6 +92,10 @@ module ProcedureCloneConcern
 
   NEW_MAX_DUREE_CONSERVATION = Expired::DEFAULT_DOSSIER_RENTENTION_IN_MONTH
 
+  # A value the original holds may no longer pass validation (a file type or a link
+  # accepted under older rules): the clone drops it rather than failing.
+  RESET_WHEN_INVALID_ATTRIBUTES = [:notice, :deliberation, :logo, :lien_dpo, :web_hook_url].freeze
+
   def clone(options: nil, admin:)
     options = default_options.merge(options || {})
 
@@ -109,12 +113,8 @@ module ProcedureCloneConcern
 
     procedure = apply_clone_options(procedure, options, admin)
 
-    if !procedure.valid?
-      procedure.errors.attribute_names.each do |attribute|
-        next if [:notice, :deliberation, :logo].exclude?(attribute)
-        procedure.public_send("#{attribute}=", nil)
-      end
-    end
+    procedure.validate
+    (procedure.errors.attribute_names & RESET_WHEN_INVALID_ATTRIBUTES).each { procedure.public_send("#{it}=", nil) }
 
     transaction do
       procedure.save!
