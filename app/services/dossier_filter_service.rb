@@ -17,6 +17,8 @@ class DossierFilterService
   private
 
   def self.sorted_ids(dossiers, sorted_column, instructeur, count)
+    return sorted_column.column.sorted_ids(dossiers, sorted_column.order) if sorted_column.column.is_a?(Columns::DemandeurSiretColumn)
+
     table = sorted_column.column.table
     column = sorted_column.column.column
     order = sorted_column.order

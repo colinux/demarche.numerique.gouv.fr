@@ -62,7 +62,7 @@ module DossierExportConcern
       end
     elsif with_etablissement
       columns += [
-        ['Établissement SIRET', etablissement&.siret],
+        ['Établissement SIRET', siret],
         ['Établissement siège social', etablissement&.siege_social],
         ['Établissement NAF', etablissement&.naf],
         ['Établissement libellé NAF', etablissement&.libelle_naf],

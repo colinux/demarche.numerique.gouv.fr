@@ -6,7 +6,7 @@ class Columns::DossierColumn < Column
     when 'self'
       dossier.public_send(column)
     when 'etablissement'
-      dossier.etablissement.public_send(column)
+      dossier.etablissement&.public_send(column)
     when 'individual'
       dossier.individual.public_send(column)
     when 'groupe_instructeur'
