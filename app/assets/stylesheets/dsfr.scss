@@ -366,8 +366,11 @@ button.fr-notice__link {
   text-decoration: underline;
   text-decoration-thickness: var(--underline-thickness);
   text-underline-offset: 2px;
+}
 
-  // no background on hover/active, as on a real DSFR link
+// no background on hover/active, as on a real DSFR link; the notice button
+// keeps the DSFR button background on hover
+[data-href] {
   --hover-tint: var(--idle);
   --active-tint: var(--idle);
 }
