@@ -238,6 +238,35 @@ describe 'Creating a new dossier:', js: true do
         expect(page).to have_current_path(brouillon_dossier_path(dossier))
       end
 
+      scenario 'the user goes on with an unverified SIRET while the INSEE is down' do
+        stub_request(:get, /https:\/\/entreprise.api.gouv.fr\/v4\/insee\/sirene\/etablissements\/#{siret}/)
+          .to_return(status: 503, body: '')
+
+        visit commencer_path(path: procedure.path)
+        click_on 'Commencer un dossier'
+
+        fill_in 'Numéro SIRET', with: siret
+        click_on 'Continuer'
+
+        expect(page).to have_current_path(etablissement_dossier_path(dossier))
+        expect(page).to have_content('Nous n’avons pas pu vérifier votre SIRET')
+        expect(page).to have_content('418 166 096 00051')
+        click_on 'Continuer avec ces informations'
+
+        expect(page).to have_current_path(brouillon_dossier_path(dossier))
+        expect(dossier.reload.demandeur_siret).to be_degraded
+
+        stub_request(:get, /https:\/\/entreprise.api.gouv.fr\/v4\/insee\/sirene\/etablissements\/#{siret}/)
+          .to_return(status: 200, body: File.read('spec/fixtures/files/api_entreprise/etablissements.json'))
+        allow(APIEntreprise::HealthChecker).to receive(:provider_up?).and_return(true)
+
+        Cron::RetryDegradedDemandeurSiretJob.perform_now
+        perform_enqueued_jobs(only: FetchExternalDataJob)
+
+        expect(dossier.reload.etablissement).to be_present
+        expect(dossier.demandeur_siret).to be_nil
+      end
+
       scenario 'the user is notified when its SIRET is invalid' do
         visit commencer_path(path: procedure.path)
         click_on 'Commencer un dossier'
