@@ -1703,6 +1703,35 @@ describe Dossier, type: :model do
         expect(dossier.unverified_data_labels).to eq("le SIRET du demandeur, « Numéro SIRET » et « Numéro RNA »")
       end
     end
+
+    context 'when the demandeur SIRET waits for the API, without any etablissement' do
+      let(:dossier) { dossiers.entreprise_en_instruction }
+
+      before do
+        dossier.etablissement.destroy!
+        dossier.reload.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+        dossier.reload
+      end
+
+      it 'reads the SIRET the usager typed' do
+        expect(dossier.siret).to eq('30613890001294')
+        expect(dossier.siren).to eq('306138900')
+        expect(dossier.owner_name).to eq('SIRET 306 138 900 01294 (données liées au SIRET en attente de récupération)')
+      end
+
+      it "can't accepter, and names the SIRET it waits for" do
+        expect(dossier.may_accepter?(instructeur:, motivation:)).to be_falsey
+        expect(dossier.unverified_data_labels).to eq('le SIRET du demandeur')
+      end
+
+      context 'when the SIRET turned out unknown' do
+        before { dossier.demandeur_siret.update_columns(external_state: 'external_error') }
+
+        it 'no longer blocks the decision' do
+          expect(dossier.reload.may_accepter?(instructeur:, motivation:)).to be_truthy
+        end
+      end
+    end
   end
 
   describe "can't transition to terminer when annotations privees are not valid" do

@@ -429,6 +429,7 @@ fr:
           individual_identity: "Votre identité"
           form: "Sections du formulaire"
           edit_siret: "Modifier le SIRET"
+          unverified_siret: "SIRET %{siret} (données liées au SIRET en attente de récupération)"
           edit_identity: "Modifier l’identité"
           edit_identity_html: 'Modifier <span aria-hidden="true"> l’identité</span>'
           accuse_lecture: Cette démarche est soumise à un accusé de lecture.

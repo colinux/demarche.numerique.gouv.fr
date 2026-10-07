@@ -139,7 +139,8 @@ module Types
       if object.revision.procedure.for_individual
         dataloader.with(Sources::Association, :individual).load(object)
       else
-        dataloader.with(Sources::Association, :etablissement).load(object)
+        dataloader.with(Sources::Association, :etablissement).load(object) ||
+          dataloader.with(Sources::Association, :demandeur_siret).load(object)&.then { Etablissement.new(siret: it.siret) }
       end
     end
 

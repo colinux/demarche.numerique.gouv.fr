@@ -20,6 +20,7 @@ module Users
       :unread_messages_for_user,
       :individual,
       :etablissement,
+      :demandeur_siret,
       { procedure: [:procedure_paths, { replaced_by_procedure: :procedure_paths }] },
     ].freeze
 

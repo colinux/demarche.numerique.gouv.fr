@@ -4,8 +4,10 @@ module AttestationDepotHelper
   def attestation_depot_requester_identity(dossier)
     if dossier.etablissement.present?
       raison_sociale_or_name(dossier.etablissement)
-    else
+    elsif dossier.individual.present?
       [dossier.individual.prenom, dossier.individual.nom.upcase].join(' ')
+    elsif dossier.siret.present?
+      t('views.shared.dossiers.demande.unverified_siret', siret: pretty_siret(dossier.siret))
     end
   end
 

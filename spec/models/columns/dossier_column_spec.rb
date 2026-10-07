@@ -88,6 +88,21 @@ describe Columns::DossierColumn do
         end
       end
 
+      context 'when the dossier has no etablissement yet, only an unverified SIRET' do
+        let(:procedure) { procedures.entreprise }
+        let(:dossier) { dossiers.entreprise_en_instruction }
+
+        before do
+          dossier.etablissement.destroy!
+          dossier.reload.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+          dossier.reload
+        end
+
+        it 'reads nothing from the etablissement, without failing' do
+          expect(procedure.find_column(label: "Entreprise raison sociale").value(dossier)).to be_nil
+        end
+      end
+
       context 'when sva/svr enabled' do
         let(:procedure) { create(:procedure, :sva, for_individual: true, groupe_instructeurs: [groupe_instructeur]) }
         let(:dossier) { create(:dossier, :en_instruction, procedure:) }

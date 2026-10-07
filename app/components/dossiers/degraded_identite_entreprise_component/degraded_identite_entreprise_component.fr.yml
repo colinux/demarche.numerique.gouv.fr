@@ -4,4 +4,5 @@ fr:
   dossier_blocked: Il nʼest pas possible dʼaccepter ou de refuser un dossier sans cette étape.
   insee_down: "LʼINSEE est indisponible, les informations sur lʼentreprise arriveront dʼici quelques heures."
   token_rejected: "Le jeton API Entreprise de cette démarche a été refusé : les informations sur lʼentreprise nʼarriveront pas tant quʼil nʼaura pas été renouvelé."
+  not_found: "Ce SIRET nʼa pas été trouvé dans lʼannuaire de lʼINSEE."
   unavailable: "Les informations sur lʼentreprise nʼont pas pu être récupérées ; lʼadministration a été prévenue."

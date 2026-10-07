@@ -70,3 +70,21 @@ describe 'users/dossiers/attestation_depot', type: :view do
     end
   end
 end
+
+describe 'users/dossiers/attestation_depot', type: :view do
+  context 'when the demandeur SIRET waits for the API' do
+    let(:dossier) { create(:dossier, :en_construction, procedure: procedures.entreprise) }
+
+    before do
+      sign_in dossier.user
+      dossier.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+      assign(:dossier, dossier)
+      render
+    end
+
+    it 'names the demandeur by its SIRET' do
+      expect(rendered).to have_text('30613890001294')
+      expect(rendered).to have_text('SIRET 306 138 900 01294 (données liées au SIRET en attente de récupération)')
+    end
+  end
+end

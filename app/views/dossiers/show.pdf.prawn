@@ -492,6 +492,8 @@ prawn_document(page_size: "A4") do |pdf|
     add_identite_individual(pdf, @dossier.individual)
   elsif @dossier.etablissement.present?
     add_identite_etablissement(pdf, @dossier.etablissement)
+  elsif @dossier.siret.present?
+    format_in_2_columns(pdf, "SIRET", @dossier.siret)
   end
 
   add_title(pdf, 'Formulaire')

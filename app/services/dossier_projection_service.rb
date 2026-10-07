@@ -15,7 +15,7 @@ class DossierProjectionService
       when :individual
         :individual
       when :etablissement
-        :etablissement
+        [:etablissement, :demandeur_siret]
       when :groupe_instructeur
         :groupe_instructeur
       when :followers_instructeurs

@@ -278,7 +278,9 @@ module DossierHelper
       return "#{dossier&.individual&.prenom} #{dossier&.individual&.nom}"
     end
 
-    return "" if dossier.etablissement.blank?
+    if dossier.etablissement.blank?
+      return dossier.siret.present? ? "SIRET #{pretty_siret(dossier.siret)}" : ""
+    end
 
     if dossier.etablissement.diffusable_commercialement == false
       "SIRET #{pretty_siret(dossier.etablissement.siret)}"

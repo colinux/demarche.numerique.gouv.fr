@@ -265,7 +265,7 @@ module ColumnsConcern
   end
 
   def moral_columns
-    siret_column = dossier_col(table: 'etablissement', column: :siret)
+    siret_column = Columns::DemandeurSiretColumn.new(procedure_id: id, table: 'etablissement', column: :siret)
 
     etablissements = Etablissement::DISPLAYABLE_COLUMNS.map do |(column, attributes)|
       dossier_col(table: 'etablissement', column:, type: attributes[:type], filterable: attributes.fetch(:filterable, true))

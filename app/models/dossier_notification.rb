@@ -311,7 +311,7 @@ class DossierNotification < ApplicationRecord
     dossiers = Dossier
       .select(:id)
       .where(id: dossier_ids_with_notifications_by_statut.values.flat_map(&:values).flatten.uniq)
-      .includes(:etablissement, :individual)
+      .includes(:etablissement, :demandeur_siret, :individual)
       .index_by(&:id)
 
     dossier_ids_with_notifications_by_statut.filter_map do |statut, dossier_ids_by_notification_type|
