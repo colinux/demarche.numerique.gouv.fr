@@ -1638,6 +1638,44 @@ describe Instructeurs::DossiersController, type: :controller do
       end
     end
 
+    context 'when the annotation value is invalid' do
+      let(:private_type_de_champs) { [{ type: :dossier_link }, { type: :siret }] }
+      let(:dossier_link_annotation) { dossier.root_champs_private.first }
+      let(:siret_annotation) { dossier.root_champs_private.second }
+      let(:linked_dossier) { dossiers.en_construction }
+
+      before { dossier_link_annotation.update_column(:value, linked_dossier.id.to_s) }
+
+      def update_annotation(champ, attributes)
+        patch :update_annotations, params: {
+          procedure_id: procedure.id,
+          dossier_id: dossier.id,
+          dossier: { champs_private_attributes: { champ.public_id => attributes } },
+        }, format: :turbo_stream
+      end
+
+      it 'does not store a malformed value and shows the error' do
+        update_annotation(dossier_link_annotation, value: '34217270 34197685')
+
+        expect(dossier_link_annotation.reload.value).to eq(linked_dossier.id.to_s)
+        expect(response.body).to include('Le numéro de dossier ne doit contenir que des chiffres')
+      end
+
+      it 'stores a valid dossier number' do
+        other_dossier = dossiers.en_instruction
+        update_annotation(dossier_link_annotation, value: other_dossier.id.to_s)
+
+        expect(dossier_link_annotation.reload.value).to eq(other_dossier.id.to_s)
+      end
+
+      it 'stores a siret before its etablissement is fetched' do
+        siret_annotation.update_columns(value: nil, external_id: nil, etablissement_id: nil)
+        update_annotation(siret_annotation, external_id: '41816609600051')
+
+        expect(siret_annotation.reload.external_id).to eq('41816609600051')
+      end
+    end
+
     context 'when annotation is pre_rempli (read-only guard)' do
       let(:private_type_de_champs) { [{ type: :pre_rempli }] }
       let(:public_type_de_champs) { [] }
