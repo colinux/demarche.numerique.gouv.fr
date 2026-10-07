@@ -1,0 +1,14 @@
+en:
+  users:
+    dossiers:
+      etablissement:
+        title: "Establishment information"
+        unverified_title: "We could not check your SIRET"
+        insee_down: "The INSEE directory is unavailable, we cannot check your SIRET."
+        token_rejected: "Company information could not be retrieved; the administration has been notified."
+        check_yourself_html: "Please check for yourself that the number <strong>%{siret}</strong> matches your company:"
+        check_in_annuaire: "Check in the business directory"
+        fetched_from_insee: "We retrieved the following information about your establishment from INSEE and Infogreffe."
+        attached: "This information will be attached to your application."
+        other_siret: "Use another SIRET number"
+        continue: "Continue with this information"
