@@ -87,8 +87,12 @@ class DossierSerializer < ActiveModel::Serializer
     object.user&.email
   end
 
+  def etablissement
+    object.etablissement || object.demandeur_siret&.then { Etablissement.new(siret: it.siret) }
+  end
+
   def entreprise
-    object.etablissement&.entreprise
+    etablissement&.entreprise
   end
 
   def state
