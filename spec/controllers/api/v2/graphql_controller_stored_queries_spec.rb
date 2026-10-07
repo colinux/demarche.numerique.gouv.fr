@@ -345,6 +345,21 @@ describe API::V2::GraphqlController do
           }
         end
 
+        context 'when the demandeur SIRET waits for the API' do
+          before do
+            dossier.etablissement.destroy!
+            dossier.reload.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+          end
+
+          it {
+            expect(gql_errors).to be_nil
+            expect(gql_data[:dossier][:id]).to eq(dossier.to_typed_id)
+            expect(gql_data[:dossier][:demandeur][:__typename]).to eq('PersonneMoraleIncomplete')
+            expect(gql_data[:dossier][:demandeur][:siret]).to eq('30613890001294')
+            expect(gql_data[:dossier][:demandeur][:libelleNaf]).to be_nil
+          }
+        end
+
         context 'when there are missing data' do
           before do
             dossier.etablissement.update!(entreprise_code_effectif_entreprise: nil, entreprise_capital_social: nil, entreprise_numero_tva_intracommunautaire: nil)
