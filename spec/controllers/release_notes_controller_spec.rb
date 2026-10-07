@@ -82,6 +82,15 @@ RSpec.describe ReleaseNotesController, type: :controller do
         expect(response.body).to include('target="_blank"')
         expect(response.body).to include('title=')
       end
+
+      context 'when a link href is malformed' do
+        let!(:note_admin) { create(:release_note, categories: ['administrateur'], body: 'Écrivez-nous : <a href="mailto:contact">contact</a>', released_on: Date.new(2023, 10, 15)) }
+
+        it 'still renders the page' do
+          expect(response).to have_http_status(:ok)
+          expect(response.body).to include('title="contact — Nouvel onglet"')
+        end
+      end
     end
   end
 end
