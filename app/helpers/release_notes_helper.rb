@@ -36,11 +36,12 @@ module ReleaseNotesHelper
 
   def render_release_note_content(content)
     content.body.fragment.source.css("a[href]").each do |link|
-      uri = URI.parse(link['href'])
+      # Hrefs are typed by hand: without this, the sanitizer turns surrounding (nbsp) spaces into %20
+      link.set_attribute('href', link['href'].gsub(/\A[[:space:]]+|[[:space:]]+\z/, ''))
 
       link.set_attribute('rel', 'noreferrer noopener')
       link.set_attribute('target', '_blank')
-      link.set_attribute('title', new_tab_suffix(uri.host))
+      link.set_attribute('title', new_tab_suffix(link.text.squish.presence))
     end
 
     content

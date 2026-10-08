@@ -8,7 +8,37 @@ RSpec.describe ReleaseNotesHelper, type: :helper do
       release_note.body = "Go to <a href='http://example.com'>Example</a>"
       processed_content = helper.render_release_note_content(release_note.body)
 
-      expect(processed_content.body.to_s).to include('Go to <a href="http://example.com" rel="noreferrer noopener" target="_blank" title="example.com — Nouvel onglet">Example</a>')
+      expect(processed_content.body.to_s).to include('Go to <a href="http://example.com" rel="noreferrer noopener" target="_blank" title="Example — Nouvel onglet">Example</a>')
+    end
+
+    it "strips whitespace around the href" do
+      release_note.body = "Go to <a href=' http://example.com/doc '>Example</a>"
+      processed_content = helper.render_release_note_content(release_note.body)
+
+      expect(processed_content.body.to_s).to include('<a href="http://example.com/doc" rel="noreferrer noopener" target="_blank" title="Example — Nouvel onglet">Example</a>')
+    end
+
+    it "strips non-breaking spaces around the href" do
+      release_note.body = "Go to <a href='http://example.com/doc\u00A0'>Example</a>"
+      processed_content = helper.render_release_note_content(release_note.body)
+
+      expect(processed_content.body.to_s).to include('<a href="http://example.com/doc" ')
+    end
+
+    ["mailto:contact", "gid:foo", "http://exa mple.com"].each do |href|
+      it "keeps rendering when the href is #{href}" do
+        release_note.body = "Go to <a href='#{href}'>Example</a>"
+        processed_content = helper.render_release_note_content(release_note.body)
+
+        expect(processed_content.body.to_s).to include('title="Example — Nouvel onglet">Example</a>')
+      end
+    end
+
+    it "falls back to a bare new tab title when the link has no text" do
+      release_note.body = "Go to <a href='http://example.com'> </a>"
+      processed_content = helper.render_release_note_content(release_note.body)
+
+      expect(processed_content.body.to_s).to include('title="Nouvel onglet"')
     end
 
     it "handles content without links" do
