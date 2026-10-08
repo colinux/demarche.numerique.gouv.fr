@@ -396,6 +396,20 @@ describe API::V1::DossiersController do
             expect(subject.keys).to match_array(field_list)
           end
         end
+
+        context 'when the demandeur SIRET waits for the API' do
+          before do
+            dossier.etablissement.destroy!
+            dossier.reload.create_demandeur_siret!(siret: '30613890001294', external_state: 'degraded')
+          end
+
+          it do
+            expect(subject[:etablissement][:siret]).to eq('30613890001294')
+            expect(subject[:etablissement][:adresse]).to be_nil
+            expect(subject[:entreprise][:siren]).to be_nil
+            expect(subject[:entreprise][:raison_sociale]).to be_nil
+          end
+        end
       end
     end
   end
